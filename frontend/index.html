@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScrapSense AI — Smart Scrap &amp; Electronic Waste Valuation Platform</title>
+  <meta name="description" content="AI-powered scrap material identification, real-time mandi valuation, eco-impact analytics, and admin-mediated marketplace for Indian scrap and electronic waste recycling." />
+  <meta name="keywords" content="scrap, e-waste, recycling, AI, CLIP, mandi rates, copper, aluminium, PCB, electronic waste, India" />
+  <meta name="author" content="ScrapSense AI - Final Year Engineering Project" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="ScrapSense AI — Smart Scrap & E-Waste Valuation" />
+  <meta property="og:description" content="Zero-shot AI waste classification, dynamic scrap pricing, eco-impact analytics & admin-mediated marketplace." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630' fill='%230a0f1c'><rect width='1200' height='630'/><text x='50%25' y='45%25' font-size='72' fill='%2300d4aa' text-anchor='middle' font-family='sans-serif' font-weight='bold'>ScrapSense AI</text><text x='50%25' y='58%25' font-size='32' fill='%23a0aec0' text-anchor='middle' font-family='sans-serif'>Smart Scrap &amp; E-Waste Valuation Platform</text></svg>" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- Standalone QR Code Library for Instant Mobile Scan -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Chart.js for Admin Analytics Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ================= AUTH SCREEN ================= -->
+  <div class="auth-screen" id="authScreen">
+
+    <!-- === ROLE SELECTOR PANEL (always visible left side) === -->
+    <div class="auth-role-selector" id="authRoleSelector">
+      <div class="auth-brand-top">
+        <span class="auth-brand-icon">⚙️</span>
+        <div>
+          <div class="auth-brand-name">ScrapSense<span class="auth-brand-ai">AI</span></div>
+          <div class="auth-brand-tag">Smart Scrap &amp; E-Waste Platform</div>
+        </div>
+      </div>
+
+      <div class="auth-role-title">Choose Your Role to Continue</div>
+
+      <!-- SELLER ROLE CARD -->
+      <button type="button" class="auth-role-card auth-role-card--seller active-role-card" id="roleCardSeller" data-role="seller">
+        <div class="arc-icon">📦</div>
+        <div class="arc-body">
+          <div class="arc-name">Seller</div>
+          <div class="arc-desc">Scan scrap &amp; e-waste items, check live mandi rates, post lots for sale</div>
+        </div>
+        <div class="arc-arrow">→</div>
+      </button>
+
+      <!-- BUYER ROLE CARD -->
+      <button type="button" class="auth-role-card auth-role-card--buyer" id="roleCardBuyer" data-role="buyer">
+        <div class="arc-icon">🏢</div>
+        <div class="arc-body">
+          <div class="arc-name">Buyer</div>
+          <div class="arc-desc">Browse verified lots, approve purchases, request new items at your price</div>
+        </div>
+        <div class="arc-arrow">→</div>
+      </button>
+
+      <!-- ADMIN ROLE CARD -->
+      <button type="button" class="auth-role-card auth-role-card--admin" id="roleCardAdmin" data-role="admin">
+        <div class="arc-icon">🛡️</div>
+        <div class="arc-body">
+          <div class="arc-name">Administrator</div>
+          <div class="arc-desc">Manage approvals, set product rates, view buyer &amp; seller records</div>
+        </div>
+        <div class="arc-arrow">→</div>
+      </button>
+
+      <div class="auth-role-footer">🔒 All data is role-restricted and privately mediated</div>
+    </div>
+
+    <!-- === LOGIN/REGISTER PANEL (right side, changes per role) === -->
+    <div class="auth-form-panel" id="authFormPanel">
+
+      <!-- Role indicator badge -->
+      <div class="auth-role-badge" id="authRoleBadge">
+        <span class="arb-icon" id="authRoleBadgeIcon">📦</span>
+        <span class="arb-label" id="authRoleBadgeLabel">Seller Portal</span>
+      </div>
+
+      <!-- Quick Role Selector Tabs for effortless role switching on all screen sizes -->
+      <div class="auth-quick-roles" id="authQuickRoles">
+        <button type="button" class="quick-role-pill active" data-role="seller">
+          <span class="qrp-icon">📦</span> Seller
+        </button>
+        <button type="button" class="quick-role-pill" data-role="buyer">
+          <span class="qrp-icon">🏢</span> Buyer
+        </button>
+        <button type="button" class="quick-role-pill" data-role="admin">
+          <span class="qrp-icon">🛡️</span> Administrator
+        </button>
+      </div>
+
+      <div class="auth-mode-switch" id="authModeSwitch">
+        <button type="button" class="auth-mode-btn active" id="modeLoginBtn">🔑 Sign In</button>
+        <button type="button" class="auth-mode-btn" id="modeRegisterBtn">✨ Register</button>
+      </div>
+
+      <!-- 1. LOGIN FORM -->
+      <div class="auth-form-card" id="loginCard">
+        <div class="card-intro">
+          <h2 id="loginTitle">Seller Sign In</h2>
+          <p id="loginSubtitle">Enter your registered email and password to access your seller dashboard.</p>
+        </div>
+
+        <form id="authForm" class="auth-form">
+          <label id="authEmailLabel">Email Address
+            <input name="email" id="authEmailInput" type="email" required placeholder="you@example.com" autocomplete="username" />
+          </label>
+          <label>Password
+            <input name="password" id="authPasswordInput" type="password" required placeholder="Enter your password" autocomplete="current-password" />
+          </label>
+          <button class="btn btn-primary btn-auth" type="submit" id="loginSubmitBtn">
+            <span class="btn-text">Sign In as Seller</span>
+          </button>
+          <p id="authMessage" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-switch-prompt" id="registerSwitchPrompt">
+          <span>New to ScrapSense AI?</span>
+          <button type="button" class="link-switch-btn" id="goToRegisterBtn">Create a free account →</button>
+        </div>
+
+        <p class="admin-hint" id="adminHint" hidden>
+          🔒 Administrator access is restricted. Use pre-configured system credentials only.
+        </p>
+      </div>
+
+      <!-- 2. REGISTRATION FORM -->
+      <div class="auth-form-card" id="registerCard" hidden>
+        <div class="card-intro">
+          <h2 id="registerTitle">Create Seller Account</h2>
+          <p id="registerSubtitle">Register once to publish waste lots and receive verified buyer offers.</p>
+        </div>
+
+        <form id="registrationForm" class="auth-form">
+          <label>Full Name
+            <input name="name" id="regNameInput" required placeholder="e.g. Ramesh Kumar / EcoRecycle" />
+          </label>
+          <label>Email Address
+            <input name="email" id="regEmailInput" type="email" required placeholder="you@example.com" />
+          </label>
+          <label>Password (minimum 6 characters)
+            <input name="password" id="regPasswordInput" type="password" minlength="6" required placeholder="Create your password" />
+          </label>
+          <button class="btn btn-secondary btn-auth" type="submit" id="registerSubmitBtn">
+            <span class="btn-text">Create Account</span>
+          </button>
+          <p id="registrationMessage" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-switch-prompt">
+          <span>Already have an account?</span>
+          <button type="button" class="link-switch-btn" id="goToLoginBtn">Sign in to your account →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="site-header">
+    <div class="brand">
+      <div class="brand-icon-wrap">⚙️</div>
+      <div class="brand-text">
+        <div class="brand-name-row">
+          <span class="brand-name">ScrapSense<span class="brand-ai">AI</span></span>
+          <span class="brand-version-badge">PRO</span>
+        </div>
+        <span class="brand-sub">Electronic &amp; Scrap Intelligence</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Phone App QR Trigger Button -->
+      <button class="btn-phone-connect" id="openPhoneModalBtn" type="button" title="Open on Mobile Phone">
+        <span class="phone-icon">📱</span>
+        <span class="phone-text">Mobile View</span>
+      </button>
+
+      <!-- Realtime Backend Health Pill -->
+      <div class="server-status" id="serverStatus" title="ScrapSense Backend Status · Click to Reconnect">
+        <span class="status-dot online"></span>
+        <span id="serverStatusText">Connecting...</span>
+      </div>
+
+      <!-- User Profile & Logout Widget (Single unified widget) -->
+      <div class="user-session-widget" id="userSessionWidget" hidden>
+        <div class="user-profile-badge" id="userProfileBadge" title="Active Session">
+          <span class="user-avatar-icon" id="userAvatarIcon">👤</span>
+          <div class="user-info-text">
+            <span class="user-role-tag" id="userRoleTag">SELLER</span>
+            <span class="user-display-name" id="userDisplayName">Active User</span>
+          </div>
+        </div>
+        <button id="headerLogoutBtn" class="btn-header-logout" type="button" title="Sign Out">
+          <span class="logout-icon">🚪</span>
+          <span class="logout-text">Logout</span>
+        </button>
+      </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="hamburger-btn" id="hamburgerBtn" type="button" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+
+      <!-- Site Navigation Drawer for Mobile/Guest -->
+      <nav class="site-nav" id="siteNav">
+        <a href="#detect" class="nav-link-detect">Prices &amp; Scan</a>
+        <a href="#marketplace" class="nav-link-market">Marketplace</a>
+        <a href="#orders" class="nav-link-orders">Orders</a>
+        <a href="#history" class="nav-link-history">History</a>
+        <a href="#categories" class="nav-link-categories">Prices</a>
+        <a href="#how" class="nav-link-how">Guide</a>
+        <button id="logoutBtn" class="logout-btn mobile-only-logout" type="button">🚪 Log out</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= SELLER DASHBOARD SEGMENTED TABS ================= -->
+  <div class="seller-nav-bar" id="sellerNavBar">
+    <div class="seller-nav-container">
+      <button type="button" class="seller-tab-btn active" data-seller-tab="scanner">
+        <span class="tab-icon">📊</span>
+        <span class="tab-text">Spot Rates &amp; Scanner</span>
+      </button>
+      <button type="button" class="seller-tab-btn" data-seller-tab="post-lot">
+        <span class="tab-icon">📦</span>
+        <span class="tab-text">Post Scrap Lot</span>
+      </button>
+      <button type="button" class="seller-tab-btn" data-seller-tab="orders">
+        <span class="tab-icon">🛒</span>
+        <span class="tab-text">Orders &amp; Payouts</span>
+      </button>
+      <button type="button" class="seller-tab-btn" data-seller-tab="history">
+        <span class="tab-icon">📈</span>
+        <span class="tab-text">Scrap Log History</span>
+      </button>
+      <button type="button" class="seller-tab-btn" data-seller-tab="guide">
+        <span class="tab-icon">💡</span>
+        <span class="tab-text">Recycling Guide</span>
+      </button>
+      <button type="button" class="seller-tab-btn seller-tab-chatbot" data-seller-tab="chatbot" id="tabChatbotBtn">
+        <span class="tab-icon">🤖</span>
+        <span class="tab-text">AI Copilot</span>
+      </button>
+      <button type="button" class="seller-tab-btn seller-tab-logout" id="sellerLogoutBtn" title="Log Out from Seller Dashboard">
+        <span class="tab-icon">🚪</span>
+        <span class="tab-text">Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= BUYER DASHBOARD SEGMENTED TABS ================= -->
+  <div class="buyer-nav-bar" id="buyerNavBar" hidden>
+    <div class="seller-nav-container">
+      <button type="button" class="buyer-tab-btn active" data-buyer-tab="marketplace">
+        <span class="tab-icon">🏪</span>
+        <span class="tab-text">Browse Marketplace</span>
+      </button>
+      <button type="button" class="buyer-tab-btn" data-buyer-tab="add-item">
+        <span class="tab-icon">➕</span>
+        <span class="tab-text">Add Product / Price Offer</span>
+      </button>
+      <button type="button" class="buyer-tab-btn" data-buyer-tab="my-requests">
+        <span class="tab-icon">📋</span>
+        <span class="tab-text">My Requests</span>
+      </button>
+      <button type="button" class="buyer-tab-btn buyer-tab-chatbot" data-buyer-tab="chatbot" id="buyerTabChatbotBtn">
+        <span class="tab-icon">🤖</span>
+        <span class="tab-text">AI Copilot</span>
+      </button>
+      <button type="button" class="buyer-tab-btn buyer-tab-logout" id="buyerLogoutBtn" title="Log Out from Buyer Dashboard">
+        <span class="tab-icon">🚪</span>
+        <span class="tab-text">Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ================= 1. HERO & CAMERA SCANNER (SHOWN FIRST) ================= -->
+    <section class="hero seller-view-section" id="detect" data-seller-view="scanner" hidden>
+
+      <!-- ================= ELECTRONIC COMPONENTS & E-WASTE SCANNER ================= -->
+      <div class="electronic-scanner-wrapper" id="electronicScannerWrapper">
+      <div class="hero-copy">
+        <div class="badge-pill">
+          <span class="pulse-icon">●</span> Electronic Components &amp; E-Waste AI Vision
+        </div>
+        <h1>Scan Components.<br><span class="accent">Unlock Scrap &amp; Resale Value.</span></h1>
+        <p class="hero-sub">
+          Point your live camera at microcontrollers, PCBs, IC chips, copper coils, capacitors, transistors, 
+          resistors, batteries, or electronic waste for instant AI classification and real-time mandi valuation.
+        </p>
+
+        <!-- Quick sample buttons for Electronic Components ONLY -->
+        <div class="quick-samples">
+          <div class="sample-head">
+            <span class="sample-label">⚡ Test Electronic Component AI Vision (Click to simulate):</span>
+            <span class="sample-badge">100% Hardware &amp; Silicon</span>
+          </div>
+          <div class="sample-chips">
+            <button class="sample-chip" data-sample="arduino">🤖 Arduino / ESP32</button>
+            <button class="sample-chip" data-sample="motherboard">🔌 Motherboard PCB</button>
+            <button class="sample-chip" data-sample="ic_chip">🔲 IC Microchip</button>
+            <button class="sample-chip" data-sample="cpu">🧠 CPU Processor</button>
+            <button class="sample-chip" data-sample="gpu">🎮 Graphics Card</button>
+            <button class="sample-chip" data-sample="transformer">⚡ Transformer</button>
+            <button class="sample-chip" data-sample="capacitor">🔋 Capacitor</button>
+            <button class="sample-chip" data-sample="resistor">🎛️ Resistors/SMD</button>
+            <button class="sample-chip" data-sample="inductor">🧲 Inductor Toroid</button>
+            <button class="sample-chip" data-sample="solder">🪙 Solder Scrap</button>
+            <button class="sample-chip" data-sample="copper">🔶 Copper Wire</button>
+            <button class="sample-chip" data-sample="battery">🔋 Lead Battery</button>
+            <button class="sample-chip" data-sample="ev_battery">⚡ EV Battery</button>
+            <button class="sample-chip" data-sample="computer">💻 PC / Laptop</button>
+            <button class="sample-chip" data-sample="mobile">📱 Mobile Phone</button>
+            <button class="sample-chip" data-sample="tv">📺 TV / Monitor</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scan & Upload Box -->
+      <div class="scan-panel">
+        <!-- AI Vision Engine Switcher -->
+        <div class="ai-engine-selector-bar" id="aiEngineSelectorBar">
+          <span class="ai-engine-label">🧠 Vision Model:</span>
+          <div class="ai-engine-options">
+            <button type="button" class="ai-engine-btn active" data-engine="clip" title="Zero-Shot Local CLIP ViT">⚡ Fast CLIP</button>
+            <button type="button" class="ai-engine-btn" data-engine="gemini" title="Google Astra / Gemini 1.5 Flash Vision">🔵 Astra / Gemini</button>
+            <button type="button" class="ai-engine-btn" data-engine="openai" title="OpenAI GPT-4o Vision">🟢 GPT-4o</button>
+            <button type="button" class="ai-engine-btn" data-engine="claude" title="Anthropic Claude 3.5 Sonnet Vision">🟣 Claude 3.5</button>
+          </div>
+        </div>
+
+        <div class="scan-tabs">
+          <button class="scan-tab active" data-mode="camera">📷 Live Camera Scanner</button>
+          <button class="scan-tab" data-mode="upload">📁 Upload File / Photo</button>
+        </div>
+
+        <div class="scan-stage">
+          <!-- Live Camera Stream Box (Default on Seller Page) -->
+          <div class="camera-box" id="cameraBox">
+            <div class="video-wrapper">
+              <video id="video" autoplay playsinline></video>
+              <canvas id="canvas" hidden></canvas>
+              <div class="camera-overlay-target">
+                <div class="scanner-laser"></div>
+                <div class="scanner-corner tl"></div>
+                <div class="scanner-corner tr"></div>
+                <div class="scanner-corner bl"></div>
+                <div class="scanner-corner br"></div>
+                <span class="scanner-label">TARGET ELECTRONIC COMPONENT</span>
+              </div>
+            </div>
+            <div class="camera-controls">
+              <button id="startCamBtn" class="btn btn-secondary">▶ Start Live Camera</button>
+              <button id="switchCamBtn" class="btn btn-secondary" hidden title="Switch Camera">🔄 Flip Cam</button>
+              <button id="captureBtn" class="btn btn-primary" hidden>📸 Capture Photo</button>
+              <button id="retakeBtn" class="btn btn-secondary" hidden>↺ Retake Photo</button>
+            </div>
+          </div>
+
+          <!-- Upload Dropzone (Hidden when camera is active) -->
+          <div class="dropzone" id="dropzone" hidden>
+            <input type="file" id="fileInput" accept="image/*" hidden />
+            <div class="dropzone-hint" id="dropzoneHint">
+              <div class="dz-icon-circle">
+                <span class="dz-icon">⤒</span>
+              </div>
+              <p class="dz-title">Drag &amp; drop component photo here</p>
+              <p class="dz-sub">or <button type="button" id="browseBtn" class="link-btn">browse photos</button></p>
+              <span class="dz-format">Supports JPG, PNG, WEBP, HEIC</span>
+            </div>
+            <img id="previewImg" class="preview-img" alt="Scrap Preview" hidden />
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button id="analyzeBtn" class="btn btn-primary btn-analyze" disabled>
+            <span class="btn-text">⚡ Analyze Item with AI</span>
+            <span class="btn-spinner" hidden></span>
+          </button>
+        </div>
+        <p id="statusMsg" class="status-msg">Click 'Start Live Camera' or select a sample electronic item above</p>
+      </div> <!-- end .scan-panel -->
+      </div> <!-- end #electronicScannerWrapper -->
+
+      <!-- ================= NON-CAMERA CATEGORY VALUATION HUB ================= -->
+      <div class="category-valuation-hub" id="categoryValuationHub">
+        <!-- Camera restriction notification banner -->
+        <div class="camera-scope-banner">
+          <div class="csb-left">
+            <span class="csb-icon">📷</span>
+            <div class="csb-text">
+              <strong>AI Camera Scanner is Dedicated to Electronic Components &amp; E-Waste</strong>
+              <p>For <span id="currentCategoryName">Metal Scrap</span>, evaluate by weight below using real Indian Mandi rates, calculate instant payouts, or post your lot for certified buyers.</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="switchToCameraBtn">
+            ⚡ Switch to Electronic Camera
+          </button>
+        </div>
+
+        <!-- Selected Category Items Grid -->
+        <div class="category-hub-head">
+          <div>
+            <h3 id="categoryHubTitle">🔩 Metal Scrap — Current Market Spot Rates</h3>
+            <p id="categoryHubSubtitle" class="hub-subtitle">Click any item below to calculate weight-based cash payout or post for sale.</p>
+          </div>
+          <span class="hub-city-indicator" id="hubCityIndicator">📍 Indian Mandi Benchmark</span>
+        </div>
+
+        <div class="category-cards-grid" id="categoryCardsGrid">
+          <!-- Populated dynamically with item cards for the selected category -->
+        </div>
+
+        <!-- Quick Weight Payout Calculator for this Category -->
+        <div class="category-calc-box">
+          <div class="calc-box-head">
+            <span class="calc-icon">🧮</span>
+            <div>
+              <h4>Instant Scrap Mandi Valuation Calculator</h4>
+              <p>Select material and enter weight to see accurate live payout</p>
+            </div>
+          </div>
+
+          <div class="cat-calc-grid">
+            <div class="cat-calc-inputs">
+              <label>Selected Material / Item:
+                <select id="catCalcItemSelect" class="form-select"></select>
+              </label>
+
+              <div class="form-row-calc">
+                <label>Weight / Quantity:
+                  <input type="number" id="catCalcQty" min="0.5" step="0.5" value="10" />
+                </label>
+                <div class="calc-unit-display">
+                  <span>Unit:</span>
+                  <strong id="catCalcUnitLabel" class="cat-unit-badge">kg</strong>
+                </div>
+              </div>
+
+              <div class="cat-calc-rate-preview">
+                <span>Current Mandi Spot Rate:</span>
+                <strong id="catCalcRateText">₹28 / kg</strong>
+              </div>
+            </div>
+
+            <div class="cat-calc-payout">
+              <div class="cat-payout-label">Estimated Seller Payout</div>
+              <div class="cat-payout-value" id="catCalcTotalPayout">₹280</div>
+              <div class="cat-payout-band">
+                <span>Min: <b id="catCalcMinPayout">₹260</b></span>
+                <span>•</span>
+                <span>Max: <b id="catCalcMaxPayout">₹320</b></span>
+              </div>
+              <button type="button" class="btn btn-primary btn-block" id="catCalcSellBtn">
+                📦 Post This Lot for Sale →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div> <!-- end #categoryValuationHub -->
+
+    </section> <!-- end #detect (hero) -->
+
+    <!-- ================= RESULT / DIGITAL RECEIPT ================= -->
+    <section class="result-wrap seller-view-section" id="resultWrap" data-seller-view="scanner" hidden>
+      <div class="receipt-container">
+        
+        <div class="receipt" id="receipt">
+          <div class="receipt-notch left"></div>
+          <div class="receipt-notch right"></div>
+
+          <!-- Header -->
+          <div class="receipt-head">
+            <div class="receipt-icon-box">
+              <span class="receipt-icon" id="rIcon">♻️</span>
+            </div>
+            <div class="receipt-title-box">
+              <span class="receipt-tag" id="rTag">VALUATION &amp; RECYCLING SLIP</span>
+              <h2 id="rName">Copper Wire Scrap</h2>
+              <span class="receipt-category" id="rCategory">Non-Ferrous Metal</span>
+            </div>
+            <div class="confidence-badge">
+              <span class="conf-score" id="rConfidence">96.4%</span>
+              <span class="conf-label">AI Match</span>
+            </div>
+          </div>
+
+          <div class="receipt-divider"></div>
+
+          <!-- Specifications Table -->
+          <dl class="receipt-specs">
+            <div class="spec-item">
+              <dt>Classification</dt>
+              <dd id="rType">Recyclable - High Value</dd>
+            </div>
+            <div class="spec-item">
+              <dt>Current Market Rate</dt>
+              <dd id="rPrice" class="highlight-brass">₹480 - ₹680 / kg</dd>
+            </div>
+            <div class="spec-item">
+              <dt>Admin Routing</dt>
+              <dd id="rSellTo">Electrical scrap dealer / Wire refinery</dd>
+            </div>
+          </dl>
+
+          <!-- Interactive Calculator -->
+          <div class="calc-section">
+            <div class="calc-header">
+              <span class="calc-title">🧮 Interactive Resale Value Calculator</span>
+              <span class="calc-unit" id="calcUnitLabel">Quantity (kg)</span>
+            </div>
+            <div class="calc-controls">
+              <div class="calc-input-row">
+                <input type="number" id="calcQty" min="0.1" step="0.5" value="5" class="calc-input" />
+                <span class="calc-unit-tag" id="calcUnitTag">kg</span>
+              </div>
+              <input type="range" id="calcSlider" min="0.5" max="50" step="0.5" value="5" class="calc-slider" />
+            </div>
+
+            <div class="calc-payout-box">
+              <div class="payout-col min">
+                <span class="payout-label">Min Est.</span>
+                <span class="payout-val" id="payoutMin">₹2,400</span>
+              </div>
+              <div class="payout-col avg featured">
+                <span class="payout-label">Expected Average</span>
+                <span class="payout-val" id="payoutAvg">₹2,900</span>
+              </div>
+              <div class="payout-col max">
+                <span class="payout-label">Max Est.</span>
+                <span class="payout-val" id="payoutMax">₹3,400</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eco Impact Box -->
+          <div class="eco-box" id="ecoBox">
+            <div class="eco-head">
+              <span class="eco-icon">🌱</span>
+              <div>
+                <strong>Eco-Impact &amp; Circular Recovery</strong>
+                <p id="ecoBadgeText" class="eco-sub">95% energy saved over virgin mining</p>
+              </div>
+            </div>
+            <div class="eco-metrics">
+              <div class="eco-metric">
+                <span class="eco-num" id="ecoCo2">4.5 kg</span>
+                <span class="eco-desc">CO₂ Emissions Diverted</span>
+              </div>
+              <div class="eco-metric">
+                <span class="eco-num" id="ecoEnergy">85%</span>
+                <span class="eco-desc">Energy Conserved</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcycling & Reuse Tip -->
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <div class="tip-content">
+              <strong>Reuse &amp; Value Tip:</strong>
+              <p id="rTip">Mechanically strip the insulation rather than burning it to avoid toxic gases and receive top scrap value.</p>
+            </div>
+          </div>
+
+          <div class="receipt-divider dashed"></div>
+
+          <!-- Alternative AI Predictions -->
+          <div class="alt-predictions">
+            <p class="alt-title">Alternative Classifier Matches</p>
+            <div class="alt-bars" id="rAltList"></div>
+          </div>
+
+          <!-- Receipt Footer Actions -->
+          <div class="receipt-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="printReceiptBtn">
+              🖨️ Print Scrap Slip
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="saveHistoryBtn">
+              💾 Save to Log
+            </button>
+          </div>
+
+          <p class="receipt-disclaimer">
+            *Resale figures are indicative Indian scrap averages for demonstration. Physical prices depend on purity, batch weight, and local market rate.
+          </p>
+        </div> <!-- end #receipt -->
+
+      </div> <!-- end .receipt-container -->
+    </section> <!-- end #resultWrap -->
+
+    <!-- ================= 2. LIVE SCRAP & E-WASTE PRICE BOARD & VALUATION ================= -->
+    <section class="categories-section seller-view-section" id="categories" data-seller-view="scanner">
+
+      <!-- Single Unified Top Location, Search & Camera Scanner Trigger Row -->
+      <div class="mandi-topbar">
+        <div class="city-selector-pill">
+          <span class="city-pin">📍</span>
+          <select id="mandiCitySelect" aria-label="Select City for Mandi Rates">
+            <option value="Pune" selected>Pune</option>
+            <option value="Mumbai">Mumbai</option>
+            <option value="Delhi NCR">Delhi NCR</option>
+            <option value="Bengaluru">Bengaluru</option>
+            <option value="Hyderabad">Hyderabad</option>
+            <option value="Jaipur">Jaipur</option>
+            <option value="Ahmedabad">Ahmedabad</option>
+            <option value="Chennai">Chennai</option>
+            <option value="Kolkata">Kolkata</option>
+          </select>
+          <span class="city-arrow">▾</span>
+        </div>
+
+        <div class="mandi-search-pill">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="categorySearch" placeholder="Search any scrap materials, components..." autocomplete="off" />
+          <button type="button" id="clearSearchBtn" class="clear-search-btn" hidden>✕</button>
+        </div>
+
+        <button type="button" class="btn-topbar-scanner" id="topbarScannerBtn" title="Launch AI Camera Vision for Electronic Scrap">
+          <span class="btn-scanner-icon">⚡</span>
+          <span>AI Camera Scanner</span>
+        </button>
+      </div>
+
+      <!-- Section heading with count + city loading bar -->
+      <div class="mandi-section-head">
+        <div>
+          <div class="mandi-section-title" id="mandiBoardTitle">📊 Live Scrap &amp; E-Waste Price Board</div>
+          <div class="mandi-section-subtitle" id="mandiBoardSubtitle">Real-time mandi spot rates · Updated for selected city</div>
+        </div>
+        <span class="mandi-count-badge" id="mandiCountBadge">0 items</span>
+      </div>
+      <div class="city-loading-bar" id="cityLoadingBar"></div>
+
+      <!-- Single Unified Category Filter Pills -->
+      <div class="category-pills" id="categoryPills">
+        <button type="button" class="cat-pill active" data-cat-filter="all" data-cat="All Categories">
+          <span class="cp-icon">🌐</span> All Materials
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="E-Waste" data-cat="E-Waste">
+          <span class="cp-icon">⚡</span> Electronic &amp; E-Waste
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="Metal Scrap" data-cat="Metal Scrap">
+          <span class="cp-icon">🔩</span> Metal Scrap
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="Plastic Waste" data-cat="Plastic Waste">
+          <span class="cp-icon">🧴</span> Plastic Waste
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="Paper &amp; Cardboard" data-cat="Paper &amp; Cardboard">
+          <span class="cp-icon">📦</span> Paper &amp; Cardboard
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="Glass &amp; Rubber" data-cat="Glass &amp; Rubber">
+          <span class="cp-icon">🛞</span> Glass &amp; Rubber
+        </button>
+        <button type="button" class="cat-pill" data-cat-filter="Industrial Scrap" data-cat="Industrial Scrap">
+          <span class="cp-icon">🏭</span> Industrial Scrap
+        </button>
+      </div>
+
+      <!-- Dynamic Mandi Cards Grid -->
+      <div class="mandi-grid" id="categoryGrid">
+        <!-- populated dynamically by script.js -->
+      </div>
+    </section>
+
+    <!-- ================= 3. SELLER POST LOT (ACCESSIBLE VIA TOP TAB) ================= -->
+    <section class="seller-lot-section seller-view-section" id="sellerPostLot" data-seller-view="post-lot" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">SELLER ACTION</span>
+          <h2>📦 Submit Scrap Lot for Admin Verification</h2>
+          <p class="section-sub">Your personal identity and phone number remain completely private. Admin verifies your lot before displaying it to certified buyers.</p>
+        </div>
+      </div>
+
+      <div class="seller-lot-container">
+        <form id="listingForm" class="listing-form">
+          <div class="form-row">
+            <label>Item Name / Component
+              <input name="item" id="lotItemInput" required placeholder="e.g. Copper Wire / Motherboard PCBs / Arduino" />
+            </label>
+            <label>Category
+              <select name="category" id="lotCategorySelect" required>
+                <option value="E-Waste">⚡ E-Waste &amp; Electronic Components</option>
+                <option value="Metal Scrap">🔩 Metal Scrap</option>
+                <option value="Plastic Waste">🧴 Plastic Waste</option>
+                <option value="Paper &amp; Cardboard">📦 Paper &amp; Cardboard</option>
+                <option value="Glass &amp; Rubber">🛞 Glass &amp; Rubber</option>
+                <option value="Industrial Scrap">🏭 Industrial Scrap</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>Available Quantity
+              <input name="quantity" type="number" min="0.1" step="0.1" value="5" required />
+            </label>
+            <label>Unit
+              <select name="unit" id="lotUnitSelect">
+                <option value="kg">kg</option>
+                <option value="unit">unit / piece</option>
+                <option value="pack">pack</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>State
+              <select name="state" id="listingState" required>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Gujarat">Gujarat</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+              </select>
+            </label>
+            <label>City
+              <select name="city" id="listingCity" required>
+                <option value="Jaipur">Jaipur</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>Contact Number (WhatsApp)
+              <input type="tel" name="seller_phone" id="lotPhoneInput" placeholder="e.g. +91 98765 43210" />
+            </label>
+            <label>Detailed Pickup Address
+              <div style="display: flex; gap: 8px;">
+                <input type="text" name="address" id="lotAddressInput" placeholder="e.g. 12/4 Industrial Area, Phase 2" style="flex: 1;" />
+                <button type="button" class="btn btn-secondary btn-sm" id="autoDetectLocationBtn" title="Auto-detect my location" style="padding: 0 10px;">📍 Detect</button>
+              </div>
+            </label>
+          </div>
+
+          <label>Attach Photos/Documents
+            <input type="file" name="file_upload" id="lotFileInput" accept="image/*,.pdf,.doc,.docx" multiple style="display: block; margin-top: 5px;" />
+          </label>
+
+          <label>Seller Note &amp; Lot Condition
+            <textarea name="note" rows="3" placeholder="Describe component condition, purity, quantity, packaging, or pickup availability..."></textarea>
+          </label>
+
+          <button class="btn btn-primary btn-submit-lot" type="submit">Publish Lot for Verification</button>
+          <p id="listingMessage" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <!-- Seller's Published Lots Management Table -->
+        <div class="seller-my-lots-card" id="sellerMyLotsCard">
+          <div class="sml-header">
+            <div class="sml-title-group">
+              <span class="sml-icon">📦</span>
+              <div>
+                <h3>My Published Scrap Lots</h3>
+                <p class="sml-sub">Manage, update pricing, or edit details of your listed scrap inventory. Visible exclusively on your seller dashboard.</p>
+              </div>
+            </div>
+            <span class="sml-count-badge" id="sellerMyLotsCount">0 Lots</span>
+          </div>
+          <div class="sml-table-responsive">
+            <table class="sml-table" id="sellerMyLotsTable">
+              <thead>
+                <tr>
+                  <th>Item &amp; Category</th>
+                  <th>Quantity</th>
+                  <th>Price Range</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="sellerMyLotsTbody">
+                <tr>
+                  <td colspan="6" class="empty-lots-cell">No lots published yet. Fill the form above to submit your first lot.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. MARKETPLACE (SHOWN TO ALL - ROLE-FILTERED) ================= -->
+    <section class="market-section" id="marketplace">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">ADMIN-MEDIATED LOTS</span>
+          <h2>Controlled Marketplace</h2>
+          <p class="section-sub">Browse verified seller lots. Seller identity is always private. All purchase requests go through Admin approval.</p>
+        </div>
+        <div class="market-tools">
+          <select id="cityFilter" class="admin-select" aria-label="Filter listings by city">
+            <option value="all">All cities</option>
+          </select>
+          <span class="market-count" id="marketCount">0 active lots</span>
+        </div>
+      </div>
+
+      <!-- Marketplace Search & Filter Bar -->
+      <div class="market-search-bar">
+        <div class="market-search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="marketSearchInput" placeholder="Search lots by name, category..." autocomplete="off" />
+        </div>
+        <div class="market-filter-pills">
+          <button type="button" class="market-filter-pill active" data-market-filter="all">All</button>
+          <button type="button" class="market-filter-pill" data-market-filter="E-Waste">⚡ E-Waste</button>
+          <button type="button" class="market-filter-pill" data-market-filter="Metal Scrap">🔩 Metal Scrap</button>
+          <button type="button" class="market-filter-pill" data-market-filter="Plastic Waste">🧴 Plastic Waste</button>
+          <button type="button" class="market-filter-pill" data-market-filter="Paper &amp; Cardboard">📦 Paper &amp; Cardboard</button>
+          <button type="button" class="market-filter-pill" data-market-filter="Glass &amp; Rubber">🛞 Glass &amp; Rubber</button>
+          <button type="button" class="market-filter-pill" data-market-filter="Industrial Scrap">🏭 Industrial Scrap</button>
+        </div>
+        <select id="marketSortSelect" class="market-sort-select">
+          <option value="newest">Sort: Newest First</option>
+          <option value="oldest">Sort: Oldest First</option>
+          <option value="price-low">Sort: Price Low → High</option>
+          <option value="price-high">Sort: Price High → Low</option>
+          <option value="qty-high">Sort: Quantity High → Low</option>
+        </select>
+        <button type="button" class="btn btn-primary btn-market-add-prod" id="marketAddProductBtn" title="Post Buy Requirement (RFQ) to certified sellers">
+          <span>📋 Post Buy Requirement (RFQ)</span>
+        </button>
+      </div>
+
+      <div class="market-grid" id="marketGrid"><div class="empty-market">No seller lots published yet.</div></div>
+    </section>
+
+    <!-- ================= BUYER: ADD ITEM / PROCUREMENT RFQ ================= -->
+    <section class="buyer-add-section" id="buyerAddItem" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">ENTERPRISE BUYER PROCUREMENT DESK</span>
+          <h2>📋 Post Buy Requirement (RFQ)</h2>
+          <p class="section-sub">Broadcast your scrap procurement requirement to certified sellers. Admin reviews and matches your demand with verified bulk lots.</p>
+        </div>
+      </div>
+      <div class="seller-lot-container">
+        <form id="buyerItemForm" class="listing-form buyer-procurement-form">
+          <div class="form-row">
+            <label>Material / Scrap Specification
+              <input name="item" id="buyerItemInput" required placeholder="e.g. Clean HMS-1 Iron / Shredded PET Flakes / Server Motherboards" />
+            </label>
+            <label>Scrap Material Sector
+              <select name="category" id="buyerCategorySelect" required>
+                <option value="E-Waste">⚡ Electronic Components &amp; E-Waste</option>
+                <option value="Metal Scrap">🔩 Metal Scrap</option>
+                <option value="Plastic Waste">🧴 Plastic Waste</option>
+                <option value="Paper &amp; Cardboard">📦 Paper &amp; Cardboard</option>
+                <option value="Glass &amp; Rubber">🛞 Glass &amp; Rubber</option>
+                <option value="Industrial Scrap">🏭 Industrial Scrap</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Required Quantity
+              <input name="quantity" type="number" min="0.1" step="0.1" value="100" required />
+            </label>
+            <label>Unit of Measurement
+              <select name="unit" id="buyerUnitSelect">
+                <option value="kg">kg (Kilograms)</option>
+                <option value="MT">MT (Metric Tons)</option>
+                <option value="unit">unit / piece</option>
+                <option value="pack">pack / bale</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Target Buying Price (₹ per unit)
+              <input name="offered_price" type="number" min="0.01" step="0.01" required placeholder="Target price in ₹" />
+            </label>
+            <label>Preferred Settlement Term
+              <select name="payment">
+                <option>Bank RTGS / NEFT</option>
+                <option>UPI</option>
+                <option>Letter of Credit (LC)</option>
+                <option>Pay on Weighbridge Delivery</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Delivery Destination / Plant Location
+              <input name="address" required placeholder="City / Industrial Area / State" />
+            </label>
+            <label>Procurement Urgency
+              <select name="urgency">
+                <option value="immediate">Immediate (1-3 Days)</option>
+                <option value="weekly" selected>Standard (Within 7 Days)</option>
+                <option value="monthly">Monthly Supply Contract</option>
+              </select>
+            </label>
+          </div>
+          <label>Technical Purity &amp; Packaging Requirements
+            <textarea name="note" rows="2" placeholder="Specify acceptable contamination %, packaging type (baled/loose/drummed), or delivery terms..."></textarea>
+          </label>
+          <button class="btn btn-primary btn-submit-lot" type="submit">📢 Submit Procurement RFQ to Admin Desk</button>
+          <p id="buyerItemMessage" class="form-message" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= BUYER: MY REQUESTS ================= -->
+    <section class="orders-section" id="buyerRequests" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">MY PURCHASE REQUESTS</span>
+          <h2>📋 My Requests &amp; Status</h2>
+          <p class="section-sub">Track all your purchase requests and approval status from admin.</p>
+        </div>
+      </div>
+      <div id="buyerRequestsList" class="orders-list"><div class="empty-market">No requests submitted yet.</div></div>
+    </section>
+
+    <!-- ================= 5. SELLER ORDERS & PAYMENT DESK ================= -->
+    <section class="orders-section seller-view-section" id="orders" data-seller-view="orders" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">PAYMENT &amp; TRANSACTION DESK</span>
+          <h2>🛒 Orders, Approvals &amp; Payments</h2>
+          <p class="section-sub">Track buyer inquiries, admin approvals, and download payment receipts for your completed lots.</p>
+        </div>
+      </div>
+      <div id="ordersList" class="orders-list"><div class="empty-market">No orders yet.</div></div>
+    </section>
+
+    <!-- ================= 6. SCAN HISTORY & STATS ================= -->
+    <section class="history-section seller-view-section" id="history" data-seller-view="history" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">PERSONAL DASHBOARD</span>
+          <h2>📊 Your Scrap &amp; Resale Log</h2>
+          <p class="section-sub">Track all items you have analyzed and see your cumulative unlocked value.</p>
+        </div>
+        <button id="clearHistoryBtn" class="btn btn-secondary btn-sm">Clear History</button>
+      </div>
+
+      <div class="stats-cards">
+        <div class="stat-card">
+          <span class="stat-icon">📦</span>
+          <div class="stat-info">
+            <span class="stat-number" id="statItemCount">0</span>
+            <span class="stat-label">Items Analyzed</span>
+          </div>
+        </div>
+        <div class="stat-card highlight">
+          <span class="stat-icon">💰</span>
+          <div class="stat-info">
+            <span class="stat-number" id="statTotalValue">₹0</span>
+            <span class="stat-label">Total Scrap Value Unlocked</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🌍</span>
+          <div class="stat-info">
+            <span class="stat-number" id="statCo2Saved">0 kg</span>
+            <span class="stat-label">Est. CO₂ Offset</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-table-wrap">
+        <table class="history-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Confidence</th>
+              <th>Qty / Weight</th>
+              <th>Est. Value</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="historyTbody">
+            <tr>
+              <td colspan="7" class="empty-row">No items scanned yet. Scan an item above to log it!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 7. HOW IT WORKS (VIVA & RECYCLING GUIDE) ================= -->
+    <section class="how-section seller-view-section" id="how" data-seller-view="guide" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">ENGINEERING &amp; CIRCULAR METHODOLOGY</span>
+          <h2>💡 How ScrapSense AI Works</h2>
+          <p class="section-sub">Architected for real-world electronic component and scrap valuation with zero-shot computer vision.</p>
+        </div>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-badge">01</div>
+          <h3>Multimodal Vision AI</h3>
+          <p>
+            Unlike traditional YOLO models bound to 80 generic objects, ScrapSense uses OpenAI's CLIP 
+            vision-language transformer to match visual embeddings against electronic and scrap concepts in zero-shot mode.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">02</div>
+          <h3>Dynamic Component Valuation</h3>
+          <p>
+            The backend extracts market price bands, material compositions (Gold pins, Silver solder, Copper windings, Aluminium), 
+            and computes real-time estimated payouts based on user weight and quantity inputs.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-badge">03</div>
+          <h3>Circular Economy Routing</h3>
+          <p>
+            The system guides users away from landfills by recommending licensed smelters, e-waste dismantlers, 
+            and upcycling strategies while computing ecological carbon offsets and minerals diverted.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8. ADMIN PANEL ================= -->
+    <section class="admin-section" id="admin">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">CONTROL ROOM</span>
+          <h2>🛡️ Admin Control Panel</h2>
+          <p class="section-sub">Review seller lots, approve buyer requests, issue payment logs to sellers, and manage rates. Buyer contact details are never shown to sellers.</p>
+        </div>
+        <div class="admin-summary" id="adminSummary">0 products · 0 buyers</div>
+      </div>
+
+      <!-- Admin Tab Navigation -->
+      <div class="admin-tab-bar">
+        <button type="button" class="admin-tab-btn active" data-admin-tab="approvals">🔔 Approval Requests</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="analytics">📊 Analytics Dashboard</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="rates">₹ Product Rates</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="buyers">⌂ Buyer Records</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="users">👥 Registered Users</button>
+        <button type="button" class="admin-tab-btn admin-tab-btn--logout" id="adminLogoutBtn" title="Log out from Administrator Control Panel">🚪 Log Out</button>
+      </div>
+
+      <!-- Admin Tab: Approvals -->
+      <div class="admin-tab-content" id="adminTabApprovals">
+        <div class="admin-list-block approval-block">
+          <div class="list-title">
+            <h3>🔔 Pending Seller Lot Approval Requests</h3>
+            <span id="requestCount">0</span>
+          </div>
+          <div id="adminRequests" class="admin-list"></div>
+        </div>
+        <div class="admin-list-block approval-block" style="margin-top:1.5rem">
+          <div class="list-title">
+            <h3>✅ Approved Lots (Payment Logs Sent)</h3>
+            <span id="approvedCount">0</span>
+          </div>
+          <div id="adminApproved" class="admin-list"></div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Product Rates -->
+      <div class="admin-tab-content" id="adminTabRates" hidden>
+        <div class="admin-grid">
+          <form class="admin-form" id="productForm">
+            <div class="form-heading"><span class="form-icon">₹</span><div><h3>Add / Update Product Pricing</h3><p>Rates appear in the seller catalog and buyer marketplace.</p></div></div>
+            <label>Product name<input name="name" required placeholder="e.g. Copper Wire" /></label>
+            <label>Category<input name="category" required placeholder="e.g. Non-Ferrous Metal" /></label>
+            <div class="form-row"><label>Unit<select name="unit"><option value="kg">kg</option><option value="unit">unit</option><option value="piece">piece</option></select></label><label>Icon<input name="icon" value="♻️" maxlength="4" /></label></div>
+            <div class="form-row"><label>Min rate (₹)<input name="min_price" type="number" min="0" step="0.5" required /></label><label>Max rate (₹)<input name="max_price" type="number" min="0" step="0.5" required /></label></div>
+            <label>Internal routing note<input name="sell_to" placeholder="Admin-only routing note" /></label>
+            <button class="btn btn-primary" type="submit">＋ Save product rate</button>
+          </form>
+          <div class="admin-list-block">
+            <div class="list-title"><h3>Active product rates</h3><span id="productCount">0</span></div>
+            <div id="adminProducts" class="admin-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Buyer Records -->
+      <div class="admin-tab-content" id="adminTabBuyers" hidden>
+        <div class="admin-grid">
+          <form class="admin-form" id="buyerForm">
+            <div class="form-heading"><span class="form-icon">⌂</span><div><h3>Add Private Buyer</h3><p>Only Admin can see or edit these verified buyer records.</p></div></div>
+            <label>Buyer / company name<input name="name" required placeholder="Verified Rajasthan buyer name" /></label>
+            <label>Accepts category<input name="category" required placeholder="e.g. Copper, Aluminium" /></label>
+            <div class="form-row"><label>State<input name="state" value="Rajasthan" required /></label><label>City<input name="city" required placeholder="Jaipur / Jodhpur" /></label></div>
+            <div class="form-row"><label>Phone<input name="phone" type="tel" required placeholder="Verified phone" /></label><label>Rate offer<input name="rate" placeholder="₹480–₹680 / kg" /></label></div>
+            <label>Google Maps / IndiaMART source URL<input name="source_url" type="url" required placeholder="https://..." /></label>
+            <button class="btn btn-primary" type="submit">＋ Save verified buyer</button>
+          </form>
+          <div class="admin-list-block">
+            <div class="list-title"><h3>Private buyer records</h3><span id="buyerCount">0</span></div>
+            <div id="adminBuyers" class="admin-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Registered Users -->
+      <div class="admin-tab-content" id="adminTabUsers" hidden>
+        <div class="admin-list-block approval-block">
+          <div class="list-title"><h3>Registered Seller &amp; Buyer Accounts</h3><span id="registeredUserCount">0</span></div>
+          <div id="registeredUsers" class="admin-list"><div class="empty-market">Connect backend to load accounts.</div></div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Analytics Dashboard -->
+      <div class="admin-tab-content" id="adminTabAnalytics" hidden>
+        <div class="analytics-dashboard">
+          <!-- Stat Cards Row -->
+          <div class="analytics-stat-cards">
+            <div class="analytics-stat-card" style="--accent:#22c55e">
+              <span class="analytics-stat-icon">👥</span>
+              <div class="analytics-stat-info">
+                <span class="analytics-stat-num" id="analyticsUsers">0</span>
+                <span class="analytics-stat-label">Total Users</span>
+              </div>
+            </div>
+            <div class="analytics-stat-card" style="--accent:#3b82f6">
+              <span class="analytics-stat-icon">📦</span>
+              <div class="analytics-stat-info">
+                <span class="analytics-stat-num" id="analyticsListings">0</span>
+                <span class="analytics-stat-label">Active Listings</span>
+              </div>
+            </div>
+            <div class="analytics-stat-card" style="--accent:#f59e0b">
+              <span class="analytics-stat-icon">🛒</span>
+              <div class="analytics-stat-info">
+                <span class="analytics-stat-num" id="analyticsOrders">0</span>
+                <span class="analytics-stat-label">Total Orders</span>
+              </div>
+            </div>
+            <div class="analytics-stat-card" style="--accent:#10b981">
+              <span class="analytics-stat-icon">💰</span>
+              <div class="analytics-stat-info">
+                <span class="analytics-stat-num" id="analyticsRevenue">₹0</span>
+                <span class="analytics-stat-label">Total Revenue</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="analytics-charts-grid">
+            <div class="analytics-chart-card">
+              <h3>📊 Listings by Category</h3>
+              <div class="chart-container"><canvas id="chartCategory"></canvas></div>
+            </div>
+            <div class="analytics-chart-card">
+              <h3>📈 Orders by Status</h3>
+              <div class="chart-container"><canvas id="chartOrders"></canvas></div>
+            </div>
+            <div class="analytics-chart-card analytics-chart-wide">
+              <h3>👥 User Distribution</h3>
+              <div class="chart-container"><canvas id="chartUsers"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Feed -->
+          <div class="analytics-activity-card">
+            <h3>🕐 Recent Activity</h3>
+            <div id="analyticsActivityFeed" class="analytics-activity-feed">
+              <div class="empty-market">No recent activity yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="brand">
+        <span class="brand-mark">⚙️</span>
+        <span class="brand-name">ScrapSense<span class="brand-ai">AI</span></span>
+      </div>
+      <p class="footer-copy">
+        &copy; 2026 ScrapSense AI · Final Year Engineering Project · Computer Science &amp; Engineering<br>
+        FastAPI · PyTorch Transformers (CLIP Vision) · Vanilla JavaScript &amp; CSS
+      </p>
+    </div>
+  </footer>
+
+  <!-- ================= 📱 MOBILE PHONE RUN MODAL ================= -->
+  <div class="modal-backdrop" id="phoneModal" hidden role="dialog" aria-modal="true" aria-labelledby="phoneModalTitle">
+    <div class="phone-modal-card">
+      <button class="modal-close" id="closePhoneModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      
+      <div class="phone-modal-head">
+        <span class="phone-modal-icon">📱</span>
+        <div>
+          <h2 id="phoneModalTitle">Run ScrapSense AI on Your Mobile Phone</h2>
+          <p class="phone-modal-sub">Scan live scrap items directly with your smartphone's camera!</p>
+        </div>
+      </div>
+
+      <div class="phone-modal-body">
+        <div class="phone-qr-box">
+          <div id="phoneQrCanvas" class="phone-qr-canvas"></div>
+          <span class="phone-qr-hint">Scan with Phone Camera or Google Lens</span>
+          <div id="phoneIpChips" class="phone-ip-chips" title="Click an IP address to switch QR code"></div>
+        </div>
+
+        <div class="phone-instructions">
+          <div class="step-line">
+            <span class="step-num">1</span>
+            <div>
+              <strong>Connect Phone to Same Wi-Fi / Hotspot:</strong>
+              <p>Mobile data band karein aur phone ko apne <b>Ghar ke Wi-Fi</b> ya <b>Laptop ke Hotspot</b> se connect karein.</p>
+            </div>
+          </div>
+
+          <div class="step-line">
+            <span class="step-num">2</span>
+            <div>
+              <strong>Open this Link in Chrome / Safari on Phone:</strong>
+              <div class="phone-url-copy-box">
+                <input type="text" id="phoneUrlInput" value="http://192.168.1.45:5500" />
+                <button type="button" id="copyPhoneUrlBtn" class="btn btn-secondary btn-sm">📋 Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-line">
+            <span class="step-num">3</span>
+            <div>
+              <strong>Allow Camera Access:</strong>
+              <p>Mobile Chrome/Safari me jab camera popup aaye to <b>Allow</b> dabayein.</p>
+            </div>
+          </div>
+
+          <div class="phone-troubleshoot-box">
+            <div class="tb-title">⚠️ "Site can't be reached" solution:</div>
+            <ul class="tb-list">
+              <li><b>Wi-Fi Check:</b> Phone and Laptop must be on the <u>exact same Wi-Fi</u> (Phone's Mobile 4G/5G data must be OFF).</li>
+              <li><b>Windows Firewall:</b> Double-click <code>allow_firewall.bat</code> in the project folder to unblock Port 5500 &amp; 8000.</li>
+              <li><b>Hotspot trick:</b> Turn ON Mobile Hotspot on your Laptop, then connect your phone to Laptop Hotspot for instant connection.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BUYER DECISION MODAL ================= -->
+  <div class="modal-backdrop" id="purchaseModal" hidden role="dialog" aria-modal="true" aria-labelledby="purchaseModalTitle">
+    <form class="purchase-modal" id="purchaseForm">
+      <button class="modal-close" id="closePurchase" type="button" title="Close dialog" aria-label="Close dialog">×</button>
+      
+      <div class="modal-header-compact">
+        <span class="section-kicker">BUYER APPROVAL DESK</span>
+        <h2 id="purchaseModalTitle">Review &amp; Approve Seller Lot</h2>
+        <div id="purchaseItem" class="purchase-item-banner"></div>
+      </div>
+
+      <!-- Buyer name is auto-filled from session - not shown to keep it private -->
+      <input type="hidden" name="name" id="buyerNameHidden" />
+
+      <div class="purchase-form-grid">
+        <label>Quantity Required
+          <input name="quantity" id="purchaseQtyInput" type="number" min="0.1" step="0.1" required placeholder="Quantity needed" />
+        </label>
+
+        <label>Your Decision
+          <select name="decision" id="buyerDecision">
+            <option value="accepted">✅ Approve &amp; Purchase Lot</option>
+            <option value="declined">❌ Decline this Lot</option>
+          </select>
+        </label>
+
+        <label>Offer Price (₹ per unit)
+          <input name="offered_price" id="buyerOfferPrice" type="number" min="0.01" step="0.01" required placeholder="Target rate" />
+        </label>
+
+        <label>Payment Method
+          <select name="payment" id="buyerPaymentMethod">
+            <option value="UPI">⚡ UPI / Instant Transfer</option>
+            <option value="Card">💳 Corporate Card</option>
+            <option value="Net banking">🏛️ Net Banking / RTGS</option>
+            <option value="Pay on pickup">🤝 Pay on Pickup</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="purchase-address-label">Pickup / Delivery Address
+        <textarea name="address" id="purchaseAddressInput" rows="2" required placeholder="Warehouse address, facility location, or delivery hub..."></textarea>
+      </label>
+
+      <div class="purchase-hint-pill">
+        💡 <span>You can propose your own price. Admin coordinates transaction privately with seller.</span>
+      </div>
+
+      <div class="modal-actions-bar">
+        <button class="btn btn-primary btn-purchase-submit" type="submit" id="submitPurchaseBtn">
+          <span>📤 Send Approval Request to Admin</span>
+        </button>
+        <button class="btn btn-secondary btn-purchase-cancel" type="button" id="closePurchaseCancel">
+          <span>Cancel</span>
+        </button>
+      </div>
+
+      <p id="purchaseMessage" class="form-message" aria-live="polite"></p>
+      
+      <div id="paymentReceipt" class="payment-receipt" hidden>
+        <span class="section-kicker">PURCHASE ORDER RECEIPT</span>
+        <strong id="receiptNumber"></strong>
+        <img id="receiptQr" alt="Payment request QR code" />
+        <small>Scan after admin approval to continue payment.</small>
+      </div>
+    </form>
+  </div>
+
+  <!-- ================= SELLER EDIT LOT MODAL (EXCLUSIVELY FOR SELLERS) ================= -->
+  <div class="modal-backdrop" id="editLotModal" hidden role="dialog" aria-modal="true" aria-labelledby="editLotModalTitle">
+    <form class="purchase-modal edit-lot-modal" id="editLotForm">
+      <button class="modal-close" id="closeEditLotModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      <span class="section-kicker" id="editLotKicker">PRODUCT &amp; PRICING WORKSTATION</span>
+      <h2 id="editLotModalTitle">✏️ Edit Product Price &amp; Data</h2>
+      <p class="section-sub" id="editLotModalSub">Update price rates, available quantity, material name, or location for this product lot.</p>
+      <input type="hidden" id="editLotId" name="id" />
+
+      <div class="form-row">
+        <label>Item Name / Material
+          <input name="item" id="editLotItem" required placeholder="e.g. Copper Wire / Motherboard PCBs" />
+        </label>
+        <label>Category
+          <select name="category" id="editLotCategory" required>
+            <option value="E-Waste">⚡ E-Waste &amp; Electronic Components</option>
+            <option value="Metal Scrap">🔩 Metal Scrap</option>
+            <option value="Plastic Waste">🧴 Plastic Waste</option>
+            <option value="Paper &amp; Cardboard">📦 Paper &amp; Cardboard</option>
+            <option value="Glass &amp; Rubber">🛞 Glass &amp; Rubber</option>
+            <option value="Industrial Scrap">🏭 Industrial Scrap</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>Available Quantity
+          <input name="quantity" id="editLotQuantity" type="number" min="0.1" step="0.1" required />
+        </label>
+        <label>Unit
+          <select name="unit" id="editLotUnit">
+            <option value="kg">kg</option>
+            <option value="unit">unit / piece</option>
+            <option value="pack">pack</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>Min Price (₹ / unit)
+          <input name="min_price" id="editLotMinPrice" type="number" min="0" step="0.1" required />
+        </label>
+        <label>Max Price (₹ / unit)
+          <input name="max_price" id="editLotMaxPrice" type="number" min="0" step="0.1" required />
+        </label>
+      </div>
+
+      <div class="form-row">
+        <label>State
+          <input name="state" id="editLotState" required placeholder="State" />
+        </label>
+        <label>City
+          <input name="city" id="editLotCity" required placeholder="City" />
+        </label>
+      </div>
+
+      <label>Condition &amp; Specification Notes
+        <textarea name="note" id="editLotNote" rows="2" placeholder="Purity, packaging, or pickup readiness..."></textarea>
+      </label>
+
+      <div class="modal-buttons" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+        <button class="btn btn-primary" type="submit" style="flex: 1;">💾 Save Lot Changes</button>
+        <button class="btn btn-secondary" type="button" id="cancelEditLotBtn">Cancel</button>
+      </div>
+      <p id="editLotMessage" class="form-message" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- ================= FLOATING CAMERA AI SCANNER FAB ================= -->
+  <div class="float-cam-fab" id="floatCamFab" hidden>
+    <button class="float-cam-btn" id="floatCamBtn" type="button" title="Open AI Camera Scanner">
+      <span class="float-cam-icon">📷</span>
+      <span>Live AI Scanner</span>
+    </button>
+  </div>
+
+  <!-- ================= ITEM DETAIL MODAL (mandi card click) ================= -->
+  <div class="item-modal-backdrop" id="itemDetailModal" hidden role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+    <div class="item-modal-card" id="itemModalCard">
+      <button class="item-modal-close" id="itemModalClose" type="button" aria-label="Close item details">×</button>
+
+      <!-- Head: circular icon + name + category tag -->
+      <div class="item-modal-head">
+        <div class="item-modal-icon-big" id="itemModalIcon">♻️</div>
+        <div class="item-modal-head-info">
+          <h3 id="itemModalTitle">Item Name</h3>
+          <span class="item-modal-cat-tag" id="itemModalCatTag">E-waste</span>
+        </div>
+      </div>
+
+      <!-- Price hero with scan CTA -->
+      <div class="item-modal-price-hero">
+        <div>
+          <div class="modal-price-val" id="itemModalPriceVal">₹0 /kg</div>
+          <div class="modal-price-range" id="itemModalPriceRange">₹0 – ₹0 range</div>
+        </div>
+        <button class="modal-scan-cta-btn" id="itemModalScanBtn" type="button">
+          📷 Scan Live
+        </button>
+      </div>
+
+      <!-- Interactive calculator -->
+      <div class="modal-calc-section">
+        <div class="modal-calc-title">🧮 Resale Value Calculator</div>
+        <div class="modal-calc-row">
+          <input type="number" class="modal-qty-input" id="itemModalQty" min="0.1" step="0.5" value="1" />
+          <span class="modal-unit-badge" id="itemModalUnit">kg</span>
+        </div>
+        <div class="modal-payout-grid">
+          <div class="modal-payout-item">
+            <span class="modal-payout-label">Min Est.</span>
+            <span class="modal-payout-val" id="itemModalMin">₹0</span>
+          </div>
+          <div class="modal-payout-item featured">
+            <span class="modal-payout-label">Expected Avg</span>
+            <span class="modal-payout-val" id="itemModalAvg">₹0</span>
+          </div>
+          <div class="modal-payout-item">
+            <span class="modal-payout-label">Max Est.</span>
+            <span class="modal-payout-val" id="itemModalMax">₹0</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-modal-sell" id="itemModalSellBtn" style="width:100%; margin-top:14px; padding:12px 18px; font-weight:700; font-size:0.95rem; background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; border-radius:12px; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(16, 185, 129, 0.35);">
+          <span>⚡</span> Sell This Item (Request Doorstep Pickup)
+        </button>
+      </div>
+
+      <!-- Reuse tip -->
+      <div class="modal-info-row">
+        <span class="modal-info-icon">💡</span>
+        <span id="itemModalTip">Segregate and send to authorized recycler.</span>
+      </div>
+
+      <!-- Eco badge -->
+      <div class="modal-info-row">
+        <span class="modal-info-icon">🌱</span>
+        <div>
+          <div id="itemModalCo2">CO₂ Impact: —</div>
+          <span class="modal-eco-chip" id="itemModalEcoBadge">Circular Economy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ⚡ DIRECT ITEM SELL / PICKUP MODAL ================= -->
+  <div class="modal-backdrop" id="quickSellModal" hidden role="dialog" aria-modal="true" aria-labelledby="quickSellModalTitle">
+    <div class="quick-sell-modal-card">
+      <button class="modal-close" id="closeQuickSellModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      
+      <div class="quick-sell-head">
+        <span class="quick-sell-badge">⚡ DIRECT MANDI SELL REQUEST</span>
+        <h2 id="quickSellModalTitle">Book Free Doorstep Scrap Pickup</h2>
+        <p class="quick-sell-sub">Sell at verified mandi spot prices. Free doorstep pickup &amp; instant digital payment (UPI/Cash).</p>
+      </div>
+
+      <!-- Item Preview Banner -->
+      <div class="quick-sell-item-banner">
+        <div class="qs-icon" id="qsItemIcon">🥫</div>
+        <div class="qs-item-details">
+          <h3 id="qsItemTitle">Aluminium Utensils / Sections</h3>
+          <div class="qs-meta">
+            <span class="qs-tag" id="qsItemCat">Non-Ferrous Metal</span>
+            <span class="qs-rate" id="qsItemRate">₹125 /kg</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="quickSellForm" class="quick-sell-form">
+        <!-- Quantity & Payout summary row -->
+        <div class="qs-calc-box">
+          <div class="qs-calc-input-group">
+            <label for="qsQtyInput">Quantity to Sell</label>
+            <div class="qs-qty-wrapper">
+              <button type="button" class="qs-stepper-btn" id="qsMinusBtn">−</button>
+              <input type="number" id="qsQtyInput" name="quantity" min="0.1" step="0.5" value="5" required />
+              <button type="button" class="qs-stepper-btn" id="qsPlusBtn">+</button>
+              <span class="qs-unit-badge" id="qsUnitBadge">kg</span>
+            </div>
+          </div>
+          <div class="qs-payout-box">
+            <span class="qs-payout-label">Estimated Payout</span>
+            <span class="qs-payout-amount" id="qsTotalPayout">₹625</span>
+            <span class="qs-payout-hint">Paid via UPI / Cash at pickup</span>
+          </div>
+        </div>
+
+        <!-- Contact & Location -->
+        <div class="form-row">
+          <label>Seller Full Name
+            <input type="text" id="qsSellerName" name="seller_name" required placeholder="Enter your full name" />
+          </label>
+          <label>WhatsApp / Mobile Number
+            <input type="tel" id="qsSellerPhone" name="seller_phone" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>City
+            <input type="text" id="qsCity" name="city" required value="Pune" placeholder="Your City" />
+          </label>
+          <label>Preferred Pickup Slot
+            <select id="qsPickupSlot" name="pickup_slot">
+              <option value="Today (Within 2 Hours)">⚡ Urgent Today (Within 2 Hours)</option>
+              <option value="Tomorrow Morning (9 AM - 1 PM)" selected>Tomorrow Morning (9 AM - 1 PM)</option>
+              <option value="Tomorrow Evening (2 PM - 6 PM)">Tomorrow Evening (2 PM - 6 PM)</option>
+              <option value="Weekend Special Pickup">Weekend Special Pickup</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Pickup Address &amp; Pincode
+          <textarea id="qsAddress" name="address" rows="2" required placeholder="House/Shop No., Street, Landmark, Area & Pincode"></textarea>
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-qs-submit" id="qsSubmitBtn">
+          ⚡ Confirm Sell &amp; Book Free Pickup
+        </button>
+        <p id="qsFormMsg" class="form-message" aria-live="polite"></p>
+      </form>
+
+      <!-- Success Receipt Screen (replaces form upon submit) -->
+      <div id="qsSuccessCard" class="qs-success-card" hidden>
+        <div class="qs-success-icon">🎉</div>
+        <h3>Sell Request Booked Successfully!</h3>
+        <p class="qs-success-sub">Doorstep pickup scheduled. Recycler partner will contact you shortly.</p>
+        <div class="qs-receipt-box">
+          <div class="qs-receipt-row">
+            <span>Booking ID:</span>
+            <strong id="qsReceiptId" style="font-family:var(--font-mono); color:#22c55e;">SELL-829104</strong>
+          </div>
+          <div class="qs-receipt-row">
+            <span>Item:</span>
+            <strong id="qsReceiptItem">Aluminium Utensils (5 kg)</strong>
+          </div>
+          <div class="qs-receipt-row">
+            <span>Estimated Payout:</span>
+            <strong id="qsReceiptAmount" style="color:#22c55e; font-size:1.15rem;">₹625</strong>
+          </div>
+          <div class="qs-receipt-row">
+            <span>Pickup Slot:</span>
+            <span id="qsReceiptSlot">Tomorrow Morning</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" id="qsDoneBtn" style="width:100%; margin-top:16px;">
+          ✓ Done &amp; View in Log
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FLOATING AI HELP CHATBOT TRIGGER ================= -->
+  <div class="ai-copilot-floating" id="aiCopilotTrigger" role="button" tabindex="0" title="Open ScrapSense AI Help Chatbot (GPT, Claude, Astra)">
+    <div class="copilot-pulse"></div>
+    <div class="copilot-btn-inner">
+      <span class="copilot-icon">🤖</span>
+      <div class="copilot-text-box">
+        <span class="copilot-title">AI Help Chatbot</span>
+        <span class="copilot-sub">GPT-4o · Claude · Astra</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AI RECYCLING HELP CHATBOT MODAL / DRAWER ================= -->
+  <div class="copilot-modal-backdrop" id="copilotModal" hidden>
+    <div class="copilot-drawer">
+      <!-- Header -->
+      <div class="copilot-header">
+        <div class="copilot-brand">
+          <div class="copilot-avatar">🤖</div>
+          <div>
+            <div class="copilot-name">ScrapSense <span class="accent-glow">AI Help Chatbot</span></div>
+            <div class="copilot-status">
+              <span class="copilot-status-dot online"></span>
+              <span id="copilotProviderStatus">Active: Google Astra / Gemini</span>
+            </div>
+          </div>
+        </div>
+        <div class="copilot-header-actions">
+          <span class="astra-db-badge" id="astraDbBadge" title="DataStax Astra DB Cloud Sync">
+            ⚡ Astra DB <span id="astraDbState">Ready</span>
+          </span>
+          <button class="copilot-close-btn" id="copilotCloseBtn" type="button" aria-label="Close Chat">✕</button>
+        </div>
+      </div>
+
+      <!-- Provider Selector Tabs -->
+      <div class="copilot-provider-bar">
+        <button type="button" class="copilot-provider-btn active" data-provider="gemini" title="Google Astra / Gemini 1.5 Flash">
+          <span class="prov-icon">🔵</span>
+          <span class="prov-label">Astra / Gemini</span>
+        </button>
+        <button type="button" class="copilot-provider-btn" data-provider="openai" title="OpenAI GPT-4o">
+          <span class="prov-icon">🟢</span>
+          <span class="prov-label">OpenAI GPT-4o</span>
+        </button>
+        <button type="button" class="copilot-provider-btn" data-provider="claude" title="Anthropic Claude 3.5 Sonnet">
+          <span class="prov-icon">🟣</span>
+          <span class="prov-label">Claude 3.5</span>
+        </button>
+      </div>
+
+      <!-- Quick prompts -->
+      <div class="copilot-quick-prompts" id="copilotQuickPrompts">
+        <button type="button" class="c-quick-chip" data-query="What is the current scrap mandi rate for copper wire in India?">🔶 Copper Rates</button>
+        <button type="button" class="c-quick-chip" data-query="How to safely recycle motherboards and extract gold/silver?">🔌 Motherboard E-Waste</button>
+        <button type="button" class="c-quick-chip" data-query="What is the exchange rate and disposal rule for lead-acid batteries?">🔋 Battery Exchange Value</button>
+        <button type="button" class="c-quick-chip" data-query="Calculate eco-impact and resale payout for 15kg aluminium scrap.">🌱 15kg Aluminium</button>
+      </div>
+
+      <!-- Chat Messages Scroll Container -->
+      <div class="copilot-messages" id="copilotMessages">
+        <div class="c-msg c-bot">
+          <div class="c-avatar">🤖</div>
+          <div class="c-bubble">
+            <p><strong>Namaste! Main hoon ScrapSense AI Copilot.</strong></p>
+            <p>Aap mujhse kisi bhi scrap material, electronic component, live mandi prices, gold/copper recovery, ya safe recycling practices ke baare me pooch sakte hain.</p>
+            <div class="c-bot-meta">
+              <span class="c-tag">🧠 GPT-4o · Claude · Astra</span>
+              <span class="c-tag">⚡ Astra DB Memory</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Preview Thumbnail (if attached) -->
+      <div class="copilot-attachment-preview" id="copilotAttachmentPreview" hidden>
+        <img id="copilotPreviewThumb" src="" alt="Attachment" />
+        <span class="attach-label">Scrap photo attached for Vision AI analysis</span>
+        <button type="button" class="copilot-remove-attachment" id="copilotRemoveAttachBtn" title="Remove image">✕</button>
+      </div>
+
+      <!-- Input Bar -->
+      <form class="copilot-input-form" id="copilotInputForm">
+        <input type="file" id="copilotFileInput" accept="image/*" hidden />
+        <button type="button" class="copilot-attach-btn" id="copilotAttachBtn" title="Attach scrap photo for visual analysis">
+          📷
+        </button>
+        <input
+          type="text"
+          class="copilot-input-field"
+          id="copilotInputField"
+          placeholder="Ask about scrap rates, recycling, e-waste..."
+          autocomplete="off"
+        />
+        <button type="submit" class="copilot-send-btn" id="copilotSendBtn" aria-label="Send message">
+          <span>➤</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="scrapToast" class="scrap-toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

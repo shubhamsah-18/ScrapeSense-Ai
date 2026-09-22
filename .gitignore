@@ -1,0 +1,39 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+backend_stderr.log
+backend_stdout.log
+backend_error.log
+
+# IDE & AI Assistant configs
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch and nested backup folders
+scratch/
+scrap-recycle-ai/
+
+# Node (if added later)
+node_modules/
+package-lock.json
+

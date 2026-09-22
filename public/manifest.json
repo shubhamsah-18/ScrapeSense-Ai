@@ -1,0 +1,19 @@
+{
+  "name": "ScrapSense AI",
+  "short_name": "ScrapSense",
+  "description": "Smart Scrap & Electronic Waste Valuation Platform with AI-powered material identification, real-time mandi pricing, and eco-impact analytics.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08111b",
+  "theme_color": "#0a0f1c",
+  "orientation": "any",
+  "categories": ["business", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0f1c' width='100' height='100' rx='20'/><text x='50' y='72' text-anchor='middle' font-size='60'>⚙️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

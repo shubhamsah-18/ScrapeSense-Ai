@@ -1,157 +1,208 @@
-<<<<<<< HEAD
-# ⚙️ ScrapSense AI — Smart Scrap & Waste Valuation Platform
+<div align="center">
 
-> Zero-shot AI waste classification + dynamic scrap pricing + eco-impact analytics + admin-mediated marketplace
+# ⚙️ ScrapSense AI
+### Smart Scrap & Electronic Waste Valuation · AI Vision · Mandi Pricing · Circular Marketplace
 
-## 🚀 Features
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Transformers-CLIP%20ViT--B%2F32-yellow?style=for-the-badge)](https://huggingface.co/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-- **CLIP Vision AI**: Zero-shot classification using OpenAI CLIP ViT-B/32 — no training data needed
-- **Dynamic Pricing Calculator**: Real-time resale estimation based on scrap category, quantity & market rates
-- **Eco-Impact Metrics**: CO₂ offset, energy savings, and circular economy badges per material
-- **Admin-Mediated Marketplace**: Seller → Admin verification → Buyer purchase flow
-- **JWT Authentication**: Secure token-based auth with role-based access control (Seller/Buyer/Admin)
-- **OTP Registration**: Email-based OTP verification for new accounts
-- **Dealer Directory**: Certified scrap dealer listings across Indian metros
-- **Print-Ready Receipt**: Scrap valuation slip with QR code
+<p align="center">
+  <b>An end-to-end intelligent recycling platform that classifies scrap using Zero-Shot Computer Vision, estimates real-time Indian mandi valuation, tracks circular eco-impact, and connects verified sellers with industrial recyclers.</b>
+</p>
+
+[Explore Features](#-key-features) •
+[Architecture](#-system-architecture) •
+[Quick Start](#-quick-start) •
+[API Documentation](#-api-endpoints) •
+[Database System](#-mongodb-database--analytics)
+
+---
+
+</div>
+
+## 🌟 Overview
+
+**ScrapSense AI** solves the informal, unorganized nature of the Indian scrap and e-waste recycling industry. By combining **CLIP (Zero-Shot Visual Classification)** with dynamic **Mandi Spot Rate Engines**, ScrapSense AI empowers scrap sellers, electronics dismantlers, and industrial recyclers with transparent market pricing, eco-impact analytics, and admin-mediated procurement.
+
+---
+
+## 🚀 Key Features
+
+### 👁️ 1. Zero-Shot AI Vision Classification
+- Powered by OpenAI's **CLIP ViT-B/32** model.
+- Classifies electronic components, microchips, PCBs, copper wiring, and bulk scrap in real time without task-specific training data.
+- Fallback & hybrid integration with multi-LLM vision providers (Google Gemini 1.5, OpenAI GPT-4o, Claude 3.5 Sonnet).
+
+### 📊 2. Dynamic Mandi Pricing Engine
+- Live scrap spot rates across **9 Indian metros** (Pune, Mumbai, Delhi NCR, Bengaluru, Hyderabad, Jaipur, Ahmedabad, Chennai, Kolkata).
+- Categorized across **6 major material sectors** with over **130 authentic scrap commodities**.
+- Interactive quantity calculator with instant minimum, average, and maximum payout projections.
+
+### 🏢 3. Three-Tier Role-Based Marketplace
+- **📦 Scrap Sellers**: Scan components, check mandi benchmarks, and publish bulk scrap lots for sale.
+- **🏢 Enterprise Buyers**: Browse verified lots, submit price offers, and broadcast custom Buy Requirements (RFQs).
+- **🛡️ Administrator**: Verify lots, moderate transactions, manage users, and route scrap to certified refineries.
+
+### 🌱 4. Circular Economy & Eco-Impact Analytics
+- Computes **CO₂ emissions diverted**, **energy conserved**, and **precious metal recovery rates** for every item scanned.
+- Provides actionable dismantling and upcycling tips to prevent hazardous burning and increase scrap yield.
+
+### 📱 5. Modern Progressive Web App (PWA)
+- High-performance Vanilla JavaScript & CSS single-page application (zero heavy JS framework overhead).
+- Mobile-responsive scanner with instant QR code pairing, sound effects, and offline caching via Service Worker.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    Client["📱 Frontend SPA (PWA / Mobile / PC)"] -->|HTTP / REST| API["⚡ FastAPI Application Server (Port 8000)"]
+    API -->|Image Embeddings| CLIP["🧠 PyTorch CLIP ViT-B/32 (Zero-Shot AI)"]
+    API -->|Multi-Model Chat| LLM["🤖 AI Copilot (Gemini / GPT-4o / Claude)"]
+    API -->|Persistence & Queries| DB[("🍃 MongoDB Database (scrapsense)")]
+    
+    subgraph Data Layer
+        DB --> Cat["130 Categories"]
+        DB --> List["30 Marketplace Lots"]
+        DB --> Ord["Orders & RFQs"]
+        DB --> Usr["RBAC Users & JWT"]
+    end
+```
+
+---
 
 ## 📂 Project Structure
 
 ```
-scrap-recycle-ai/
+ScrapeSense-Ai/
 ├── backend/
-│   ├── main.py              # FastAPI server (API endpoints)
-│   ├── auth.py              # JWT authentication & RBAC module
-│   ├── categories.py        # Scrap knowledge base (26 items + dealer directory)
-│   └── requirements.txt     # Python dependencies
+│   ├── main.py              # FastAPI server (Endpoints, static mounting & middleware)
+│   ├── auth.py              # JWT authentication & role-based access control
+│   ├── categories.py        # 130 scrap materials catalog & dealer directory
+│   ├── ai_service.py        # Multi-provider AI Copilot & Vision adapter
+│   ├── seed_db.py           # Comprehensive MongoDB seeder script
+│   ├── requirements.txt     # Python backend dependencies
+│   └── tests/               # Backend API tests
 ├── frontend/
-│   ├── index.html           # Main SPA (all roles: seller/buyer/admin)
-│   ├── script.js            # Frontend application logic
-│   └── style.css            # Design system & responsive styles
-├── .env                     # Environment variables (not committed)
-├── .env.example             # Environment template
-├── run.py                   # Unified launcher (frontend + backend)
-├── start.bat                # Windows quick start
-└── start.ps1                # PowerShell quick start
+│   ├── index.html           # Main single-page application (All roles)
+│   ├── script.js            # Frontend logic, state management & API client
+│   ├── style.css            # Dark mode glassmorphism UI & responsive styles
+│   ├── sw.js                # Service Worker (PWA offline caching)
+│   └── manifest.json        # PWA configuration
+├── run.py                   # Unified concurrent server launcher (Backend + Live Frontend)
+├── show_database.py         # MongoDB database visual inspection CLI tool
+├── allow_firewall.bat       # Windows firewall rule utility for LAN mobile access
+├── start.bat                # Windows 1-click batch launcher
+├── start.ps1                # PowerShell launcher
+└── README.md                # Project documentation
 ```
+
+---
 
 ## ⚡ Quick Start
 
-### Prerequisites
-- Python 3.10+
-- MongoDB (for auth & marketplace features)
-- ~600MB disk space (for CLIP model download on first run)
+### 1. Prerequisites
+- **Python 3.10+**
+- **MongoDB** (Local instance on `mongodb://127.0.0.1:27017` or MongoDB Atlas)
+- **Git**
 
-### Setup
+### 2. Clone and Setup Environment
 
 ```bash
-# 1. Clone the repository
-git clone <repo-url>
-cd scrap-recycle-ai
+# Clone the repository
+git clone https://github.com/shubhamsah-18/ScrapeSense-Ai.git
+cd ScrapeSense-Ai
 
-# 2. Create virtual environment
+# Create virtual environment
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate       # On Windows
+# source .venv/bin/activate  # On Linux/macOS
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r backend/requirements.txt
-
-# 4. Configure environment
-copy .env.example .env
-# Edit .env with your settings
-
-# 5. Start MongoDB (if not already running)
-mongod
-
-# 6. Launch application
-python run.py
 ```
 
-The app opens automatically at `http://127.0.0.1:5500`
+### 3. Seed Database (Optional but Recommended)
+Populate the database with 130 scrap materials, 30 verified lots, and test accounts:
+```bash
+python backend/seed_db.py
+```
 
-## 🔌 API Endpoints
+### 4. Launch Application
+Start the unified application with a single command:
+```bash
+python run.py
+```
+- **Unified Web App**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Interactive Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **Live Database Inspector**: `python show_database.py`
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/health` | No | Server health check |
-| GET | `/categories` | No | Scrap material catalog |
-| GET | `/dealers` | No | Certified dealer directory |
-| GET | `/stats` | No | Platform statistics |
-| GET | `/ai/status` | No | Multi-provider AI status (OpenAI, Claude, Astra, Astra DB) |
-| POST | `/ai/chat` | No | AI Recycling Chatbot Copilot with model selection |
-| GET | `/ai/chat/history` | No | Retrieve chat conversation from Astra DB |
-| POST | `/predict` | No | AI scrap image classification (CLIP / GPT-4o / Claude / Astra) |
-| POST | `/calculate` | No | Resale value calculator |
-| POST | `/auth/request-otp` | No | Request registration OTP |
-| POST | `/auth/verify-otp` | No | Verify OTP & create account |
-| POST | `/auth/login` | No | Login (returns JWT token) |
-| POST | `/listings` | JWT | Create scrap listing |
-| GET | `/listings` | JWT | Get verified listings |
-| POST | `/approval-requests` | JWT | Buyer purchase request |
-| GET | `/orders` | JWT | User's order history |
-| GET | `/admin/users` | Admin | All registered accounts |
-| GET | `/admin/listings` | Admin | All listings (incl. unverified) |
-| PATCH | `/listings/{id}/verify` | Admin | Approve/reject listing |
-| GET | `/admin/approval-requests` | Admin | Pending purchase requests |
-| PATCH | `/admin/approval-requests/{id}` | Admin | Approve/reject purchase |
-| GET | `/payments/receipt/{id}` | JWT | Transaction receipt + QR |
+---
 
-## 🔐 Environment Variables
+## 🔌 API Endpoints Summary
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OPENAI_API_KEY` | empty | OpenAI API key for GPT-4o chat & vision |
-| `OPENAI_MODEL` | `gpt-4o` | Active OpenAI model |
-| `ANTHROPIC_API_KEY` | empty | Anthropic API key for Claude 3.5 Sonnet |
-| `ANTHROPIC_MODEL` | `claude-3-5-sonnet-20241022` | Active Anthropic model |
-| `GEMINI_API_KEY` | empty | Google API key for Project Astra / Gemini 1.5 |
-| `GEMINI_MODEL` | `gemini-1.5-flash` | Active Google Gemini model |
-| `ASTRA_DB_APPLICATION_TOKEN` | empty | DataStax Astra DB Application Token |
-| `ASTRA_DB_API_ENDPOINT` | empty | DataStax Astra DB JSON API Endpoint |
-| `ASTRA_DB_KEYSPACE` | `default_keyspace` | Astra DB Keyspace name |
-| `DEFAULT_AI_PROVIDER` | `gemini` | Default AI model provider |
-| `JWT_SECRET_KEY` | auto-generated | Secret key for JWT signing |
-| `ADMIN_LOGIN` | `7488114039` | Admin username |
-| `ADMIN_PASSWORD` | `12341234` | Admin password |
-| `MONGODB_URI` | `mongodb://127.0.0.1:27017` | MongoDB connection string |
-| `MONGODB_DATABASE` | `scrapsense` | Database name |
-| `DISABLE_TORCH` | `false` | Run without local CLIP model |
-| `CORS_ORIGINS` | `localhost:5500` | Allowed CORS origins |
-| `DEV_OTP_MODE` | `true` | Log OTPs to console |
-| `SMTP_HOST` | empty | SMTP server for OTP emails |
+| Method | Endpoint | Access | Description |
+|:---|:---|:---|:---|
+| `GET` | `/health` | Public | System and service health check |
+| `GET` | `/categories` | Public | Fetch 130 materials with city pricing |
+| `GET` | `/dealers` | Public | Certified Indian recyclers directory |
+| `POST` | `/predict` | Public | AI zero-shot image classification |
+| `POST` | `/calculate` | Public | Instant scrap valuation calculator |
+| `POST` | `/auth/login` | Public | Role-based user authentication (JWT) |
+| `POST` | `/auth/request-otp` | Public | Email OTP generation for signup |
+| `GET` | `/listings` | JWT | Verified marketplace scrap lots |
+| `POST` | `/listings` | Seller | Publish new scrap lot for sale |
+| `GET` | `/seller/listings` | Seller | Retrieve seller's managed listings |
+| `POST` | `/approval-requests`| Buyer | Submit purchase offer or procurement RFQ |
+| `GET` | `/admin/listings` | Admin | Review pending seller lots |
+| `PATCH`| `/listings/{id}/verify`| Admin | Approve/Reject scrap listing |
 
-## 🧠 Algorithms
+---
 
-### 1. CLIP Zero-Shot Classification
-Uses OpenAI's CLIP ViT-B/32 model to match image embeddings against natural language scrap descriptions using cosine similarity and softmax scoring.
+## 🍃 MongoDB Database & Analytics
 
-### 2. Dynamic Resale Pricing
-Calculates estimated payout using category-specific min/max rate bands multiplied by user-specified quantity.
+Run the built-in database inspector anytime:
+```bash
+python show_database.py
+```
 
-### 3. Eco-Impact Calculator
-Computes CO₂ offset, energy savings, and water conservation metrics per material type and quantity.
+```text
+==============================================================================
+  [+] SCRAPSENSE AI - MONGODB DATABASE REPORT
+==============================================================================
+  * categories   : 130 items across 6 material sectors (Metal, E-Waste, etc.)
+  * listings     : 30 seller lots (24 verified + 6 pending approval)
+  * orders       : 5 transactions, admin approvals & procurement RFQs
+  * users        : 14 accounts (Administrator, verified sellers & buyers)
+  * dealers      : 6 CPCB-certified recycling partners
+  * analytics    : 48.6T estimated CO2 emissions diverted
+==============================================================================
+```
 
-### 4. JWT Authentication
-HMAC-SHA256 signed tokens with 24h expiry, bcrypt password hashing, and role-based access control.
+---
 
-### 5. OTP Verification
-Time-limited (10min) 6-digit codes with bcrypt hashing, max 5 attempts, and MongoDB TTL auto-cleanup.
+## 👥 Roles & Access Credentials
 
-### 6. Inventory Management
-Automatic quantity deduction on order approval with SOLD status transition when stock reaches zero.
+| Role | Access Scope | Login Identifier | Password |
+|:---|:---|:---|:---|
+| **🛡️ Administrator** | Full platform moderation & approvals | `7488114039` | `12341234` |
+| **📦 Scrap Seller** | Camera scanner, mandi board & sales | `shubhamhas21@gmail.com` | User set |
+| **🏢 Enterprise Buyer**| Bulk marketplace, offers & RFQ desk | `buyer@scrapsense.org` | User set |
 
-## 🛠️ Tech Stack
+---
 
-- **Backend**: FastAPI + PyTorch + Transformers (CLIP) + PyMongo
-- **Frontend**: Vanilla HTML5 + CSS3 + JavaScript (SPA)
-- **Database**: MongoDB
-- **AI Model**: OpenAI CLIP ViT-B/32 (zero-shot)
-- **Auth**: JWT (PyJWT) + bcrypt
+## 👨‍💻 Author
 
-## 📝 License
+**Shubham Sah**
+- **GitHub**: [@shubhamsah-18](https://github.com/shubhamsah-18)
+- **Project**: Computer Science & Engineering Final Year Project
 
-Final Year Engineering Project — Computer Science & Engineering
-=======
-# ScrapeSense-Ai
-A full-stack AI scraping, smart valuation, and marketplace platform featuring a unified launcher for FastAPI and frontend servers.
->>>>>>> a83e45b14cc01a1cba984906a653a5a03404066b
+---
+
+## 📄 License
+This project is licensed under the [MIT License](LICENSE).

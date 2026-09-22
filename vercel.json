@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/categories",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/dealers",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/predict",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/calculate",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/stats",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/listings",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/listings/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/seller/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/orders",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/orders/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/approval-requests",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/approval-requests/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/ai/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/payments/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
+    }
+  ],
+  "env": {
+    "DISABLE_TORCH": "1"
+  }
+}

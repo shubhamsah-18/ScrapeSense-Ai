@@ -112,8 +112,8 @@
         </div>
 
         <form id="authForm" class="auth-form">
-          <label id="authEmailLabel">Email Address
-            <input name="email" id="authEmailInput" type="email" required placeholder="you@example.com" autocomplete="username" />
+          <label id="authEmailLabel">Email, Username, or Phone
+            <input name="email" id="authEmailInput" type="text" required placeholder="admin / email / phone" autocomplete="username" />
           </label>
           <div class="auth-input-wrapper">
             <div class="auth-label-row">
@@ -127,6 +127,30 @@
           </button>
           <p id="authMessage" class="form-message" aria-live="polite"></p>
         </form>
+
+        <!-- Quick 1-Click Demo Logins for instant presentation access -->
+        <div class="demo-quick-auth-bar" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(168, 85, 247, 0.35);">
+          <div style="font-size: 0.78rem; font-weight: 600; color: #c084fc; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: space-between;">
+            <span>⚡ 1-Click Instant Demo Login</span>
+            <span style="font-size: 0.72rem; color: #a1a1aa; font-weight: normal;">Presentation Mode</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <button type="button" class="btn-demo-quick" id="quickLoginAdminBtn" style="background: rgba(147, 51, 234, 0.22); border: 1px solid rgba(168, 85, 247, 0.55); color: #e9d5ff; border-radius: 8px; padding: 9px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" title="Instant Login as Administrator">
+              🛡️ Admin
+            </button>
+            <button type="button" class="btn-demo-quick" id="quickLoginSellerBtn" style="background: rgba(34, 197, 94, 0.18); border: 1px solid rgba(34, 197, 94, 0.45); color: #86efac; border-radius: 8px; padding: 9px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" title="Instant Login as Certified Seller">
+              📦 Seller
+            </button>
+            <button type="button" class="btn-demo-quick" id="quickLoginBuyerBtn" style="background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.45); color: #93c5fd; border-radius: 8px; padding: 9px 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" title="Instant Login as Verified Buyer">
+              🏢 Buyer
+            </button>
+          </div>
+          <div style="margin-top: 10px; font-size: 0.74rem; color: #cbd5e1; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 10px; line-height: 1.45;">
+            <div><strong>🛡️ Admin:</strong> <code style="color: #c084fc;">admin</code> / <code style="color: #38bdf8;">password123</code></div>
+            <div><strong>📦 Seller:</strong> <code style="color: #86efac;">apex.metals@scrapsense.org</code> / <code style="color: #38bdf8;">password123</code></div>
+            <div><strong>🏢 Buyer:</strong> <code style="color: #93c5fd;">procurement@tatasteel.com</code> / <code style="color: #38bdf8;">password123</code></div>
+          </div>
+        </div>
 
         <div class="auth-switch-prompt" id="registerSwitchPrompt">
           <span>New to ScrapSense AI?</span>

@@ -4706,6 +4706,17 @@ body[data-role="admin"] .site-nav a[href="#how"] {
   animation: authFadeIn 0.35s ease;
 }
 
+/* Ensure auth screen completely hides when hidden attribute or is-hidden class is present */
+#authScreen[hidden],
+.auth-screen[hidden],
+#authScreen.is-hidden,
+.auth-screen.is-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 @keyframes authFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

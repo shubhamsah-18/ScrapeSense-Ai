@@ -47,7 +47,9 @@ def seed_database(seed_if_empty: bool = False, db=None):
     # -------------------------------------------------------------
     print("\n[1/6] Checking 'categories' collection...")
     cat_count = db.categories.count_documents({})
-    if cat_count == 0:
+    if cat_count < len(WASTE_CATEGORIES):
+        if cat_count > 0:
+            db.categories.delete_many({})
         cat_docs = []
         for label, info in WASTE_CATEGORIES.items():
             base_p = info.get("base_price", info.get("min_price", 0))

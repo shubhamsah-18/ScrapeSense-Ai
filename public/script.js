@@ -259,7 +259,7 @@ let activeMode = "camera"; // Default to camera for instant scanning
 let currentFacingMode = "environment"; // Mobile back camera default
 let isBackendOnline = false;
 let currentResult = null;
-let allCategories = [];
+let allCategories = STATIC_SCRAP_DATABASE.map(c => normalizeCategory(c));
 let activeCatFilter = "all";
 let activeSellerTab = "scanner";
 let activeSellerCategory = "All Categories";
@@ -621,6 +621,3033 @@ function getScrapItemImage(item) {
 // ============================================================
 // COMPREHENSIVE ELECTRONIC COMPONENTS & SCRAP DATASET
 // ============================================================
+// ============================================================
+// COMPLETE 151-ITEM SCRAP MASTER DATABASE (25+ Items Per Category)
+// Embedded directly to guarantee instantaneous display across all 6 categories
+// ============================================================
+const STATIC_SCRAP_DATABASE = [
+  {
+    "key": "steel or iron scrap metal",
+    "display_name": "Scrap Iron (Old Iron)",
+    "category": "Metal Scrap",
+    "type": "Ferrous Scrap Metal",
+    "unit": "kg",
+    "base_price": 28,
+    "spot_price": 28,
+    "min_price": 26,
+    "max_price": 32,
+    "price_range": "\u20b926 - \u20b932 / kg",
+    "sell_to": "Local Loha Mandi / Steel Rolling Mill",
+    "reuse_tip": "Separate thin sheet iron from heavy structural angle iron to secure top mandi price.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "75% energy saved vs blast furnace",
+      "badge": "Heavy Ferrous"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "heavy melting steel scrap hms 1 and 2",
+    "display_name": "Heavy Melting Steel (HMS 1 & 2)",
+    "category": "Metal Scrap",
+    "type": "Heavy Industrial Ferrous Scrap",
+    "unit": "kg",
+    "base_price": 34,
+    "spot_price": 34,
+    "min_price": 31,
+    "max_price": 38,
+    "price_range": "\u20b931 - \u20b938 / kg",
+    "sell_to": "Electric Arc Furnace / Induction Furnace",
+    "reuse_tip": "Clean steel cuts greater than 6mm thickness command premium HMS-1 tier pricing.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/kg",
+      "energy_saved": "80% energy saved vs virgin iron ore",
+      "badge": "Industrial HMS"
+    },
+    "icon": "\ud83d\udd29"
+  },
+  {
+    "key": "cast iron scrap pipes machinery",
+    "display_name": "Cast Iron Scrap",
+    "category": "Metal Scrap",
+    "type": "High Carbon Brittle Iron",
+    "unit": "kg",
+    "base_price": 30,
+    "spot_price": 30,
+    "min_price": 27,
+    "max_price": 35,
+    "price_range": "\u20b927 - \u20b935 / kg",
+    "sell_to": "Cast Iron Foundry / Soil Pipe Manufacturer",
+    "reuse_tip": "Heavy sanitary soil pipes and machinery counterweights are melted directly into new castings.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Direct remelting saves coal & coke",
+      "badge": "High Carbon Iron"
+    },
+    "icon": "\ud83e\udea8"
+  },
+  {
+    "key": "rebar tmt steel scrap construction",
+    "display_name": "TMT Rebar Steel Scrap",
+    "category": "Metal Scrap",
+    "type": "Construction Reinforcement Steel",
+    "unit": "kg",
+    "base_price": 32,
+    "spot_price": 32,
+    "min_price": 29,
+    "max_price": 36,
+    "price_range": "\u20b929 - \u20b936 / kg",
+    "sell_to": "Re-Rolling Mill / Secondary Steel Producer",
+    "reuse_tip": "Straighten long rebar cut-pieces for reuse in site column ties or sell bundled.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.6 kg CO\u2082/kg",
+      "energy_saved": "Direct re-rolling without blast furnace",
+      "badge": "TMT Rebar"
+    },
+    "icon": "\ud83c\udfd7\ufe0f"
+  },
+  {
+    "key": "galvanized iron sheet scrap gi sheet",
+    "display_name": "Galvanized Iron Sheet (GI)",
+    "category": "Metal Scrap",
+    "type": "Zinc Coated Mild Steel Sheet",
+    "unit": "kg",
+    "base_price": 26,
+    "spot_price": 26,
+    "min_price": 23,
+    "max_price": 30,
+    "price_range": "\u20b923 - \u20b930 / kg",
+    "sell_to": "Secondary Sheet Producer / Zinc Recovery Unit",
+    "reuse_tip": "Dry corrugated roofing sheets and air duct off-cuts free from rust yield top rate.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.3 kg CO\u2082/kg",
+      "energy_saved": "Zinc & steel composite reclamation",
+      "badge": "Galvanized Steel"
+    },
+    "icon": "\ud83d\udee1\ufe0f"
+  },
+  {
+    "key": "stainless steel utensils or stainless scrap",
+    "display_name": "Steel (Stainless Steel SS 304)",
+    "category": "Metal Scrap",
+    "type": "Non-Magnetic Alloy (SS 304)",
+    "unit": "kg",
+    "base_price": 42,
+    "spot_price": 42,
+    "min_price": 38,
+    "max_price": 48,
+    "price_range": "\u20b938 - \u20b948 / kg",
+    "sell_to": "Stainless Steel Utensil Yard / Induction Furnace",
+    "reuse_tip": "High nickel-chromium content. Check with magnet; non-magnetic grades yield higher rates.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.8 kg CO\u2082/kg",
+      "energy_saved": "Saves virgin Nickel & Chromium",
+      "badge": "Nickel-Chrome Alloy"
+    },
+    "icon": "\ud83e\udd63"
+  },
+  {
+    "key": "stainless steel 316 industrial scrap",
+    "display_name": "Stainless Steel SS 316 Scrap",
+    "category": "Metal Scrap",
+    "type": "Molybdenum Marine Grade Stainless",
+    "unit": "kg",
+    "base_price": 68,
+    "spot_price": 68,
+    "min_price": 60,
+    "max_price": 78,
+    "price_range": "\u20b960 - \u20b978 / kg",
+    "sell_to": "Chemical Equipment Fabricator / Specialized Foundry",
+    "reuse_tip": "Contains 2% Molybdenum. Test with acid chemical spot test to confirm 316 premium grade.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.8 kg CO\u2082/kg",
+      "energy_saved": "Conserves critical Molybdenum & Nickel",
+      "badge": "SS 316 Premium"
+    },
+    "icon": "\u2693"
+  },
+  {
+    "key": "copper wire scrap",
+    "display_name": "Copper (Millberry Wire & Scrap)",
+    "category": "Metal Scrap",
+    "type": "Non-Ferrous Premium Metal",
+    "unit": "kg",
+    "base_price": 460,
+    "spot_price": 460,
+    "min_price": 420,
+    "max_price": 510,
+    "price_range": "\u20b9420 - \u20b9510 / kg",
+    "sell_to": "Authorized Metal Mandi / Copper Smelter",
+    "reuse_tip": "Bright stripped copper wire (Millberry grade) fetches the absolute highest scrap value.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.5 kg CO\u2082/kg",
+      "energy_saved": "85% energy saved vs mining",
+      "badge": "Top Value Metal"
+    },
+    "icon": "\ud83d\udd36"
+  },
+  {
+    "key": "copper birch cliff heavy copper scrap",
+    "display_name": "Copper Birch & Cliff Scrap",
+    "category": "Metal Scrap",
+    "type": "Heavy Copper Tubes & Busbars",
+    "unit": "kg",
+    "base_price": 435,
+    "spot_price": 435,
+    "min_price": 395,
+    "max_price": 475,
+    "price_range": "\u20b9395 - \u20b9475 / kg",
+    "sell_to": "Copper Ingot Manufacturer / Electrical Foundry",
+    "reuse_tip": "Includes burnt wire and soldered plumbing pipes. Remove solder joints to upgrade to Berry grade.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.2 kg CO\u2082/kg",
+      "energy_saved": "82% energy saved vs mining",
+      "badge": "Heavy Copper"
+    },
+    "icon": "\ud83e\udd49"
+  },
+  {
+    "key": "copper pipes and refrigeration tubes",
+    "display_name": "Copper Plumbing & AC Pipes",
+    "category": "Metal Scrap",
+    "type": "Deoxidized High Purity Copper",
+    "unit": "kg",
+    "base_price": 445,
+    "spot_price": 445,
+    "min_price": 410,
+    "max_price": 490,
+    "price_range": "\u20b9410 - \u20b9490 / kg",
+    "sell_to": "HVAC Repair Aggregator / Copper Tube Manufacturer",
+    "reuse_tip": "Drain any compressor oil residue from air conditioner pipes before weighing.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.3 kg CO\u2082/kg",
+      "energy_saved": "84% energy conserved",
+      "badge": "HVAC Copper"
+    },
+    "icon": "\ud83d\udebf"
+  },
+  {
+    "key": "brass scrap metal",
+    "display_name": "Brass / Peetal Scrap",
+    "category": "Metal Scrap",
+    "type": "Copper-Zinc Alloy",
+    "unit": "kg",
+    "base_price": 320,
+    "spot_price": 320,
+    "min_price": 290,
+    "max_price": 350,
+    "price_range": "\u20b9290 - \u20b9350 / kg",
+    "sell_to": "Brass Foundry / Utensil & Valve Merchant",
+    "reuse_tip": "High copper-zinc purity found in plumbing valves, water taps, locks, and religious idols.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.8 kg CO\u2082/kg",
+      "energy_saved": "80% energy saved vs virgin smelting",
+      "badge": "High Value Brass"
+    },
+    "icon": "\ud83c\udfba"
+  },
+  {
+    "key": "brass honey scrap machinery parts",
+    "display_name": "Brass Honey Scrap",
+    "category": "Metal Scrap",
+    "type": "Yellow Brass Castings & Shavings",
+    "unit": "kg",
+    "base_price": 310,
+    "spot_price": 310,
+    "min_price": 280,
+    "max_price": 340,
+    "price_range": "\u20b9280 - \u20b9340 / kg",
+    "sell_to": "Jamnagar Brass Parts Manufacturer",
+    "reuse_tip": "Segregate brass water meter casings, sanitary fittings, and machine turnings from iron contamination.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.5 kg CO\u2082/kg",
+      "energy_saved": "78% energy saved",
+      "badge": "Honey Brass"
+    },
+    "icon": "\ud83c\udf6f"
+  },
+  {
+    "key": "brass plumbing valves and faucets",
+    "display_name": "Brass Plumbing Valves & Taps",
+    "category": "Metal Scrap",
+    "type": "Forged Sanitary Brass",
+    "unit": "kg",
+    "base_price": 325,
+    "spot_price": 325,
+    "min_price": 295,
+    "max_price": 355,
+    "price_range": "\u20b9295 - \u20b9355 / kg",
+    "sell_to": "Plumbing Scrap Merchant / Sanitary Re-Melt Unit",
+    "reuse_tip": "Remove plastic handles and rubber washers before selling to receive maximum price.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.6 kg CO\u2082/kg",
+      "energy_saved": "80% energy conserved",
+      "badge": "Sanitary Brass"
+    },
+    "icon": "\ud83d\udeb0"
+  },
+  {
+    "key": "aluminium scrap metal",
+    "display_name": "Aluminium Scrap",
+    "category": "Metal Scrap",
+    "type": "Non-Ferrous Lightweight Metal",
+    "unit": "kg",
+    "base_price": 170,
+    "spot_price": 170,
+    "min_price": 145,
+    "max_price": 195,
+    "price_range": "\u20b9145 - \u20b9195 / kg",
+    "sell_to": "Aluminium Smelter / Extrusion Yard",
+    "reuse_tip": "Recycling aluminium saves 95% of the massive electricity needed to smelt raw bauxite.",
+    "eco_impact": {
+      "co2_saved_per_unit": "9.0 kg CO\u2082/kg",
+      "energy_saved": "95% energy conserved",
+      "badge": "Eco Champion Metal"
+    },
+    "icon": "\ud83e\udd6b"
+  },
+  {
+    "key": "aluminium extrusion profiles windows",
+    "display_name": "Aluminium Extrusions (Window Profiles)",
+    "category": "Metal Scrap",
+    "type": "Architectural Alloy 6063",
+    "unit": "kg",
+    "base_price": 185,
+    "spot_price": 185,
+    "min_price": 160,
+    "max_price": 210,
+    "price_range": "\u20b9160 - \u20b9210 / kg",
+    "sell_to": "Architectural Extrusion Plant / Smelter",
+    "reuse_tip": "Remove glass, plastic weatherstripping, and steel screws to get clean extrusion 6063 grade.",
+    "eco_impact": {
+      "co2_saved_per_unit": "9.5 kg CO\u2082/kg",
+      "energy_saved": "95% energy saved vs alumina electrolysis",
+      "badge": "Alloy 6063"
+    },
+    "icon": "\ud83e\ude9f"
+  },
+  {
+    "key": "aluminium engine castings auto scrap",
+    "display_name": "Aluminium Engine Castings (Tense)",
+    "category": "Metal Scrap",
+    "type": "High Silicon Cast Aluminium",
+    "unit": "kg",
+    "base_price": 155,
+    "spot_price": 155,
+    "min_price": 135,
+    "max_price": 175,
+    "price_range": "\u20b9135 - \u20b9175 / kg",
+    "sell_to": "Automotive Ingot Foundry",
+    "reuse_tip": "Pistons, cylinder heads, and gearbox casings. Must be free from heavy steel liners and iron bolts.",
+    "eco_impact": {
+      "co2_saved_per_unit": "8.5 kg CO\u2082/kg",
+      "energy_saved": "92% energy saved",
+      "badge": "Cast Aluminium"
+    },
+    "icon": "\ud83c\udfce\ufe0f"
+  },
+  {
+    "key": "aluminium beverage cans ubc scrap",
+    "display_name": "Aluminium Beverage Cans (UBC)",
+    "category": "Metal Scrap",
+    "type": "Used Beverage Cans 3004 Alloy",
+    "unit": "kg",
+    "base_price": 130,
+    "spot_price": 130,
+    "min_price": 115,
+    "max_price": 150,
+    "price_range": "\u20b9115 - \u20b9150 / kg",
+    "sell_to": "Can-to-Can Secondary Smelter",
+    "reuse_tip": "Empty and crush cans flat to reduce transport bulk. High demand in sustainable packaging.",
+    "eco_impact": {
+      "co2_saved_per_unit": "9.2 kg CO\u2082/kg",
+      "energy_saved": "95% energy saved; back on shelf in 60 days",
+      "badge": "Circular UBC"
+    },
+    "icon": "\ud83e\udd64"
+  },
+  {
+    "key": "lead metal scrap",
+    "display_name": "Lead Metal Scrap",
+    "category": "Metal Scrap",
+    "type": "Heavy Soft Metal",
+    "unit": "kg",
+    "base_price": 135,
+    "spot_price": 135,
+    "min_price": 110,
+    "max_price": 160,
+    "price_range": "\u20b9110 - \u20b9160 / kg",
+    "sell_to": "Certified Battery / Lead Smelter",
+    "reuse_tip": "Used in radiation shielding and weights. Handle with gloves and keep in dry containers.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.2 kg CO\u2082/kg",
+      "energy_saved": "Infinite recyclability",
+      "badge": "Dense Heavy Metal"
+    },
+    "icon": "\u2693"
+  },
+  {
+    "key": "lead battery plates scrap",
+    "display_name": "Lead Battery Plates & Posts",
+    "category": "Metal Scrap",
+    "type": "Antimonial Lead Battery Scrap",
+    "unit": "kg",
+    "base_price": 120,
+    "spot_price": 120,
+    "min_price": 100,
+    "max_price": 140,
+    "price_range": "\u20b9100 - \u20b9140 / kg",
+    "sell_to": "CPCB Registered Secondary Lead Smelter",
+    "reuse_tip": "Battery grids contain antimony and lead peroxide paste. Strictly transport in acid-resistant drums.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.0 kg CO\u2082/kg",
+      "energy_saved": "99% closed-loop circularity",
+      "badge": "Battery Lead"
+    },
+    "icon": "\ud83d\udd0b"
+  },
+  {
+    "key": "zinc die cast scrap zamak",
+    "display_name": "Zinc Die-Cast Scrap (Zamak)",
+    "category": "Metal Scrap",
+    "type": "Zamak Zinc-Aluminium Die Cast",
+    "unit": "kg",
+    "base_price": 180,
+    "spot_price": 180,
+    "min_price": 155,
+    "max_price": 205,
+    "price_range": "\u20b9155 - \u20b9205 / kg",
+    "sell_to": "Zinc Smelter / Galvanizing Chemical Plant",
+    "reuse_tip": "Automobile door handles, carburetors, and cabinet hardware. Distinct heavy weight compared to aluminium.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.6 kg CO\u2082/kg",
+      "energy_saved": "75% energy saved vs zinc ore roasting",
+      "badge": "Zamak Alloy"
+    },
+    "icon": "\ud83d\udddd\ufe0f"
+  },
+  {
+    "key": "gunmetal bronze bushings bearings",
+    "display_name": "Gunmetal & Bronze Bushings",
+    "category": "Metal Scrap",
+    "type": "Copper-Tin-Zinc Bearing Alloy",
+    "unit": "kg",
+    "base_price": 380,
+    "spot_price": 380,
+    "min_price": 340,
+    "max_price": 420,
+    "price_range": "\u20b9340 - \u20b9420 / kg",
+    "sell_to": "Marine Bearing Foundry / Bushing Manufacturer",
+    "reuse_tip": "High tin content gives superior wear resistance. High scrap value in pump and motor rebuild sectors.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.0 kg CO\u2082/kg",
+      "energy_saved": "Conserves scarce virgin Tin",
+      "badge": "High Tin Bronze"
+    },
+    "icon": "\ud83d\udd18"
+  },
+  {
+    "key": "tin containers or sheet metal scrap",
+    "display_name": "Tin & Galvanized Sheet",
+    "category": "Metal Scrap",
+    "type": "Thin Ferrous Sheet",
+    "unit": "kg",
+    "base_price": 22,
+    "spot_price": 22,
+    "min_price": 18,
+    "max_price": 26,
+    "price_range": "\u20b918 - \u20b926 / kg",
+    "sell_to": "Sheet Metal Yard / Tin Collector",
+    "reuse_tip": "Clean dry oil tins, food cans, and corrugated roofing sheets are 100% recyclable.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Recovers tin & mild steel sheet",
+      "badge": "Tin Sheet"
+    },
+    "icon": "\ud83d\udee2\ufe0f"
+  },
+  {
+    "key": "nickel alloy superalloy high temp scrap",
+    "display_name": "Nickel Alloy & Superalloy Scrap",
+    "category": "Metal Scrap",
+    "type": "High-Nickel Heat Resistant Alloy",
+    "unit": "kg",
+    "base_price": 620,
+    "spot_price": 620,
+    "min_price": 550,
+    "max_price": 720,
+    "price_range": "\u20b9550 - \u20b9720 / kg",
+    "sell_to": "Aerospace Alloy Recycler / Nickel Smelter",
+    "reuse_tip": "Inconel, Hastelloy, and Waspaloy turbine blades fetch premium; certify alloy grade with spectrometer.",
+    "eco_impact": {
+      "co2_saved_per_unit": "5.5 kg CO\u2082/kg",
+      "energy_saved": "Conserves scarce primary Nickel ore",
+      "badge": "Superalloy"
+    },
+    "icon": "\u2708\ufe0f"
+  },
+  {
+    "key": "silver scrap precious metal jewelry",
+    "display_name": "Silver Scrap (Jewellery & Industrial)",
+    "category": "Metal Scrap",
+    "type": "Precious White Metal",
+    "unit": "gram",
+    "base_price": 95,
+    "spot_price": 95,
+    "min_price": 85,
+    "max_price": 108,
+    "price_range": "\u20b985 - \u20b9108 / gram",
+    "sell_to": "Bullion Dealer / Precious Metal Refinery",
+    "reuse_tip": "Old silverware, broken jewellery, and industrial silver contacts. Verify purity with acid test kit.",
+    "eco_impact": {
+      "co2_saved_per_unit": "8.0 kg CO\u2082/gram",
+      "energy_saved": "Infinite recyclability \u2014 no loss of purity",
+      "badge": "Precious Silver"
+    },
+    "icon": "\ud83e\udd48"
+  },
+  {
+    "key": "titanium scrap aerospace medical implants",
+    "display_name": "Titanium Scrap (Aerospace / Medical)",
+    "category": "Metal Scrap",
+    "type": "Grade 5 Ti-6Al-4V Alloy Scrap",
+    "unit": "kg",
+    "base_price": 480,
+    "spot_price": 480,
+    "min_price": 400,
+    "max_price": 580,
+    "price_range": "\u20b9400 - \u20b9580 / kg",
+    "sell_to": "Specialty Metals Dealer / Titanium Smelter",
+    "reuse_tip": "Aircraft skin panels, medical bone screws, and bicycle frames. Identify with spark test \u2014 no sparks.",
+    "eco_impact": {
+      "co2_saved_per_unit": "7.0 kg CO\u2082/kg",
+      "energy_saved": "Saves 95% energy vs primary sponge",
+      "badge": "Premium Ti Alloy"
+    },
+    "icon": "\ud83d\ude80"
+  },
+  {
+    "key": "a plastic bottle or plastic container",
+    "display_name": "Plastic Bottles (PET Clear)",
+    "category": "Plastic Waste",
+    "type": "Polyethylene Terephthalate",
+    "unit": "kg",
+    "base_price": 18,
+    "spot_price": 18,
+    "min_price": 16,
+    "max_price": 22,
+    "price_range": "\u20b916 - \u20b922 / kg",
+    "sell_to": "Polyester Yarn Plant / Bottle Flake Processor",
+    "reuse_tip": "Empty, flatten, and separate transparent clear bottles for the premium grade scrap price.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/kg",
+      "energy_saved": "Spun into recycled polyester textile",
+      "badge": "Bottle-to-Fibre"
+    },
+    "icon": "\ud83e\udd64"
+  },
+  {
+    "key": "green and brown colored pet bottles",
+    "display_name": "Coloured PET Bottles (Green/Amber)",
+    "category": "Plastic Waste",
+    "type": "Pigmented PET Scrap",
+    "unit": "kg",
+    "base_price": 14,
+    "spot_price": 14,
+    "min_price": 11,
+    "max_price": 17,
+    "price_range": "\u20b911 - \u20b917 / kg",
+    "sell_to": "Coloured Polyester Staple Fibre Plant",
+    "reuse_tip": "Keep green and amber soda bottles separate from clear transparent batches.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "Recycled into industrial strapping tape",
+      "badge": "Coloured PET"
+    },
+    "icon": "\ud83c\udf7e"
+  },
+  {
+    "key": "hard plastic chairs buckets HDPE containers",
+    "display_name": "Plastic Buckets & Chairs (HDPE)",
+    "category": "Plastic Waste",
+    "type": "High-Density Polyethylene & PP",
+    "unit": "kg",
+    "base_price": 26,
+    "spot_price": 26,
+    "min_price": 22,
+    "max_price": 30,
+    "price_range": "\u20b922 - \u20b930 / kg",
+    "sell_to": "Molding Granule Manufacturer / Polymer Plant",
+    "reuse_tip": "Broken plastic buckets, water jugs, plastic chairs, and crates have high industrial pellet demand.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.6 kg CO\u2082/kg",
+      "energy_saved": "Reused in automotive & crate moulding",
+      "badge": "Rigid HDPE"
+    },
+    "icon": "\ud83e\udea3"
+  },
+  {
+    "key": "hdpe milk pouches and oil containers",
+    "display_name": "HDPE Oil Jugs & Canisters",
+    "category": "Plastic Waste",
+    "type": "Blow Moulded Rigid HDPE",
+    "unit": "kg",
+    "base_price": 24,
+    "spot_price": 24,
+    "min_price": 20,
+    "max_price": 28,
+    "price_range": "\u20b920 - \u20b928 / kg",
+    "sell_to": "Extrusion Granule Plant",
+    "reuse_tip": "Rinse edible oil jugs to remove oily smell and avoid contamination deductions.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Pelletized for durable electrical conduits",
+      "badge": "Blow Moulded HDPE"
+    },
+    "icon": "\ud83e\uddf4"
+  },
+  {
+    "key": "hdpe industrial crates and pallets",
+    "display_name": "HDPE Milk & Vegetable Crates",
+    "category": "Plastic Waste",
+    "type": "Heavy Duty Injection Moulded HDPE",
+    "unit": "kg",
+    "base_price": 28,
+    "spot_price": 28,
+    "min_price": 24,
+    "max_price": 33,
+    "price_range": "\u20b924 - \u20b933 / kg",
+    "sell_to": "Industrial Crate Recycler / Pelletizer",
+    "reuse_tip": "High impact strength crates are ground into heavy re-moulding chips.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "100% closed-loop return to crate production",
+      "badge": "Heavy Duty Crates"
+    },
+    "icon": "\ud83d\udce6"
+  },
+  {
+    "key": "pvc pipe plastic scrap",
+    "display_name": "PVC Pipes Scrap",
+    "category": "Plastic Waste",
+    "type": "Polyvinyl Chloride Rigid",
+    "unit": "kg",
+    "base_price": 24,
+    "spot_price": 24,
+    "min_price": 20,
+    "max_price": 28,
+    "price_range": "\u20b920 - \u20b928 / kg",
+    "sell_to": "PVC Conduit & Pipe Manufacturer",
+    "reuse_tip": "Grey electrical conduits and white plumbing PVC pipes are reground into durable drainage lines.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.0 kg CO\u2082/kg",
+      "energy_saved": "Prevents landfill polymer buildup",
+      "badge": "Rigid PVC Line"
+    },
+    "icon": "\ud83d\udeb0"
+  },
+  {
+    "key": "pvc electrical conduit pipe off cuts",
+    "display_name": "PVC Electrical Conduits",
+    "category": "Plastic Waste",
+    "type": "Rigid Unplasticized PVC (uPVC)",
+    "unit": "kg",
+    "base_price": 22,
+    "spot_price": 22,
+    "min_price": 19,
+    "max_price": 26,
+    "price_range": "\u20b919 - \u20b926 / kg",
+    "sell_to": "Secondary Conduit Extruder",
+    "reuse_tip": "Clean building construction off-cuts free from cement or plaster mortar.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "Direct extrusion without virgin PVC resin",
+      "badge": "uPVC Conduits"
+    },
+    "icon": "\u26a1"
+  },
+  {
+    "key": "upvc window frame profile scrap",
+    "display_name": "uPVC Window Profiles Scrap",
+    "category": "Plastic Waste",
+    "type": "Weather Resistant Window uPVC",
+    "unit": "kg",
+    "base_price": 30,
+    "spot_price": 30,
+    "min_price": 26,
+    "max_price": 35,
+    "price_range": "\u20b926 - \u20b935 / kg",
+    "sell_to": "Window Profile Extrusion Compounder",
+    "reuse_tip": "Premium grade white uPVC containing Titanium Dioxide UV stabilizer. Remove metal reinforcement cores.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.3 kg CO\u2082/kg",
+      "energy_saved": "Recycled in core layers of new profiles",
+      "badge": "uPVC Profiles"
+    },
+    "icon": "\ud83e\ude9f"
+  },
+  {
+    "key": "soft plastic polythene bags or LDPE film scrap",
+    "display_name": "Packaging Plastic Film (LDPE)",
+    "category": "Plastic Waste",
+    "type": "Low-Density Polyethylene Film",
+    "unit": "kg",
+    "base_price": 21,
+    "spot_price": 21,
+    "min_price": 18,
+    "max_price": 25,
+    "price_range": "\u20b918 - \u20b925 / kg",
+    "sell_to": "LDPE Film & Pellet Extruder",
+    "reuse_tip": "Clean packaging bubble wrap, stretch film, and unprinted transparent polythene fetch top rate.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Pelletized for durable tarpaulins",
+      "badge": "LDPE Film"
+    },
+    "icon": "\ud83d\udecd\ufe0f"
+  },
+  {
+    "key": "ldpe milk pouches washed clean",
+    "display_name": "LDPE Milk Pouches (Cleaned)",
+    "category": "Plastic Waste",
+    "type": "Three-Layer Co-Extruded LDPE",
+    "unit": "kg",
+    "base_price": 25,
+    "spot_price": 25,
+    "min_price": 21,
+    "max_price": 29,
+    "price_range": "\u20b921 - \u20b929 / kg",
+    "sell_to": "Agricultural Pipe & Drip Line Extruder",
+    "reuse_tip": "Rinse pouch thoroughly with water and let dry in shade to receive top clean pouch pricing.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.6 kg CO\u2082/kg",
+      "energy_saved": "Extruded into agricultural drip irrigation lines",
+      "badge": "Clean Milk Pouches"
+    },
+    "icon": "\ud83e\udd5b"
+  },
+  {
+    "key": "lldpe stretch film industrial pallet wrap",
+    "display_name": "LLDPE Pallet Stretch Wrap",
+    "category": "Plastic Waste",
+    "type": "Linear Low-Density Polyethylene",
+    "unit": "kg",
+    "base_price": 27,
+    "spot_price": 27,
+    "min_price": 23,
+    "max_price": 32,
+    "price_range": "\u20b923 - \u20b932 / kg",
+    "sell_to": "Industrial Packaging Film Recycler",
+    "reuse_tip": "Warehouse clear stretch wrap free from tape, labels, and moisture is highly prized.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/kg",
+      "energy_saved": "High tensile polymer circularity",
+      "badge": "LLDPE Stretch"
+    },
+    "icon": "\ud83d\udcdc"
+  },
+  {
+    "key": "pp woven sacks gunny bags plastic",
+    "display_name": "PP Woven Sacks (Gunny Bags)",
+    "category": "Plastic Waste",
+    "type": "Polypropylene Woven Fabric",
+    "unit": "kg",
+    "base_price": 19,
+    "spot_price": 19,
+    "min_price": 16,
+    "max_price": 23,
+    "price_range": "\u20b916 - \u20b923 / kg",
+    "sell_to": "PP Yarn & Strap Extrusion Mill",
+    "reuse_tip": "Flour, grain, and cement bags. Shake clean from dust and tie in compressed bundles.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "Spun into industrial ropes and tie straps",
+      "badge": "Woven PP"
+    },
+    "icon": "\ud83c\udf3e"
+  },
+  {
+    "key": "pp automotive bumpers plastic scrap",
+    "display_name": "PP Auto Bumpers Scrap",
+    "category": "Plastic Waste",
+    "type": "Impact Modified Polypropylene (PP+EPDM)",
+    "unit": "kg",
+    "base_price": 22,
+    "spot_price": 22,
+    "min_price": 18,
+    "max_price": 26,
+    "price_range": "\u20b918 - \u20b926 / kg",
+    "sell_to": "Automotive Component Moulding Compounder",
+    "reuse_tip": "Remove headlights, brackets, and paint peels before shredding for automotive regrind.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Used in vehicle wheel arch liners",
+      "badge": "Automotive PP"
+    },
+    "icon": "\ud83d\ude97"
+  },
+  {
+    "key": "pp battery casing plastic polypropylene",
+    "display_name": "PP Battery Casings (Black/Red)",
+    "category": "Plastic Waste",
+    "type": "Acid Resistant Polypropylene Copolymer",
+    "unit": "kg",
+    "base_price": 31,
+    "spot_price": 31,
+    "min_price": 27,
+    "max_price": 36,
+    "price_range": "\u20b927 - \u20b936 / kg",
+    "sell_to": "Battery Casing Manufacturer / PP Compounder",
+    "reuse_tip": "Washed, neutralized battery outer boxes. Very high melt flow index for remolding.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.1 kg CO\u2082/kg",
+      "energy_saved": "Direct closed loop back into battery boxes",
+      "badge": "Battery PP"
+    },
+    "icon": "\ud83d\udd0b"
+  },
+  {
+    "key": "abs plastic casings appliance computer",
+    "display_name": "ABS Plastic (Appliance Casings)",
+    "category": "Plastic Waste",
+    "type": "Acrylonitrile Butadiene Styrene",
+    "unit": "kg",
+    "base_price": 36,
+    "spot_price": 36,
+    "min_price": 30,
+    "max_price": 44,
+    "price_range": "\u20b930 - \u20b944 / kg",
+    "sell_to": "Engineering Plastics Compounder",
+    "reuse_tip": "Computer monitor bodies, printer housings, and motorcycle fairings. Tough impact plastic.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.4 kg CO\u2082/kg",
+      "energy_saved": "Conserves expensive petrochemical monomers",
+      "badge": "Rigid ABS"
+    },
+    "icon": "\ud83d\udda5\ufe0f"
+  },
+  {
+    "key": "polycarbonate pc water dispenser bottles",
+    "display_name": "Polycarbonate (20L Water Jars)",
+    "category": "Plastic Waste",
+    "type": "High Transparency Polycarbonate (PC)",
+    "unit": "kg",
+    "base_price": 45,
+    "spot_price": 45,
+    "min_price": 38,
+    "max_price": 54,
+    "price_range": "\u20b938 - \u20b954 / kg",
+    "sell_to": "Engineering Plastic Extrusion Plant",
+    "reuse_tip": "Cracked 20-litre office water dispenser cans. Highest value common transparent plastic.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.1 kg CO\u2082/kg",
+      "energy_saved": "High heat resistance engineering resin",
+      "badge": "Optical PC"
+    },
+    "icon": "\ud83d\udeb0"
+  },
+  {
+    "key": "acrylic pmma sheet offcuts transparent",
+    "display_name": "Acrylic Sheet Scrap (PMMA)",
+    "category": "Plastic Waste",
+    "type": "Polymethyl Methacrylate",
+    "unit": "kg",
+    "base_price": 48,
+    "spot_price": 48,
+    "min_price": 40,
+    "max_price": 58,
+    "price_range": "\u20b940 - \u20b958 / kg",
+    "sell_to": "Acrylic Sheet Depolymerization Plant",
+    "reuse_tip": "Signboard off-cuts, display stands, and vehicle tail lamps. Depolymerized into pure MMA liquid.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.4 kg CO\u2082/kg",
+      "energy_saved": "Infinite monomer recovery",
+      "badge": "Pure Acrylic"
+    },
+    "icon": "\ud83d\udc8e"
+  },
+  {
+    "key": "nylon pa6 pa66 scrap engineering plastic",
+    "display_name": "Nylon Scrap (PA6 / PA66)",
+    "category": "Plastic Waste",
+    "type": "Polyamide Engineering Plastic",
+    "unit": "kg",
+    "base_price": 42,
+    "spot_price": 42,
+    "min_price": 35,
+    "max_price": 50,
+    "price_range": "\u20b935 - \u20b950 / kg",
+    "sell_to": "Industrial Filament & Gear Manufacturer",
+    "reuse_tip": "Fishing nets, industrial gears, and automotive intake manifolds. Outstanding abrasion resistance.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.2 kg CO\u2082/kg",
+      "energy_saved": "High mechanical strength polymer",
+      "badge": "Polyamide Nylon"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "expanded polystyrene thermocol foam eps",
+    "display_name": "Thermocol Foam Scrap (EPS)",
+    "category": "Plastic Waste",
+    "type": "Expanded Polystyrene Packaging",
+    "unit": "kg",
+    "base_price": 15,
+    "spot_price": 15,
+    "min_price": 12,
+    "max_price": 20,
+    "price_range": "\u20b912 - \u20b920 / kg",
+    "sell_to": "EPS Densifier & Picture Frame Moulding Plant",
+    "reuse_tip": "White appliance packing thermocol. Must be compressed or densified to avoid huge transport volume.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.3 kg CO\u2082/kg",
+      "energy_saved": "Densified blocks molded into photo frames",
+      "badge": "EPS Thermocol"
+    },
+    "icon": "\u2744\ufe0f"
+  },
+  {
+    "key": "rigid plastic buckets and domestic mugs",
+    "display_name": "Domestic Plastic Mugs & Buckets",
+    "category": "Plastic Waste",
+    "type": "PP Injection Moulding Household Scrap",
+    "unit": "kg",
+    "base_price": 23,
+    "spot_price": 23,
+    "min_price": 19,
+    "max_price": 27,
+    "price_range": "\u20b919 - \u20b927 / kg",
+    "sell_to": "Household Plastic Product Manufacturer",
+    "reuse_tip": "Household broken tubs, bathroom mugs, dustbins, and laundry baskets.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "Re-compounded into durable trash cans",
+      "badge": "Household PP"
+    },
+    "icon": "\ud83e\uddf9"
+  },
+  {
+    "key": "mix plastic waste or mixed domestic plastics",
+    "display_name": "Mixed Domestic Plastic",
+    "category": "Plastic Waste",
+    "type": "Mixed Polymers (PP, PS, HDPE)",
+    "unit": "kg",
+    "base_price": 12,
+    "spot_price": 12,
+    "min_price": 9,
+    "max_price": 15,
+    "price_range": "\u20b99 - \u20b915 / kg",
+    "sell_to": "Plastic Aggregator / Pyrolysis Recycler",
+    "reuse_tip": "Sorting by color and resin code dramatically increases payout by up to 40%.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Recycles into utility products",
+      "badge": "Plastic Circularity"
+    },
+    "icon": "\ud83e\uddf4"
+  },
+  {
+    "key": "reground plastic granules mixed polymer flakes",
+    "display_name": "Mixed Polymer Flakes / Regrind",
+    "category": "Plastic Waste",
+    "type": "Washed Polymer Flakes",
+    "unit": "kg",
+    "base_price": 25,
+    "spot_price": 25,
+    "min_price": 21,
+    "max_price": 30,
+    "price_range": "\u20b921 - \u20b930 / kg",
+    "sell_to": "Plastic Compounding & Extrusion Plant",
+    "reuse_tip": "Shredded, washed, and dried flakes ready for direct extruder feed.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Saves washing & chipping steps",
+      "badge": "Washed Flakes"
+    },
+    "icon": "\ud83e\uddea"
+  },
+  {
+    "key": "silicone rubber gaskets seals scrap",
+    "display_name": "Silicone Rubber Scrap (Seals & Gaskets)",
+    "category": "Plastic Waste",
+    "type": "High Purity Polydimethylsiloxane",
+    "unit": "kg",
+    "base_price": 55,
+    "spot_price": 55,
+    "min_price": 45,
+    "max_price": 68,
+    "price_range": "\u20b945 - \u20b968 / kg",
+    "sell_to": "Silicone Compounder / Medical Device Recycler",
+    "reuse_tip": "Food grade and medical silicone commands highest purity premium. Store clean and dry.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.8 kg CO\u2082/kg",
+      "energy_saved": "Conserves silicon ore and methyl chloride",
+      "badge": "High-Purity Silicone"
+    },
+    "icon": "\u2b55"
+  },
+  {
+    "key": "foam pu polyurethane scrap mattress furniture",
+    "display_name": "Polyurethane Foam Scrap (PU Foam)",
+    "category": "Plastic Waste",
+    "type": "Flexible Slabstock Polyurethane",
+    "unit": "kg",
+    "base_price": 18,
+    "spot_price": 18,
+    "min_price": 14,
+    "max_price": 23,
+    "price_range": "\u20b914 - \u20b923 / kg",
+    "sell_to": "Foam Rebonding Plant / Carpet Underlay Manufacturer",
+    "reuse_tip": "Mattress, sofa, and cushion foam scrap is shredded and bonded into gym mats and underlay sheets.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Rebonded into durable noise insulation panels",
+      "badge": "PU Rebond Foam"
+    },
+    "icon": "\ud83d\udecb\ufe0f"
+  },
+  {
+    "key": "fibc jumbo bag big bag woven pp scrap",
+    "display_name": "FIBC Jumbo Bags (1-Ton Bulk Bags)",
+    "category": "Plastic Waste",
+    "type": "Heavy Duty Woven Polypropylene FIBC",
+    "unit": "kg",
+    "base_price": 28,
+    "spot_price": 28,
+    "min_price": 23,
+    "max_price": 34,
+    "price_range": "\u20b923 - \u20b934 / kg",
+    "sell_to": "PP Yarn Extruder / Fibre Manufacturer",
+    "reuse_tip": "Clean 1-tonne bulk bags from food or pharma industries command premium price over soiled industrial bags.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "High tenacity PP fibre reuse",
+      "badge": "Bulk Bag FIBC"
+    },
+    "icon": "\ud83d\udecd\ufe0f"
+  },
+  {
+    "key": "newspaper or old books paper waste",
+    "display_name": "Old Newspapers (Raddi)",
+    "category": "Paper & Cardboard",
+    "type": "Newsprint Pulp Paper",
+    "unit": "kg",
+    "base_price": 16,
+    "spot_price": 16,
+    "min_price": 14,
+    "max_price": 18,
+    "price_range": "\u20b914 - \u20b918 / kg",
+    "sell_to": "Newsprint De-inking Paper Mill / Local Kabadiwala",
+    "reuse_tip": "Keep dry and tied in stacks. Clean newsprint is easily repulped into cartons and packaging trays.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.1 kg CO\u2082/kg",
+      "energy_saved": "Saves 17 mature trees per ton",
+      "badge": "Newsprint Pulp"
+    },
+    "icon": "\ud83d\udcf0"
+  },
+  {
+    "key": "old magazines glossy paper scrap",
+    "display_name": "Old Magazines (Glossy)",
+    "category": "Paper & Cardboard",
+    "type": "Glossy Coated Paper (LWC)",
+    "unit": "kg",
+    "base_price": 13,
+    "spot_price": 13,
+    "min_price": 11,
+    "max_price": 15,
+    "price_range": "\u20b911 - \u20b915 / kg",
+    "sell_to": "Paper Mill / Recycling Depot",
+    "reuse_tip": "Glossy magazines contain clay coatings; recycled into paperboard stiffeners and tissue base.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.0 kg CO\u2082/kg",
+      "energy_saved": "Reduces tree harvesting",
+      "badge": "Coated Paper"
+    },
+    "icon": "\ud83d\udcd1"
+  },
+  {
+    "key": "old notebooks text books paper scrap",
+    "display_name": "Old Books & Notebooks",
+    "category": "Paper & Cardboard",
+    "type": "High-Grade White Writing Paper",
+    "unit": "kg",
+    "base_price": 12,
+    "spot_price": 12,
+    "min_price": 10,
+    "max_price": 14,
+    "price_range": "\u20b910 - \u20b914 / kg",
+    "sell_to": "Duplex Board & Writing Paper Mill",
+    "reuse_tip": "White notebook and textbook paper has higher pulp brightness than newspaper; commands stable rate.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.0 kg CO\u2082/kg",
+      "energy_saved": "High pulp fiber retention",
+      "badge": "White Paper Pulp"
+    },
+    "icon": "\ud83d\udcda"
+  },
+  {
+    "key": "hardcover library books and registers",
+    "display_name": "Hardcover Books & Registers",
+    "category": "Paper & Cardboard",
+    "type": "Bookbinding Paper with Hardboard",
+    "unit": "kg",
+    "base_price": 10,
+    "spot_price": 10,
+    "min_price": 8,
+    "max_price": 12,
+    "price_range": "\u20b98 - \u20b912 / kg",
+    "sell_to": "Grey Board & Paper Mill",
+    "reuse_tip": "Strip off cloth and plastic lamination covers for higher grade paper valuation.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.9 kg CO\u2082/kg",
+      "energy_saved": "Pulp recycled into notebook covers",
+      "badge": "Hardcover Pulp"
+    },
+    "icon": "\ud83d\udcd6"
+  },
+  {
+    "key": "school exam papers and blank white waste",
+    "display_name": "School Exam Sheets & White Papers",
+    "category": "Paper & Cardboard",
+    "type": "Woodfree Uncoated Printing Paper",
+    "unit": "kg",
+    "base_price": 15,
+    "spot_price": 15,
+    "min_price": 13,
+    "max_price": 17,
+    "price_range": "\u20b913 - \u20b917 / kg",
+    "sell_to": "Writing & Printing Paper Mill",
+    "reuse_tip": "Keep free from carbon papers, plastic wrappers, and staples.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "High brightness pulp recovery",
+      "badge": "Woodfree Paper"
+    },
+    "icon": "\ud83d\udcdd"
+  },
+  {
+    "key": "cardboard or paper waste",
+    "display_name": "Cardboard Boxes (Cartons)",
+    "category": "Paper & Cardboard",
+    "type": "Corrugated Kraft Paperboard",
+    "unit": "kg",
+    "base_price": 14,
+    "spot_price": 14,
+    "min_price": 12,
+    "max_price": 16,
+    "price_range": "\u20b912 - \u20b916 / kg",
+    "sell_to": "Kraft Paper Mill / Corrugation Plant",
+    "reuse_tip": "Flatten corrugated e-commerce boxes to reduce bulk transport. Keep strictly away from water.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.9 kg CO\u2082/kg",
+      "energy_saved": "Recycled back into packing cartons",
+      "badge": "Corrugated Kraft"
+    },
+    "icon": "\ud83d\udce6"
+  },
+  {
+    "key": "brown packing kraft boxes heavy corrugated",
+    "display_name": "Heavy Duty Brown Kraft Boxes",
+    "category": "Paper & Cardboard",
+    "type": "Multi-Ply Virgin Kraft Corrugated",
+    "unit": "kg",
+    "base_price": 15,
+    "spot_price": 15,
+    "min_price": 13,
+    "max_price": 17,
+    "price_range": "\u20b913 - \u20b917 / kg",
+    "sell_to": "Packaging Box Manufacturer",
+    "reuse_tip": "Heavy multi-layer industrial appliance boxes command premium due to long virgin wood fibres.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.0 kg CO\u2082/kg",
+      "energy_saved": "High burst factor fibre reuse",
+      "badge": "Virgin Kraft"
+    },
+    "icon": "\ud83d\udce6"
+  },
+  {
+    "key": "duplex paperboard boxes medicine packaging",
+    "display_name": "Duplex Board (Medicine/Shoe Boxes)",
+    "category": "Paper & Cardboard",
+    "type": "White Coated Duplex Board",
+    "unit": "kg",
+    "base_price": 11,
+    "spot_price": 11,
+    "min_price": 9,
+    "max_price": 13,
+    "price_range": "\u20b99 - \u20b913 / kg",
+    "sell_to": "Duplex Mill / Board Manufacturer",
+    "reuse_tip": "Medicine cartons, shoe boxes, and cereal boxes. Grey back with smooth white top.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.85 kg CO\u2082/kg",
+      "energy_saved": "Recycled into solid board packaging",
+      "badge": "Duplex Board"
+    },
+    "icon": "\ud83d\udc5f"
+  },
+  {
+    "key": "grey board file covers millboard scrap",
+    "display_name": "Grey Board & Office File Covers",
+    "category": "Paper & Cardboard",
+    "type": "Dense Compressed Grey Board",
+    "unit": "kg",
+    "base_price": 8,
+    "spot_price": 8,
+    "min_price": 6,
+    "max_price": 10,
+    "price_range": "\u20b96 - \u20b910 / kg",
+    "sell_to": "Stationery Millboard Plant",
+    "reuse_tip": "Old office folder covers, puzzle boards, and calendar backs.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.7 kg CO\u2082/kg",
+      "energy_saved": "Compressed into rigid industrial boards",
+      "badge": "Grey Board"
+    },
+    "icon": "\ud83d\udcc1"
+  },
+  {
+    "key": "office shredded paper scrap",
+    "display_name": "Office Shredded Paper",
+    "category": "Paper & Cardboard",
+    "type": "Pure White Document Scrap",
+    "unit": "kg",
+    "base_price": 9,
+    "spot_price": 9,
+    "min_price": 7,
+    "max_price": 12,
+    "price_range": "\u20b97 - \u20b912 / kg",
+    "sell_to": "Paper Tissue & Board Factory",
+    "reuse_tip": "Bagged securely to prevent wind dispersal. Excellent feedstock for hygienic paper products.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.8 kg CO\u2082/kg",
+      "energy_saved": "Zero contamination pulp",
+      "badge": "Office Pulp"
+    },
+    "icon": "\ud83d\udcc4"
+  },
+  {
+    "key": "virgin white computer paper printouts",
+    "display_name": "Computer Printout Paper (A4/A3)",
+    "category": "Paper & Cardboard",
+    "type": "High Brightness Copier Paper",
+    "unit": "kg",
+    "base_price": 16,
+    "spot_price": 16,
+    "min_price": 14,
+    "max_price": 19,
+    "price_range": "\u20b914 - \u20b919 / kg",
+    "sell_to": "Tissue & High-Grade Recycled Paper Mill",
+    "reuse_tip": "Office photocopier sheets free from plastic sleeves. Very high de-inking yield.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.3 kg CO\u2082/kg",
+      "energy_saved": "Conserves 100% bleach chemicals",
+      "badge": "Bright Copier Pulp"
+    },
+    "icon": "\ud83d\udda8\ufe0f"
+  },
+  {
+    "key": "continuous computer stationery form paper",
+    "display_name": "Continuous Computer Forms",
+    "category": "Paper & Cardboard",
+    "type": "Perforated Continuous Dot Matrix Paper",
+    "unit": "kg",
+    "base_price": 15,
+    "spot_price": 15,
+    "min_price": 13,
+    "max_price": 18,
+    "price_range": "\u20b913 - \u20b918 / kg",
+    "sell_to": "Writing & Ledger Paper Mill",
+    "reuse_tip": "Bank ledger and billing sheets. Strip carbon interleaves if present.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Pure long wood fibres",
+      "badge": "Continuous Forms"
+    },
+    "icon": "\ud83e\uddfe"
+  },
+  {
+    "key": "kraft paper cement bags multiwall sacks",
+    "display_name": "Multiwall Kraft Cement Sacks",
+    "category": "Paper & Cardboard",
+    "type": "Unbleached High-Tensile Kraft Paper",
+    "unit": "kg",
+    "base_price": 11,
+    "spot_price": 11,
+    "min_price": 9,
+    "max_price": 13,
+    "price_range": "\u20b99 - \u20b913 / kg",
+    "sell_to": "Heavy Kraft Paper Mill",
+    "reuse_tip": "Dust off all cement or powder residues before bundling.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.9 kg CO\u2082/kg",
+      "energy_saved": "High tear resistance fibres",
+      "badge": "Multiwall Kraft"
+    },
+    "icon": "\ud83c\udfd7\ufe0f"
+  },
+  {
+    "key": "tetra pak carton packaging aseptic scrap",
+    "display_name": "Tetra Pak Beverage Cartons",
+    "category": "Paper & Cardboard",
+    "type": "Poly-Al-Paperboard Composite",
+    "unit": "kg",
+    "base_price": 9,
+    "spot_price": 9,
+    "min_price": 7,
+    "max_price": 11,
+    "price_range": "\u20b97 - \u20b911 / kg",
+    "sell_to": "Specialized Hydropulper & PolyAl Sheet Plant",
+    "reuse_tip": "Rinse, flatten, and dry. Hydropulper separates 75% paper pulp; remaining poly-aluminium is pressed into roof sheets.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.1 kg CO\u2082/kg",
+      "energy_saved": "Recovers paper and presses roofing sheets",
+      "badge": "PolyAl Composite"
+    },
+    "icon": "\ud83e\uddc3"
+  },
+  {
+    "key": "molded pulp egg trays fruit packaging",
+    "display_name": "Molded Pulp Trays (Egg/Fruit)",
+    "category": "Paper & Cardboard",
+    "type": "100% Recycled Molded Pulp",
+    "unit": "kg",
+    "base_price": 7,
+    "spot_price": 7,
+    "min_price": 5,
+    "max_price": 9,
+    "price_range": "\u20b95 - \u20b99 / kg",
+    "sell_to": "Molded Fibre Packaging Mill",
+    "reuse_tip": "Keep dry. 100% biodegradable and effortlessly dissolves in pulper tanks.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.6 kg CO\u2082/kg",
+      "energy_saved": "Requires zero chemical de-inking",
+      "badge": "Molded Pulp"
+    },
+    "icon": "\ud83e\udd5a"
+  },
+  {
+    "key": "thermal paper cash register rolls",
+    "display_name": "Thermal Cash Register Rolls",
+    "category": "Paper & Cardboard",
+    "type": "Low-Grade Thermal Coated Paper",
+    "unit": "kg",
+    "base_price": 6,
+    "spot_price": 6,
+    "min_price": 4,
+    "max_price": 8,
+    "price_range": "\u20b94 - \u20b98 / kg",
+    "sell_to": "Low-Grade Board Mill",
+    "reuse_tip": "Contains BPA heat coating; best recycled into industrial paperboard backing rather than tissue.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.5 kg CO\u2082/kg",
+      "energy_saved": "Safely isolated in heavy board cores",
+      "badge": "Thermal Paper"
+    },
+    "icon": "\ud83e\uddfe"
+  },
+  {
+    "key": "tissue paper and napkin manufacturing waste",
+    "display_name": "Tissue & Napkin Pulp Waste",
+    "category": "Paper & Cardboard",
+    "type": "Soft Creped Virgin Fibre Trim",
+    "unit": "kg",
+    "base_price": 10,
+    "spot_price": 10,
+    "min_price": 8,
+    "max_price": 13,
+    "price_range": "\u20b98 - \u20b913 / kg",
+    "sell_to": "Tissue Converting Plant",
+    "reuse_tip": "Factory clean edge trimmings from toilet tissue and napkin converting lines.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.8 kg CO\u2082/kg",
+      "energy_saved": "Rapid dissolving pulp",
+      "badge": "Tissue Broke"
+    },
+    "icon": "\ud83e\uddfb"
+  },
+  {
+    "key": "paper printing press edge trimmings blank",
+    "display_name": "Printing Press Edge Trimmings",
+    "category": "Paper & Cardboard",
+    "type": "Pure White Printing Broke",
+    "unit": "kg",
+    "base_price": 18,
+    "spot_price": 18,
+    "min_price": 15,
+    "max_price": 22,
+    "price_range": "\u20b915 - \u20b922 / kg",
+    "sell_to": "Specialty Paper Mill",
+    "reuse_tip": "Unprinted virgin paper trimmings from printing and binding factories; top scrap tier.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Replaces 100% imported wood pulp",
+      "badge": "Virgin Broke"
+    },
+    "icon": "\u2702\ufe0f"
+  },
+  {
+    "key": "sorted mixed waste paper domestic",
+    "display_name": "Sorted Mixed Office Paper",
+    "category": "Paper & Cardboard",
+    "type": "Mixed Commercial Paper Stock",
+    "unit": "kg",
+    "base_price": 11,
+    "spot_price": 11,
+    "min_price": 9,
+    "max_price": 14,
+    "price_range": "\u20b99 - \u20b914 / kg",
+    "sell_to": "Cardboard & Packaging Mill",
+    "reuse_tip": "General office collection bins including flyers, envelopes, and letterheads.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.9 kg CO\u2082/kg",
+      "energy_saved": "Recycled into brown linerboard",
+      "badge": "Mixed Office"
+    },
+    "icon": "\ud83d\udcec"
+  },
+  {
+    "key": "kraft paper tubes cores winding reels",
+    "display_name": "Kraft Paper Tubes & Cores",
+    "category": "Paper & Cardboard",
+    "type": "Spiral Wound Rigid Kraft Cores",
+    "unit": "kg",
+    "base_price": 9,
+    "spot_price": 9,
+    "min_price": 7,
+    "max_price": 11,
+    "price_range": "\u20b97 - \u20b911 / kg",
+    "sell_to": "Paper Core Manufacturer / Heavy Board Mill",
+    "reuse_tip": "Heavy winding tubes used inside fabric, plastic film, and paper rolls.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.8 kg CO\u2082/kg",
+      "energy_saved": "Extreme density board reclamation",
+      "badge": "Spiral Cores"
+    },
+    "icon": "\ud83e\udeb5"
+  },
+  {
+    "key": "waxed laminated coated paper packaging scrap",
+    "display_name": "Wax-Coated & Laminated Paper",
+    "category": "Paper & Cardboard",
+    "type": "Low-Grade Composite Paper",
+    "unit": "kg",
+    "base_price": 5,
+    "spot_price": 5,
+    "min_price": 3,
+    "max_price": 7,
+    "price_range": "\u20b93 - \u20b97 / kg",
+    "sell_to": "Industrial Fuel Pellet Plant / Pyrolysis Unit",
+    "reuse_tip": "Waxed fruit cartons, frozen food boxes, and foil-laminated packages. Cannot be repulped; converted to fuel.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.4 kg CO\u2082/kg",
+      "energy_saved": "Thermal energy recovery via pelletization",
+      "badge": "Fuel Pellet Feedstock"
+    },
+    "icon": "\ud83d\udd6f\ufe0f"
+  },
+  {
+    "key": "brown kraft wrapping paper packing sheets scrap",
+    "display_name": "Kraft Wrapping Paper & Packing Sheets",
+    "category": "Paper & Cardboard",
+    "type": "Strong Unbleached Kraft Paper",
+    "unit": "kg",
+    "base_price": 13,
+    "spot_price": 13,
+    "min_price": 11,
+    "max_price": 16,
+    "price_range": "\u20b911 - \u20b916 / kg",
+    "sell_to": "Kraft Paper Mill / Heavy Board Plant",
+    "reuse_tip": "Brown packaging paper wraps, butter paper, and interleaving kraft sheets from industrial pallets.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.0 kg CO\u2082/kg",
+      "energy_saved": "High-tensile long fibre recovery",
+      "badge": "Unbleached Kraft"
+    },
+    "icon": "\ud83e\uddfb"
+  },
+  {
+    "key": "stationery envelopes courier bags paper scrap",
+    "display_name": "Envelopes & Courier Bags (Paper)",
+    "category": "Paper & Cardboard",
+    "type": "Woodfree White Stationery Grade",
+    "unit": "kg",
+    "base_price": 12,
+    "spot_price": 12,
+    "min_price": 10,
+    "max_price": 14,
+    "price_range": "\u20b910 - \u20b914 / kg",
+    "sell_to": "Writing Paper Mill",
+    "reuse_tip": "Remove plastic windows from envelopes and peel off adhesive strips for higher purity grade.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.0 kg CO\u2082/kg",
+      "energy_saved": "Pulped into office copier stock",
+      "badge": "Woodfree White"
+    },
+    "icon": "\u2709\ufe0f"
+  },
+  {
+    "key": "cigarette paper tobacco packaging tissue scrap",
+    "display_name": "Cigarette & Tobacco Industry Paper",
+    "category": "Paper & Cardboard",
+    "type": "Ultra-Thin Specialty Tissue Paper",
+    "unit": "kg",
+    "base_price": 20,
+    "spot_price": 20,
+    "min_price": 16,
+    "max_price": 25,
+    "price_range": "\u20b916 - \u20b925 / kg",
+    "sell_to": "Specialty Paper Converter",
+    "reuse_tip": "Trimming waste from cigarette paper reels is ultra-clean long fibre; highest pulp grade.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "High alpha cellulose fibre recovery",
+      "badge": "Alpha Cellulose"
+    },
+    "icon": "\ud83d\udeac"
+  },
+  {
+    "key": "calendar art paper photo quality print waste",
+    "display_name": "Art Paper & Calendar Offcuts",
+    "category": "Paper & Cardboard",
+    "type": "High-Gloss Coated Art Paper",
+    "unit": "kg",
+    "base_price": 10,
+    "spot_price": 10,
+    "min_price": 8,
+    "max_price": 13,
+    "price_range": "\u20b98 - \u20b913 / kg",
+    "sell_to": "Coated Broke Paper Mill",
+    "reuse_tip": "High clay-coated art paper from printing presses and calendar trimmings.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.85 kg CO\u2082/kg",
+      "energy_saved": "Clay pigment recovery and fibre reuse",
+      "badge": "Coated Art Broke"
+    },
+    "icon": "\ud83d\udcc5"
+  },
+  {
+    "key": "old desktop computer tower or laptop scrap",
+    "display_name": "Old Computers & Laptops",
+    "category": "E-Waste",
+    "type": "Whole IT Equipment",
+    "unit": "pcs",
+    "base_price": 550,
+    "spot_price": 550,
+    "min_price": 350,
+    "max_price": 900,
+    "price_range": "\u20b9350 - \u20b9900 / pcs",
+    "sell_to": "Certified E-Waste Dismantler / Refurbisher",
+    "reuse_tip": "Intact desktops yield valuable motherboards, copper heatsinks, power supplies, and RAM.",
+    "eco_impact": {
+      "co2_saved_per_unit": "25.0 kg CO\u2082/unit",
+      "energy_saved": "Recovers gold, silver, copper & steel",
+      "badge": "High Value IT Unit"
+    },
+    "icon": "\ud83d\udcbb"
+  },
+  {
+    "key": "enterprise server computer motherboard scrap",
+    "display_name": "Enterprise Server Motherboards",
+    "category": "E-Waste",
+    "type": "Multi-Socket High-Gold Board",
+    "unit": "kg",
+    "base_price": 420,
+    "spot_price": 420,
+    "min_price": 320,
+    "max_price": 550,
+    "price_range": "\u20b9320 - \u20b9550 / kg",
+    "sell_to": "Precious Metal Hydrometallurgy Refinery",
+    "reuse_tip": "Dual/quad CPU sockets with heavy gold flash and BGA chipsets. Clean battery first.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.8 kg CO\u2082/kg",
+      "energy_saved": "High precious metal recovery (gold & palladium)",
+      "badge": "Server Grade Gold"
+    },
+    "icon": "\ud83d\udda7"
+  },
+  {
+    "key": "a computer motherboard or circuit board",
+    "display_name": "Motherboard PCB (Desktop/Laptop)",
+    "category": "E-Waste",
+    "type": "High-Grade Precious Board",
+    "unit": "kg",
+    "base_price": 280,
+    "spot_price": 280,
+    "min_price": 220,
+    "max_price": 450,
+    "price_range": "\u20b9220 - \u20b9450 / kg",
+    "sell_to": "Authorized E-Waste Refiner / Smelter",
+    "reuse_tip": "Dense concentration of gold-plated pins, silver solder, and multi-layer copper traces.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.5 kg CO\u2082/kg",
+      "energy_saved": "90% energy saved vs mining",
+      "badge": "Gold & Copper Rich"
+    },
+    "icon": "\ud83d\udd0c"
+  },
+  {
+    "key": "a broken mobile phone or smartphone",
+    "display_name": "Mobile Phones (Broken/Old)",
+    "category": "E-Waste",
+    "type": "Precious Metal E-Waste",
+    "unit": "pcs",
+    "base_price": 150,
+    "spot_price": 150,
+    "min_price": 80,
+    "max_price": 250,
+    "price_range": "\u20b980 - \u20b9250 / pcs",
+    "sell_to": "Precious Metal E-Waste Refiner",
+    "reuse_tip": "Smartphones contain concentrated gold on mainboards and high-capacity lithium cells.",
+    "eco_impact": {
+      "co2_saved_per_unit": "6.0 kg CO\u2082/phone",
+      "energy_saved": "Avoids raw mining of precious metals",
+      "badge": "Precious Metals Core"
+    },
+    "icon": "\ud83d\udcf1"
+  },
+  {
+    "key": "old feature keypad phones basic",
+    "display_name": "Old Feature / Keypad Phones",
+    "category": "E-Waste",
+    "type": "Gold Pin Circuit Phone",
+    "unit": "pcs",
+    "base_price": 60,
+    "spot_price": 60,
+    "min_price": 40,
+    "max_price": 90,
+    "price_range": "\u20b940 - \u20b990 / pcs",
+    "sell_to": "E-Waste Dismantler",
+    "reuse_tip": "Older 2G phones have heavier gold plating on keypad contact pads and antenna leads.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.2 kg CO\u2082/unit",
+      "energy_saved": "Recovers pure gold contacts",
+      "badge": "Keypad Gold"
+    },
+    "icon": "\ud83d\udcde"
+  },
+  {
+    "key": "a CRT monitor or television screen",
+    "display_name": "Old TVs & Monitors (CRT)",
+    "category": "E-Waste",
+    "type": "Display Device E-Waste",
+    "unit": "pcs",
+    "base_price": 380,
+    "spot_price": 380,
+    "min_price": 200,
+    "max_price": 600,
+    "price_range": "\u20b9200 - \u20b9600 / pcs",
+    "sell_to": "Authorized E-Waste Glass & Metal Processor",
+    "reuse_tip": "Heavy copper deflection yokes, power inverter boards, and aluminium frames are reclaimed.",
+    "eco_impact": {
+      "co2_saved_per_unit": "14.0 kg CO\u2082/unit",
+      "energy_saved": "Safely isolates leaded glass",
+      "badge": "Copper Yoke & Glass"
+    },
+    "icon": "\ud83d\udcfa"
+  },
+  {
+    "key": "led lcd television screen broken panel",
+    "display_name": "LED / LCD Television Panels",
+    "category": "E-Waste",
+    "type": "Flat Panel Display E-Waste",
+    "unit": "pcs",
+    "base_price": 320,
+    "spot_price": 320,
+    "min_price": 180,
+    "max_price": 500,
+    "price_range": "\u20b9180 - \u20b9500 / pcs",
+    "sell_to": "Display Dismantler / Circuit Salvager",
+    "reuse_tip": "Yields valuable main logic boards, T-CON boards, and copper-wound LED driver power units.",
+    "eco_impact": {
+      "co2_saved_per_unit": "12.0 kg CO\u2082/unit",
+      "energy_saved": "Isolates indium tin oxide transparent coatings",
+      "badge": "Flat Display Unit"
+    },
+    "icon": "\ud83d\udda5\ufe0f"
+  },
+  {
+    "key": "a car or lead-acid battery",
+    "display_name": "Lead-Acid Inverter & Auto Batteries",
+    "category": "E-Waste",
+    "type": "Hazardous Energy Storage Scrap",
+    "unit": "kg",
+    "base_price": 95,
+    "spot_price": 95,
+    "min_price": 75,
+    "max_price": 120,
+    "price_range": "\u20b975 - \u20b9120 / kg",
+    "sell_to": "Authorized Battery Recycler / Smelter",
+    "reuse_tip": "Nearly 99% of battery lead is endlessly recyclable. Never puncture or drain electrolyte.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.1 kg CO\u2082/kg",
+      "energy_saved": "99% recyclability index",
+      "badge": "Infinite Recyclable Lead"
+    },
+    "icon": "\ud83d\udd0b"
+  },
+  {
+    "key": "lithium ion 18650 battery cells laptop powerbank",
+    "display_name": "Lithium-Ion 18650 Cells Scrap",
+    "category": "E-Waste",
+    "type": "Cobalt & Nickel Battery Cells",
+    "unit": "kg",
+    "base_price": 140,
+    "spot_price": 140,
+    "min_price": 110,
+    "max_price": 180,
+    "price_range": "\u20b9110 - \u20b9180 / kg",
+    "sell_to": "Certified Lithium Hydrometallurgy Unit",
+    "reuse_tip": "Laptop packs and powerbanks. Contains expensive cobalt, nickel, and copper current collector foils.",
+    "eco_impact": {
+      "co2_saved_per_unit": "5.2 kg CO\u2082/kg",
+      "energy_saved": "Saves critical Cobalt & Lithium mining",
+      "badge": "Lithium-Cobalt Core"
+    },
+    "icon": "\ud83d\udd0b"
+  },
+  {
+    "key": "an electric vehicle battery pack",
+    "display_name": "EV Battery Pack (High Voltage)",
+    "category": "E-Waste",
+    "type": "Automotive Lithium Battery",
+    "unit": "pcs",
+    "base_price": 28000,
+    "spot_price": 28000,
+    "min_price": 15000,
+    "max_price": 60000,
+    "price_range": "\u20b915000 - \u20b960000 / pcs",
+    "sell_to": "EV OEM / Second-Life Solar Energy Storage",
+    "reuse_tip": "Decommissioned EV packs retain 70-80% capacity \u2014 ideal for stationary solar home storage.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1,200 kg CO\u2082/pack",
+      "energy_saved": "Second-life adds 6-8 years",
+      "badge": "Second-Life Solar"
+    },
+    "icon": "\u26a1"
+  },
+  {
+    "key": "an electrical wire or cable",
+    "display_name": "Electrical Cables & Copper Wires",
+    "category": "E-Waste",
+    "type": "Insulated Copper Conduit",
+    "unit": "kg",
+    "base_price": 220,
+    "spot_price": 220,
+    "min_price": 180,
+    "max_price": 260,
+    "price_range": "\u20b9180 - \u20b9260 / kg",
+    "sell_to": "Cable Stripping Plant / Mandi Merchant",
+    "reuse_tip": "Stripping outer PVC insulation exposes bright copper wire, increasing yield by up to 80%.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.2 kg CO\u2082/kg",
+      "energy_saved": "Recovers copper & PVC jacket",
+      "badge": "Cable Core"
+    },
+    "icon": "\ud83d\udd0c"
+  },
+  {
+    "key": "a computer CPU or microprocessor chip or processor with gold pins",
+    "display_name": "CPU / Microprocessor (Gold Pins)",
+    "category": "E-Waste",
+    "type": "Precious Metal Microchip",
+    "unit": "pcs",
+    "base_price": 180,
+    "spot_price": 180,
+    "min_price": 120,
+    "max_price": 350,
+    "price_range": "\u20b9120 - \u20b9350 / pcs",
+    "sell_to": "Precious Metal E-Waste Refiner",
+    "reuse_tip": "Ceramic and fiber CPUs contain pure microscopic gold bonding wires. Handle pins gently.",
+    "eco_impact": {
+      "co2_saved_per_unit": "5.5 kg CO\u2082/chip",
+      "energy_saved": "Direct gold extraction",
+      "badge": "Precious Recovery"
+    },
+    "icon": "\ud83e\udde0"
+  },
+  {
+    "key": "ceramic cpu processor 486 pentium gold cap",
+    "display_name": "Ceramic Vintage CPU (Gold Cap)",
+    "category": "E-Waste",
+    "type": "Vintage High-Yield Precious Scrap",
+    "unit": "pcs",
+    "base_price": 280,
+    "spot_price": 280,
+    "min_price": 190,
+    "max_price": 480,
+    "price_range": "\u20b9190 - \u20b9480 / pcs",
+    "sell_to": "Precious Metal Hydrometallurgy Specialist",
+    "reuse_tip": "Older 386/486/Pentium ceramic CPUs contain thick gold caps and pins; highest gold yield.",
+    "eco_impact": {
+      "co2_saved_per_unit": "8.0 kg CO\u2082/chip",
+      "energy_saved": "Maximum gold yield per gram",
+      "badge": "Vintage Gold Cap"
+    },
+    "icon": "\ud83e\ude99"
+  },
+  {
+    "key": "a computer RAM memory stick",
+    "display_name": "RAM Memory Stick (DDR3 / DDR4)",
+    "category": "E-Waste",
+    "type": "High Resale E-Waste",
+    "unit": "pcs",
+    "base_price": 120,
+    "spot_price": 120,
+    "min_price": 90,
+    "max_price": 300,
+    "price_range": "\u20b990 - \u20b9300 / pcs",
+    "sell_to": "PC Refurbisher / Component Dealer",
+    "reuse_tip": "Working DDR3/DDR4 RAM sticks command high value when sold directly to technicians.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.2 kg CO\u2082/stick",
+      "energy_saved": "Direct functional reuse",
+      "badge": "Gold Finger Contacts"
+    },
+    "icon": "\ud83d\udcbe"
+  },
+  {
+    "key": "server ecc registered ram modules",
+    "display_name": "Server ECC Registered RAM",
+    "category": "E-Waste",
+    "type": "Enterprise High Density Memory",
+    "unit": "pcs",
+    "base_price": 190,
+    "spot_price": 190,
+    "min_price": 130,
+    "max_price": 420,
+    "price_range": "\u20b9130 - \u20b9420 / pcs",
+    "sell_to": "Server Hardware Specialist / Refiner",
+    "reuse_tip": "Multi-chip ECC modules yield double the gold fingers and BGA memory silicon dies.",
+    "eco_impact": {
+      "co2_saved_per_unit": "6.0 kg CO\u2082/stick",
+      "energy_saved": "Enterprise silicon preservation",
+      "badge": "Server ECC Gold"
+    },
+    "icon": "\ud83e\udde0"
+  },
+  {
+    "key": "a computer graphics card or GPU video card",
+    "display_name": "Graphics Card (GPU / Video Card)",
+    "category": "E-Waste",
+    "type": "High Grade Hardware",
+    "unit": "pcs",
+    "base_price": 450,
+    "spot_price": 450,
+    "min_price": 250,
+    "max_price": 1500,
+    "price_range": "\u20b9250 - \u20b91500 / pcs",
+    "sell_to": "Used Hardware Reseller / Dismantler",
+    "reuse_tip": "Yields heavy copper heatsinks, GDDR memory chips, and high-efficiency VRMs.",
+    "eco_impact": {
+      "co2_saved_per_unit": "18.0 kg CO\u2082/card",
+      "energy_saved": "Silicon & copper heatsink reclaim",
+      "badge": "Silicon & Copper Core"
+    },
+    "icon": "\ud83c\udfae"
+  },
+  {
+    "key": "an arduino or esp32 or raspberry pi microcontroller development board",
+    "display_name": "Arduino / ESP32 Microcontroller",
+    "category": "E-Waste",
+    "type": "Robotics & Embedded Dev Board",
+    "unit": "pcs",
+    "base_price": 140,
+    "spot_price": 140,
+    "min_price": 80,
+    "max_price": 280,
+    "price_range": "\u20b980 - \u20b9280 / pcs",
+    "sell_to": "Maker Labs / Electronics Refurbishers",
+    "reuse_tip": "Working boards can be wiped and reflashed for STEM education or IoT automation.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/board",
+      "energy_saved": "Replaces need for new silicon fab",
+      "badge": "Maker Lab Circularity"
+    },
+    "icon": "\ud83e\udd16"
+  },
+  {
+    "key": "raspberry pi single board microcomputer",
+    "display_name": "Raspberry Pi Single Board Computer",
+    "category": "E-Waste",
+    "type": "ARM Linux Microcomputer",
+    "unit": "pcs",
+    "base_price": 650,
+    "spot_price": 650,
+    "min_price": 400,
+    "max_price": 1800,
+    "price_range": "\u20b9400 - \u20b91800 / pcs",
+    "sell_to": "Maker Space / IoT Hardware Refurbisher",
+    "reuse_tip": "High demand in edge computing and student projects. Check HDMI and boot activity.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.5 kg CO\u2082/unit",
+      "energy_saved": "Direct functional reuse",
+      "badge": "Single Board Computer"
+    },
+    "icon": "\ud83c\udf53"
+  },
+  {
+    "key": "an integrated circuit chip or microchip or smd ic",
+    "display_name": "Integrated Circuit (IC) Chip",
+    "category": "E-Waste",
+    "type": "Silicon SMD Microchip",
+    "unit": "kg",
+    "base_price": 220,
+    "spot_price": 220,
+    "min_price": 140,
+    "max_price": 480,
+    "price_range": "\u20b9140 - \u20b9480 / kg",
+    "sell_to": "Silicon Reclaim Smelter / Component Salvager",
+    "reuse_tip": "Gold and copper bonding wires inside epoxy casing; desolder gently to preserve pins.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.1 kg CO\u2082/kg",
+      "energy_saved": "Pure silicon crystal reclaim",
+      "badge": "Silicon & Gold Bond"
+    },
+    "icon": "\ud83d\udd32"
+  },
+  {
+    "key": "computer hard disk drive hdd scrap",
+    "display_name": "Hard Disk Drive (HDD Scrap)",
+    "category": "E-Waste",
+    "type": "Neodymium Magnet & Aluminium Board",
+    "unit": "pcs",
+    "base_price": 65,
+    "spot_price": 65,
+    "min_price": 45,
+    "max_price": 110,
+    "price_range": "\u20b945 - \u20b9110 / pcs",
+    "sell_to": "E-Waste Dismantler / Rare Earth Recycler",
+    "reuse_tip": "Contains high grade aluminium casting, gold plated logic board, and powerful Neodymium N52 magnets.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.8 kg CO\u2082/drive",
+      "energy_saved": "Recovers critical Neodymium & Dysprosium",
+      "badge": "Rare Earth HDD"
+    },
+    "icon": "\ud83d\udcbd"
+  },
+  {
+    "key": "solid state drive ssd nvme sata scrap",
+    "display_name": "Solid State Drive (SSD / NVMe)",
+    "category": "E-Waste",
+    "type": "NAND Flash Silicon Board",
+    "unit": "pcs",
+    "base_price": 90,
+    "spot_price": 90,
+    "min_price": 60,
+    "max_price": 220,
+    "price_range": "\u20b960 - \u20b9220 / pcs",
+    "sell_to": "IT Component Reseller / Memory Salvager",
+    "reuse_tip": "Working SSDs are wiped and repurposed. Broken SSDs yield dense multi-layer flash dies.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.0 kg CO\u2082/drive",
+      "energy_saved": "Silicon preservation",
+      "badge": "NAND Flash SSD"
+    },
+    "icon": "\ud83d\udcbe"
+  },
+  {
+    "key": "computer smps power supply unit scrap",
+    "display_name": "Computer SMPS Power Supply",
+    "category": "E-Waste",
+    "type": "Switch Mode Transformer & Aluminium Unit",
+    "unit": "pcs",
+    "base_price": 85,
+    "spot_price": 85,
+    "min_price": 60,
+    "max_price": 130,
+    "price_range": "\u20b960 - \u20b9130 / pcs",
+    "sell_to": "Scrap Dismantler / Transformer Salvager",
+    "reuse_tip": "Contains copper transformers, extruded aluminium heatsinks, and thick wiring harness.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.8 kg CO\u2082/unit",
+      "energy_saved": "Recovers copper, aluminium & sheet iron",
+      "badge": "SMPS Power Unit"
+    },
+    "icon": "\ud83d\udd0c"
+  },
+  {
+    "key": "a power transformer or copper coil transformer",
+    "display_name": "Power Transformer (Copper)",
+    "category": "E-Waste",
+    "type": "Copper Core Power Component",
+    "unit": "kg",
+    "base_price": 85,
+    "spot_price": 85,
+    "min_price": 60,
+    "max_price": 130,
+    "price_range": "\u20b960 - \u20b9130 / kg",
+    "sell_to": "Transformer Rewinder / Copper Scrap Merchant",
+    "reuse_tip": "Heavy enamel-insulated pure copper winding around silicon steel E-I laminations.",
+    "eco_impact": {
+      "co2_saved_per_unit": "4.2 kg CO\u2082/kg",
+      "energy_saved": "Pure electrolytic copper winding",
+      "badge": "Heavy Copper Coil"
+    },
+    "icon": "\u26a1"
+  },
+  {
+    "key": "an electrolytic capacitor or ceramic capacitor",
+    "display_name": "Capacitors (Electrolytic / Film)",
+    "category": "E-Waste",
+    "type": "Electronic Passive Component",
+    "unit": "kg",
+    "base_price": 45,
+    "spot_price": 45,
+    "min_price": 25,
+    "max_price": 75,
+    "price_range": "\u20b925 - \u20b975 / kg",
+    "sell_to": "E-Waste Refining Plant",
+    "reuse_tip": "High purity aluminium foil, tantalum traces, and copper leads.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Aluminium foil & tantalum recovery",
+      "badge": "Tantalum & Aluminium"
+    },
+    "icon": "\ud83d\udd0b"
+  },
+  {
+    "key": "electronic resistors smd or through hole",
+    "display_name": "Resistors (Through-Hole & SMD)",
+    "category": "E-Waste",
+    "type": "Electronic Passive Component",
+    "unit": "kg",
+    "base_price": 35,
+    "spot_price": 35,
+    "min_price": 20,
+    "max_price": 55,
+    "price_range": "\u20b920 - \u20b955 / kg",
+    "sell_to": "E-Waste Smelter",
+    "reuse_tip": "Ceramic core with tin-plated copper leads and thin nickel-chromium resistance films.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.8 kg CO\u2082/kg",
+      "energy_saved": "Copper lead reclamation",
+      "badge": "Tin-Copper Leads"
+    },
+    "icon": "\ud83c\udf9b\ufe0f"
+  },
+  {
+    "key": "telecom bts tower base station card gold",
+    "display_name": "Telecom Base Station (BTS) Cards",
+    "category": "E-Waste",
+    "type": "Heavy Gold Plated Telecom PCB",
+    "unit": "kg",
+    "base_price": 480,
+    "spot_price": 480,
+    "min_price": 380,
+    "max_price": 650,
+    "price_range": "\u20b9380 - \u20b9650 / kg",
+    "sell_to": "Precious Metal Smelter",
+    "reuse_tip": "Telecom mobile tower controller cards have the highest gold flash thickness in industrial e-waste.",
+    "eco_impact": {
+      "co2_saved_per_unit": "6.5 kg CO\u2082/kg",
+      "energy_saved": "High concentration gold & palladium",
+      "badge": "Telecom Grade Gold"
+    },
+    "icon": "\ud83d\udce1"
+  },
+  {
+    "key": "a glass bottle or broken glass",
+    "display_name": "Glass Bottles Scrap (Clear)",
+    "category": "Glass & Rubber",
+    "type": "Container Glass",
+    "unit": "kg",
+    "base_price": 4.0,
+    "spot_price": 4.0,
+    "min_price": 3,
+    "max_price": 6,
+    "price_range": "\u20b93 - \u20b96 / kg",
+    "sell_to": "Glass Bottle Factory / Beverage Bottler",
+    "reuse_tip": "Intact beer and beverage glass bottles are washed and refilled up to 30 times.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.3 kg CO\u2082/kg",
+      "energy_saved": "100% endless recyclability",
+      "badge": "Circular Glass"
+    },
+    "icon": "\ud83c\udf7e"
+  },
+  {
+    "key": "amber brown glass beer bottles",
+    "display_name": "Amber / Brown Glass Bottles",
+    "category": "Glass & Rubber",
+    "type": "UV Resistant Container Glass",
+    "unit": "kg",
+    "base_price": 4.5,
+    "spot_price": 4.5,
+    "min_price": 3,
+    "max_price": 6.5,
+    "price_range": "\u20b93 - \u20b96.5 / kg",
+    "sell_to": "Brewery Return Depots / Glass Plant",
+    "reuse_tip": "Sorted brown beer bottles return directly to washing lines or amber furnace feed.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.32 kg CO\u2082/kg",
+      "energy_saved": "Direct reuse in bottle return systems",
+      "badge": "Amber Glass"
+    },
+    "icon": "\ud83c\udf7a"
+  },
+  {
+    "key": "green wine and soda glass bottles",
+    "display_name": "Green Glass Wine Bottles",
+    "category": "Glass & Rubber",
+    "type": "Green Container Glass",
+    "unit": "kg",
+    "base_price": 3.8,
+    "spot_price": 3.8,
+    "min_price": 2.5,
+    "max_price": 5.5,
+    "price_range": "\u20b92.5 - \u20b95.5 / kg",
+    "sell_to": "Green Glass Melting Tank",
+    "reuse_tip": "Wine and carbonated soft drink bottles. Avoid mixing with flint clear glass.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.28 kg CO\u2082/kg",
+      "energy_saved": "Saves soda ash and silica",
+      "badge": "Green Glass"
+    },
+    "icon": "\ud83c\udf77"
+  },
+  {
+    "key": "broken glass shards cullet scrap",
+    "display_name": "Broken Glass (Clear Cullet)",
+    "category": "Glass & Rubber",
+    "type": "Glass Cullet Feedstock",
+    "unit": "kg",
+    "base_price": 2.5,
+    "spot_price": 2.5,
+    "min_price": 2,
+    "max_price": 4,
+    "price_range": "\u20b92 - \u20b94 / kg",
+    "sell_to": "Glass Furnace & Insulation Plant",
+    "reuse_tip": "Using recycled glass cullet in melting furnaces drops combustion temperatures and fuel usage.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.25 kg CO\u2082/kg",
+      "energy_saved": "30% less furnace energy vs silica",
+      "badge": "Furnace Cullet"
+    },
+    "icon": "\ud83c\udf78"
+  },
+  {
+    "key": "amber and coloured broken glass cullet",
+    "display_name": "Coloured Broken Cullet",
+    "category": "Glass & Rubber",
+    "type": "Mixed Cullet Melting Feedstock",
+    "unit": "kg",
+    "base_price": 2.0,
+    "spot_price": 2.0,
+    "min_price": 1.5,
+    "max_price": 3.2,
+    "price_range": "\u20b91.5 - \u20b93.2 / kg",
+    "sell_to": "Glass Wool & Aggregate Plant",
+    "reuse_tip": "Used in mineral glass wool insulation or crushed into decorative terrazzo flooring.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.22 kg CO\u2082/kg",
+      "energy_saved": "Recycled into fiberglass insulation",
+      "badge": "Coloured Cullet"
+    },
+    "icon": "\ud83e\udea8"
+  },
+  {
+    "key": "float window sheet glass building scrap",
+    "display_name": "Flat Window Sheet Glass",
+    "category": "Glass & Rubber",
+    "type": "Soda-Lime Float Glass",
+    "unit": "kg",
+    "base_price": 3.0,
+    "spot_price": 3.0,
+    "min_price": 2,
+    "max_price": 4.5,
+    "price_range": "\u20b92 - \u20b94.5 / kg",
+    "sell_to": "Float Glass Factory / Mosaic Tile Unit",
+    "reuse_tip": "Glazing window panes from renovation projects. Keep free from frames and silicone sealant.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.26 kg CO\u2082/kg",
+      "energy_saved": "Zero loss recycling",
+      "badge": "Float Glass"
+    },
+    "icon": "\ud83e\ude9f"
+  },
+  {
+    "key": "laminated auto windshield glass pvb layer",
+    "display_name": "Laminated Windshield Auto Glass",
+    "category": "Glass & Rubber",
+    "type": "Automotive Safety Laminated Glass",
+    "unit": "kg",
+    "base_price": 2.2,
+    "spot_price": 2.2,
+    "min_price": 1.5,
+    "max_price": 3.5,
+    "price_range": "\u20b91.5 - \u20b93.5 / kg",
+    "sell_to": "Windshield Delamination Processor",
+    "reuse_tip": "Crush rollers separate glass cullet from the flexible PVB plastic interlayer.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.30 kg CO\u2082/kg",
+      "energy_saved": "Recovers glass cullet and PVB polymer",
+      "badge": "Automotive Glass"
+    },
+    "icon": "\ud83d\ude97"
+  },
+  {
+    "key": "borosilicate laboratory glassware test tubes",
+    "display_name": "Laboratory Borosilicate Glass",
+    "category": "Glass & Rubber",
+    "type": "Low Expansion Heat-Resistant Glass",
+    "unit": "kg",
+    "base_price": 5.5,
+    "spot_price": 5.5,
+    "min_price": 4,
+    "max_price": 8,
+    "price_range": "\u20b94 - \u20b98 / kg",
+    "sell_to": "Specialized High-Temp Glass Foundry",
+    "reuse_tip": "Never mix with standard bottle glass due to very high melting point (>1200\u00b0C).",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.45 kg CO\u2082/kg",
+      "energy_saved": "High thermal shock resistance",
+      "badge": "Borosilicate Glass"
+    },
+    "icon": "\ud83e\uddea"
+  },
+  {
+    "key": "glass jars food containers pickle jars",
+    "display_name": "Food & Pickle Glass Jars",
+    "category": "Glass & Rubber",
+    "type": "Flint Container Glass",
+    "unit": "kg",
+    "base_price": 4.2,
+    "spot_price": 4.2,
+    "min_price": 3,
+    "max_price": 6,
+    "price_range": "\u20b93 - \u20b96 / kg",
+    "sell_to": "Food Packing Glass Plant",
+    "reuse_tip": "Wide-mouth jam and pickle containers. Wash clean from food residue.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.31 kg CO\u2082/kg",
+      "energy_saved": "Endless food-safe circularity",
+      "badge": "Food Glass Jars"
+    },
+    "icon": "\ud83c\udf6f"
+  },
+  {
+    "key": "truck and bus radial tyres heavy commercial",
+    "display_name": "Truck & Bus Radial Tyres (TBR)",
+    "category": "Glass & Rubber",
+    "type": "Heavy Commercial Vulcanized Rubber",
+    "unit": "kg",
+    "base_price": 14,
+    "spot_price": 14,
+    "min_price": 10,
+    "max_price": 18,
+    "price_range": "\u20b910 - \u20b918 / kg",
+    "sell_to": "Retreading Plant / Pyrolysis & Reclaim Unit",
+    "reuse_tip": "Heavy duty steel-belted carcasses in sound condition are retreaded 2-3 times.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.2 kg CO\u2082/kg",
+      "energy_saved": "75% energy saved over new tyre manufacture",
+      "badge": "Commercial TBR"
+    },
+    "icon": "\ud83d\ude9b"
+  },
+  {
+    "key": "a car or bike tyre",
+    "display_name": "Used Passenger Car Tyres",
+    "category": "Glass & Rubber",
+    "type": "Vulcanized Rubber Tyre",
+    "unit": "kg",
+    "base_price": 12,
+    "spot_price": 12,
+    "min_price": 8,
+    "max_price": 16,
+    "price_range": "\u20b98 - \u20b916 / kg",
+    "sell_to": "Tyre Retreading Center / Crumb Rubber Plant",
+    "reuse_tip": "Crumb rubber is blended into long-lasting highway asphalt and safety athletic tracks.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/kg",
+      "energy_saved": "70% energy saved vs virgin rubber",
+      "badge": "Crumb Rubber"
+    },
+    "icon": "\ud83d\udede"
+  },
+  {
+    "key": "motorcycle and scooter two wheeler tyres",
+    "display_name": "Two-Wheeler Bike Tyres",
+    "category": "Glass & Rubber",
+    "type": "Nylon Ply Bike Rubber",
+    "unit": "kg",
+    "base_price": 11,
+    "spot_price": 11,
+    "min_price": 7,
+    "max_price": 15,
+    "price_range": "\u20b97 - \u20b915 / kg",
+    "sell_to": "Reclaim Rubber & Oil Pyrolysis Plant",
+    "reuse_tip": "Shredded for fuel oil and recovered carbon black.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.6 kg CO\u2082/kg",
+      "energy_saved": "Avoids roadside open dumping",
+      "badge": "Two-Wheeler Rubber"
+    },
+    "icon": "\ud83c\udfcd\ufe0f"
+  },
+  {
+    "key": "tractor and heavy earthmover agricultural tyres",
+    "display_name": "Tractor & Agricultural Tyres",
+    "category": "Glass & Rubber",
+    "type": "Heavy Agricultural Lug Rubber",
+    "unit": "kg",
+    "base_price": 13,
+    "spot_price": 13,
+    "min_price": 9,
+    "max_price": 17,
+    "price_range": "\u20b99 - \u20b917 / kg",
+    "sell_to": "Heavy Retreading & Dock Bumper Fabricator",
+    "reuse_tip": "High rubber content per tyre. Often cut into marine harbor dock bumpers.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.1 kg CO\u2082/kg",
+      "energy_saved": "Repurposed into harbor fender cushions",
+      "badge": "Agricultural Tyre"
+    },
+    "icon": "\ud83d\ude9c"
+  },
+  {
+    "key": "crumb rubber granules 30 mesh asphalt",
+    "display_name": "Crumb Rubber Granules (30 Mesh)",
+    "category": "Glass & Rubber",
+    "type": "Granulated De-Wired Rubber",
+    "unit": "kg",
+    "base_price": 18,
+    "spot_price": 18,
+    "min_price": 14,
+    "max_price": 24,
+    "price_range": "\u20b914 - \u20b924 / kg",
+    "sell_to": "Rubber Modified Bitumen (CRMB) Road Plant",
+    "reuse_tip": "Clean steel-free crumb rubber blended into asphalt highways prevents road cracking.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.4 kg CO\u2082/kg",
+      "energy_saved": "Extends highway surface life by 50%",
+      "badge": "CRMB Granules"
+    },
+    "icon": "\ud83d\udee3\ufe0f"
+  },
+  {
+    "key": "tyre tread buffing dust retreading byproduct",
+    "display_name": "Tyre Buffing Powder & Peelings",
+    "category": "Glass & Rubber",
+    "type": "Pure Vulcanized Rubber Powder",
+    "unit": "kg",
+    "base_price": 15,
+    "spot_price": 15,
+    "min_price": 11,
+    "max_price": 20,
+    "price_range": "\u20b911 - \u20b920 / kg",
+    "sell_to": "Molded Rubber Goods Manufacturer",
+    "reuse_tip": "Byproduct of retreading rasp machines. Molded into solid handcart wheels and rubber mats.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "Direct vulcanization into solid wheels",
+      "badge": "Buffing Powder"
+    },
+    "icon": "\ud83d\udca8"
+  },
+  {
+    "key": "industrial rubber scrap or conveyor belt",
+    "display_name": "Industrial Rubber Conveyor Belting",
+    "category": "Glass & Rubber",
+    "type": "Industrial Fabric Reinforced Rubber",
+    "unit": "kg",
+    "base_price": 9,
+    "spot_price": 9,
+    "min_price": 6,
+    "max_price": 14,
+    "price_range": "\u20b96 - \u20b914 / kg",
+    "sell_to": "Pyrolysis & Rubber Reclaim Plant",
+    "reuse_tip": "Reinforced conveyor belts and heavy gaskets shredded for carbon black and pyrolysis fuel.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Prevents landfill burning",
+      "badge": "Reclaim Rubber"
+    },
+    "icon": "\ud83d\udda4"
+  },
+  {
+    "key": "natural rubber gaskets and seals industrial",
+    "display_name": "Natural Rubber Gaskets & Seals",
+    "category": "Glass & Rubber",
+    "type": "Elastomer Industrial Gaskets",
+    "unit": "kg",
+    "base_price": 16,
+    "spot_price": 16,
+    "min_price": 12,
+    "max_price": 21,
+    "price_range": "\u20b912 - \u20b921 / kg",
+    "sell_to": "Rubber Compounder & Molding Unit",
+    "reuse_tip": "Pipe joint gaskets and machinery vibration isolators.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Saves virgin latex harvesting",
+      "badge": "Elastomer Seals"
+    },
+    "icon": "\u2b55"
+  },
+  {
+    "key": "butyl inner tubes automotive punctured",
+    "display_name": "Butyl Rubber Inner Tubes",
+    "category": "Glass & Rubber",
+    "type": "Isobutylene Isoprene Rubber",
+    "unit": "kg",
+    "base_price": 22,
+    "spot_price": 22,
+    "min_price": 17,
+    "max_price": 28,
+    "price_range": "\u20b917 - \u20b928 / kg",
+    "sell_to": "Reclaimed Butyl Rubber Processor",
+    "reuse_tip": "Automotive inner tubes made of impermeable Butyl rubber; commands high price in reclaim sector.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.5 kg CO\u2082/kg",
+      "energy_saved": "Devulcanized into premium innerliner sheets",
+      "badge": "Butyl Rubber"
+    },
+    "icon": "\ud83c\udf69"
+  },
+  {
+    "key": "rubber hose pipes hydraulic and radiator",
+    "display_name": "Hydraulic & Radiator Rubber Hoses",
+    "category": "Glass & Rubber",
+    "type": "EPDM & Nitrile Reinforced Hoses",
+    "unit": "kg",
+    "base_price": 11,
+    "spot_price": 11,
+    "min_price": 8,
+    "max_price": 15,
+    "price_range": "\u20b98 - \u20b915 / kg",
+    "sell_to": "Rubber Scrap Pyrolysis Unit",
+    "reuse_tip": "Wire-reinforced engine cooling and oil hoses. High calorific value.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Converted into fuel oil & steel wire",
+      "badge": "Reinforced Hoses"
+    },
+    "icon": "\ud83d\udc0d"
+  },
+  {
+    "key": "footwear rubber soles hawai chappal scrap",
+    "display_name": "Footwear Rubber Soles (Chappal Scrap)",
+    "category": "Glass & Rubber",
+    "type": "EVA & Vulcanized Footwear Rubber",
+    "unit": "kg",
+    "base_price": 10,
+    "spot_price": 10,
+    "min_price": 7,
+    "max_price": 14,
+    "price_range": "\u20b97 - \u20b914 / kg",
+    "sell_to": "Shoe Sole Manufacturer / Carpet Underlay Maker",
+    "reuse_tip": "Discarded slipper soles and footwear factory trim shredded into carpet padding.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.3 kg CO\u2082/kg",
+      "energy_saved": "Bonded foam underlay circularity",
+      "badge": "Footwear Rubber"
+    },
+    "icon": "\ud83e\ude74"
+  },
+  {
+    "key": "laminated safety glass windscreen pvb interlayer",
+    "display_name": "Laminated Windscreen Glass (PVB)",
+    "category": "Glass & Rubber",
+    "type": "PVB Interlayer Safety Glass",
+    "unit": "kg",
+    "base_price": 5.5,
+    "spot_price": 5.5,
+    "min_price": 4,
+    "max_price": 7.5,
+    "price_range": "\u20b94 - \u20b97.5 / kg",
+    "sell_to": "Glass Recycling Plant / PVB Film Reclaimer",
+    "reuse_tip": "Automotive windshields with PVB interlayer require de-lamination before glass cullet use in furnace.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.4 kg CO\u2082/kg",
+      "energy_saved": "PVB recovered as acoustic insulation",
+      "badge": "Safety Glass"
+    },
+    "icon": "\ud83d\ude98"
+  },
+  {
+    "key": "silica gel desiccant waste industrial scrap",
+    "display_name": "Silica Gel Desiccant Waste",
+    "category": "Glass & Rubber",
+    "type": "Amorphous Silicon Dioxide Adsorbent",
+    "unit": "kg",
+    "base_price": 6,
+    "spot_price": 6,
+    "min_price": 4,
+    "max_price": 9,
+    "price_range": "\u20b94 - \u20b99 / kg",
+    "sell_to": "Regeneration Plant / Chemical Recycler",
+    "reuse_tip": "Heat at 120\u00b0C to regenerate adsorption capacity; regenerated silica gel resells at up to 80% of new price.",
+    "eco_impact": {
+      "co2_saved_per_unit": "0.35 kg CO\u2082/kg",
+      "energy_saved": "Thermal regeneration eliminates disposal",
+      "badge": "Silica Regen"
+    },
+    "icon": "\ud83e\uddca"
+  },
+  {
+    "key": "natural rubber crepe sheet block scrap",
+    "display_name": "Natural Rubber Block Scrap (RSS Grade)",
+    "category": "Glass & Rubber",
+    "type": "Ribbed Smoked Sheet Rubber (RSS 4/5)",
+    "unit": "kg",
+    "base_price": 145,
+    "spot_price": 145,
+    "min_price": 125,
+    "max_price": 170,
+    "price_range": "\u20b9125 - \u20b9170 / kg",
+    "sell_to": "Natural Rubber Compounder / Tyre Manufacturer",
+    "reuse_tip": "Factory reject RSS blocks and crepe offcuts from Kerala and Tamil Nadu latex farms.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.0 kg CO\u2082/kg",
+      "energy_saved": "Biobased polymer circularity",
+      "badge": "Natural Latex RSS"
+    },
+    "icon": "\ud83c\udf33"
+  },
+  {
+    "key": "nitrile nbr rubber gloves industrial waste",
+    "display_name": "Nitrile Rubber Gloves & Seals (NBR)",
+    "category": "Glass & Rubber",
+    "type": "Acrylonitrile-Butadiene Rubber Scrap",
+    "unit": "kg",
+    "base_price": 14,
+    "spot_price": 14,
+    "min_price": 10,
+    "max_price": 19,
+    "price_range": "\u20b910 - \u20b919 / kg",
+    "sell_to": "Rubber Pyrolysis Oil Producer",
+    "reuse_tip": "Used industrial and medical examination gloves. Incinerate at certified facility or pyrolyze for carbon black.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.5 kg CO\u2082/kg",
+      "energy_saved": "Carbon black and fuel oil recovery",
+      "badge": "NBR Pyrolysis"
+    },
+    "icon": "\ud83e\udde4"
+  },
+  {
+    "key": "fiberglass frp composite sheet panel scrap",
+    "display_name": "Fibreglass / FRP Composite Panels",
+    "category": "Glass & Rubber",
+    "type": "Glass Fibre Reinforced Polymer",
+    "unit": "kg",
+    "base_price": 8,
+    "spot_price": 8,
+    "min_price": 5,
+    "max_price": 12,
+    "price_range": "\u20b95 - \u20b912 / kg",
+    "sell_to": "Cement Kiln Co-Processing / FRP Shredder",
+    "reuse_tip": "Boat hulls, chemical tank offcuts, and wind turbine blade scrap. Shredded into cement kiln additive.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Thermal co-processing in cement kiln",
+      "badge": "FRP Composite"
+    },
+    "icon": "\ud83d\udee5\ufe0f"
+  },
+  {
+    "key": "factory scrap debris or metal slag debris",
+    "display_name": "Factory Debris & Slag",
+    "category": "Industrial Scrap",
+    "type": "Mixed Industrial Byproduct",
+    "unit": "kg",
+    "base_price": 25,
+    "spot_price": 25,
+    "min_price": 22,
+    "max_price": 28,
+    "price_range": "\u20b922 - \u20b928 / kg",
+    "sell_to": "Industrial Smelter / Blast Furnace",
+    "reuse_tip": "Recover metallic content from furnace slag; non-metallic slag is utilized in green cement.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.8 kg CO\u2082/kg",
+      "energy_saved": "Slag cement reduces CO\u2082 emissions",
+      "badge": "Green Cement Slag"
+    },
+    "icon": "\ud83c\udfed"
+  },
+  {
+    "key": "automobile scrap parts engine block chassis",
+    "display_name": "Automobile Scrap Parts",
+    "category": "Industrial Scrap",
+    "type": "Heavy Cast Alloy Automotive Scrap",
+    "unit": "kg",
+    "base_price": 38,
+    "spot_price": 38,
+    "min_price": 32,
+    "max_price": 45,
+    "price_range": "\u20b932 - \u20b945 / kg",
+    "sell_to": "Authorized Vehicle Scrapping Facility (RVSF)",
+    "reuse_tip": "Cast iron engine blocks and aluminium cylinder heads yield clean segregated alloys.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.0 kg CO\u2082/kg",
+      "energy_saved": "Direct foundry re-melting",
+      "badge": "Cast Alloy Auto"
+    },
+    "icon": "\ud83d\ude97"
+  },
+  {
+    "key": "electric motor scrap copper stator winding",
+    "display_name": "Electric Motors Scrap (Copper Stator)",
+    "category": "Industrial Scrap",
+    "type": "Copper & Steel Motor Assembly",
+    "unit": "kg",
+    "base_price": 48,
+    "spot_price": 48,
+    "min_price": 38,
+    "max_price": 60,
+    "price_range": "\u20b938 - \u20b960 / kg",
+    "sell_to": "Motor Dismantling Yard / Rewinder",
+    "reuse_tip": "Contains 12-18% pure copper magnet wire and high grade silicon electrical steel.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.5 kg CO\u2082/kg",
+      "energy_saved": "Recovers copper & electrical steel",
+      "badge": "Copper Motor Core"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "air conditioner ac compressor scrap copper",
+    "display_name": "AC & Fridge Compressor Scrap",
+    "category": "Industrial Scrap",
+    "type": "Sealed Copper Compressor Unit",
+    "unit": "pcs",
+    "base_price": 480,
+    "spot_price": 480,
+    "min_price": 350,
+    "max_price": 650,
+    "price_range": "\u20b9350 - \u20b9650 / pcs",
+    "sell_to": "Compressor Dismantling Unit",
+    "reuse_tip": "Drain residual lubricating oil. Intact sealed cans contain heavy copper motor stators.",
+    "eco_impact": {
+      "co2_saved_per_unit": "8.5 kg CO\u2082/unit",
+      "energy_saved": "Recovers 1.2kg pure copper per unit",
+      "badge": "Hermetic Compressor"
+    },
+    "icon": "\u2744\ufe0f"
+  },
+  {
+    "key": "industrial gearboxes and speed reducers",
+    "display_name": "Industrial Gearboxes & Reducers",
+    "category": "Industrial Scrap",
+    "type": "Heavy Cast Iron & Forged Alloy Gears",
+    "unit": "kg",
+    "base_price": 36,
+    "spot_price": 36,
+    "min_price": 30,
+    "max_price": 44,
+    "price_range": "\u20b930 - \u20b944 / kg",
+    "sell_to": "Machinery Rebuilder / Steel Foundry",
+    "reuse_tip": "High strength forged alloy steel gears inside heavy grey cast iron casings.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.6 kg CO\u2082/kg",
+      "energy_saved": "Heavy alloy re-melting",
+      "badge": "Forged Gearbox"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "machine tool cast iron beds lathe scrap",
+    "display_name": "Machine Tool Cast Beds (Lathe/Milling)",
+    "category": "Industrial Scrap",
+    "type": "Heavy Aged Cast Iron Bedding",
+    "unit": "kg",
+    "base_price": 32,
+    "spot_price": 32,
+    "min_price": 28,
+    "max_price": 37,
+    "price_range": "\u20b928 - \u20b937 / kg",
+    "sell_to": "Heavy Foundry & Cupola Furnace",
+    "reuse_tip": "Decommissioned machine tools. Extremely dense high-quality Meehanite cast iron.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Direct heavy melt for new machine beds",
+      "badge": "Machine Cast Bed"
+    },
+    "icon": "\ud83d\udddc\ufe0f"
+  },
+  {
+    "key": "lathe mild steel turnings swarf borings",
+    "display_name": "Lathe MS Turnings & Borings",
+    "category": "Industrial Scrap",
+    "type": "Mild Steel Machining Swarf",
+    "unit": "kg",
+    "base_price": 24,
+    "spot_price": 24,
+    "min_price": 20,
+    "max_price": 27,
+    "price_range": "\u20b920 - \u20b927 / kg",
+    "sell_to": "Induction Furnace / Briquetting Plant",
+    "reuse_tip": "Briquetted into high-density steel hockey pucks before melting to minimize oxidation loss.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.3 kg CO\u2082/kg",
+      "energy_saved": "Recycled in mini steel mills",
+      "badge": "MS Swarf"
+    },
+    "icon": "\ud83c\udf00"
+  },
+  {
+    "key": "foundry furnace slag and metallic dross",
+    "display_name": "Foundry Slag & Metallic Dross",
+    "category": "Industrial Scrap",
+    "type": "Furnace Residue & Dross",
+    "unit": "kg",
+    "base_price": 18,
+    "spot_price": 18,
+    "min_price": 14,
+    "max_price": 22,
+    "price_range": "\u20b914 - \u20b922 / kg",
+    "sell_to": "Slag Crushing & Metal Separation Unit",
+    "reuse_tip": "Crushed in ball mills with magnetic separation to recover 15-30% entrapped metal.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.2 kg CO\u2082/kg",
+      "energy_saved": "Mineral residue used in highway subgrade",
+      "badge": "Furnace Dross"
+    },
+    "icon": "\ud83c\udf0b"
+  },
+  {
+    "key": "chemical drum barrel steel or plastic container",
+    "display_name": "Chemical Drums & Barrels (MS)",
+    "category": "Industrial Scrap",
+    "type": "200L Industrial Steel Barrel",
+    "unit": "pcs",
+    "base_price": 350,
+    "spot_price": 350,
+    "min_price": 250,
+    "max_price": 450,
+    "price_range": "\u20b9250 - \u20b9450 / pcs",
+    "sell_to": "Authorized Drum Reconditioning Plant",
+    "reuse_tip": "Triple-rinsed and decontaminated 200-litre barrels are pressure-tested and certified for reuse.",
+    "eco_impact": {
+      "co2_saved_per_unit": "18.0 kg CO\u2082/drum",
+      "energy_saved": "Prevents raw steel sheet press fabrication",
+      "badge": "Reconditioned Drum"
+    },
+    "icon": "\ud83d\udee2\ufe0f"
+  },
+  {
+    "key": "hdpe plastic blue barrels 200 litre industrial",
+    "display_name": "HDPE Blue Chemical Barrels (200L)",
+    "category": "Industrial Scrap",
+    "type": "High Molecular Weight HDPE Barrel",
+    "unit": "pcs",
+    "base_price": 420,
+    "spot_price": 420,
+    "min_price": 320,
+    "max_price": 550,
+    "price_range": "\u20b9320 - \u20b9550 / pcs",
+    "sell_to": "Barrel Washing & Reconditioning Unit",
+    "reuse_tip": "Heavy duty blue plastic barrels with threaded bungs. High resale demand for chemical transport.",
+    "eco_impact": {
+      "co2_saved_per_unit": "16.0 kg CO\u2082/barrel",
+      "energy_saved": "Re-usable 20+ cycles",
+      "badge": "200L HDPE Drum"
+    },
+    "icon": "\ud83d\udee2\ufe0f"
+  },
+  {
+    "key": "ibc totes 1000 litre industrial intermediate container",
+    "display_name": "IBC Totes (1,000 Litre Tanks)",
+    "category": "Industrial Scrap",
+    "type": "Steel Cage + HDPE Inner Container",
+    "unit": "pcs",
+    "base_price": 2200,
+    "spot_price": 2200,
+    "min_price": 1600,
+    "max_price": 3200,
+    "price_range": "\u20b91600 - \u20b93200 / pcs",
+    "sell_to": "IBC Washing & Chemical Reconditioning Plant",
+    "reuse_tip": "Galvanized tubular steel outer cage with bottom discharge valve. Exceptional industrial reuse value.",
+    "eco_impact": {
+      "co2_saved_per_unit": "85.0 kg CO\u2082/tote",
+      "energy_saved": "Avoids composite steel-plastic manufacturing",
+      "badge": "1000L IBC Tank"
+    },
+    "icon": "\ud83d\udce6"
+  },
+  {
+    "key": "boiler tubes and heavy seamless carbon steel pipes",
+    "display_name": "Boiler Tubes & Heavy Seamless Pipes",
+    "category": "Industrial Scrap",
+    "type": "High Pressure Carbon Steel Seamless",
+    "unit": "kg",
+    "base_price": 35,
+    "spot_price": 35,
+    "min_price": 31,
+    "max_price": 39,
+    "price_range": "\u20b931 - \u20b939 / kg",
+    "sell_to": "Steel Pipe Fabricator / Re-rolling Mill",
+    "reuse_tip": "Heavy wall thickness boiler tubes. Usable lengths sold for structural piling work.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "High integrity steel reclamation",
+      "badge": "Seamless Boiler"
+    },
+    "icon": "\ud83e\ude88"
+  },
+  {
+    "key": "overhead gantry crane scrap rails tracks",
+    "display_name": "Overhead Crane Rails (Heavy Track)",
+    "category": "Industrial Scrap",
+    "type": "High Carbon Manganese Rail Steel",
+    "unit": "kg",
+    "base_price": 36,
+    "spot_price": 36,
+    "min_price": 32,
+    "max_price": 40,
+    "price_range": "\u20b932 - \u20b940 / kg",
+    "sell_to": "Secondary Re-Rolling Mill",
+    "reuse_tip": "Factory crane runway rails and railway track offcuts. Excellent toughness for forge hammers.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "Re-rolled into agricultural crowbars and tools",
+      "badge": "Crane Rail Steel"
+    },
+    "icon": "\ud83d\udee4\ufe0f"
+  },
+  {
+    "key": "transformer core silicon steel lamination sheets crgo",
+    "display_name": "Transformer CRGO Silicon Steel Core",
+    "category": "Industrial Scrap",
+    "type": "Cold Rolled Grain Oriented Silicon Steel",
+    "unit": "kg",
+    "base_price": 82,
+    "spot_price": 82,
+    "min_price": 70,
+    "max_price": 98,
+    "price_range": "\u20b970 - \u20b998 / kg",
+    "sell_to": "Transformer Core Slitting & Stamping Unit",
+    "reuse_tip": "High magnetic permeability CRGO laminations. Salvaged and restamped into smaller motor laminations.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.2 kg CO\u2082/kg",
+      "energy_saved": "High value specialty electrical alloy",
+      "badge": "CRGO Silicon Core"
+    },
+    "icon": "\u26a1"
+  },
+  {
+    "key": "structural steel i beams and heavy columns demolition",
+    "display_name": "Structural I-Beams & Heavy Channels",
+    "category": "Industrial Scrap",
+    "type": "Heavy Structural Mild Steel",
+    "unit": "kg",
+    "base_price": 33,
+    "spot_price": 33,
+    "min_price": 29,
+    "max_price": 37,
+    "price_range": "\u20b929 - \u20b937 / kg",
+    "sell_to": "Fabrication Yard / Re-Rolling Mill",
+    "reuse_tip": "Factory demolition structural beams. Straight pieces command 30% premium over melting scrap.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.6 kg CO\u2082/kg",
+      "energy_saved": "Direct reuse in temporary shoring works",
+      "badge": "Structural Beams"
+    },
+    "icon": "\ud83c\udfd7\ufe0f"
+  },
+  {
+    "key": "automobile cast iron engine block scrap",
+    "display_name": "Cast Iron Engine Blocks (Automotive)",
+    "category": "Industrial Scrap",
+    "type": "Grey Cast Iron Motor Block",
+    "unit": "kg",
+    "base_price": 33,
+    "spot_price": 33,
+    "min_price": 28,
+    "max_price": 37,
+    "price_range": "\u20b928 - \u20b937 / kg",
+    "sell_to": "Automotive Engine Foundry",
+    "reuse_tip": "Remove aluminium pistons, steel crankshafts, and oil filters for clean cast iron grading.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.2 kg CO\u2082/kg",
+      "energy_saved": "Remelted into commercial vehicle brake drums",
+      "badge": "Engine Block Iron"
+    },
+    "icon": "\ud83d\ude98"
+  },
+  {
+    "key": "automobile transmission gearbox cases scrap",
+    "display_name": "Automobile Transmission Gearboxes",
+    "category": "Industrial Scrap",
+    "type": "Mixed Alloy Transmission Core",
+    "unit": "kg",
+    "base_price": 37,
+    "spot_price": 37,
+    "min_price": 31,
+    "max_price": 44,
+    "price_range": "\u20b931 - \u20b944 / kg",
+    "sell_to": "Automotive Core Dismantler",
+    "reuse_tip": "Aluminium casing enclosing forged steel gear clusters. Drain gear oil completely.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.8 kg CO\u2082/kg",
+      "energy_saved": "Dual metal stream: Aluminium + Steel",
+      "badge": "Transmission Gearbox"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "automobile alloy wheels aluminium scrap",
+    "display_name": "Automobile Aluminium Alloy Wheels",
+    "category": "Industrial Scrap",
+    "type": "A356 Cast Aluminium Wheel Alloy",
+    "unit": "kg",
+    "base_price": 175,
+    "spot_price": 175,
+    "min_price": 150,
+    "max_price": 200,
+    "price_range": "\u20b9150 - \u20b9200 / kg",
+    "sell_to": "Secondary Aluminium Ingot Foundry",
+    "reuse_tip": "Remove balance lead weights and tyre valves. High purity silicon-magnesium aluminium alloy.",
+    "eco_impact": {
+      "co2_saved_per_unit": "9.2 kg CO\u2082/kg",
+      "energy_saved": "95% energy saved over primary smelting",
+      "badge": "A356 Alloy Wheels"
+    },
+    "icon": "\ud83c\udfce\ufe0f"
+  },
+  {
+    "key": "hydraulic cylinders and heavy ram shafts",
+    "display_name": "Hydraulic Cylinders & Piston Rams",
+    "category": "Industrial Scrap",
+    "type": "Chrome-Plated Forged Steel Shafts",
+    "unit": "kg",
+    "base_price": 35,
+    "spot_price": 35,
+    "min_price": 30,
+    "max_price": 40,
+    "price_range": "\u20b930 - \u20b940 / kg",
+    "sell_to": "Machinery Repair Yard / Heavy Forging Mill",
+    "reuse_tip": "Hard chrome-plated EN8/EN9 steel shafts are often skimmed and reused in repair cylinders.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.4 kg CO\u2082/kg",
+      "energy_saved": "Precision shaft reuse",
+      "badge": "Hydraulic Rams"
+    },
+    "icon": "\ud83c\udfd7\ufe0f"
+  },
+  {
+    "key": "galvanized air ducting scrap and ventilation hoods",
+    "display_name": "Galvanized HVAC Ducting Scrap",
+    "category": "Industrial Scrap",
+    "type": "Lightweight GI Ventilation Sheet",
+    "unit": "kg",
+    "base_price": 23,
+    "spot_price": 23,
+    "min_price": 19,
+    "max_price": 27,
+    "price_range": "\u20b919 - \u20b927 / kg",
+    "sell_to": "Sheet Metal Aggregator / Shredder",
+    "reuse_tip": "Factory ventilation ductwork and exhaust hoods. Crush or bundle to maximize truckload weight.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.4 kg CO\u2082/kg",
+      "energy_saved": "Secondary steel manufacturing",
+      "badge": "HVAC Ducting"
+    },
+    "icon": "\ud83d\udca8"
+  },
+  {
+    "key": "hydraulic cylinder piston rod chrome steel scrap",
+    "display_name": "Hydraulic Cylinder & Chrome Piston Rods",
+    "category": "Industrial Scrap",
+    "type": "Hard Chrome Plated Steel Shafts",
+    "unit": "kg",
+    "base_price": 52,
+    "spot_price": 52,
+    "min_price": 44,
+    "max_price": 62,
+    "price_range": "\u20b944 - \u20b962 / kg",
+    "sell_to": "Chrome Stripping Plant / Steel Bar Manufacturer",
+    "reuse_tip": "Chrome plating must be stripped electrolytically before steel re-rolling; chrome hexavalent waste requires CPCB disposal.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.8 kg CO\u2082/kg",
+      "energy_saved": "Chrome recovery saves 80% vs virgin chrome ore",
+      "badge": "Chrome Steel"
+    },
+    "icon": "\ud83d\udd27"
+  },
+  {
+    "key": "industrial chain sprocket gear pinion scrap",
+    "display_name": "Chains, Sprockets & Gears Scrap",
+    "category": "Industrial Scrap",
+    "type": "Alloy Case Hardened Steel Drives",
+    "unit": "kg",
+    "base_price": 36,
+    "spot_price": 36,
+    "min_price": 30,
+    "max_price": 42,
+    "price_range": "\u20b930 - \u20b942 / kg",
+    "sell_to": "Re-Rolling Mill / Alloy Steel Foundry",
+    "reuse_tip": "Case-hardened sprockets and precision gears; separate brass and bronze bushings for extra value.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.9 kg CO\u2082/kg",
+      "energy_saved": "Alloy content recycled into tool steel",
+      "badge": "Drive Alloy Steel"
+    },
+    "icon": "\u2699\ufe0f"
+  },
+  {
+    "key": "stainless steel industrial tanks vessels scrap",
+    "display_name": "Stainless Steel Tanks & Pressure Vessels",
+    "category": "Industrial Scrap",
+    "type": "304/316 Grade SS Fabricated Equipment",
+    "unit": "kg",
+    "base_price": 120,
+    "spot_price": 120,
+    "min_price": 105,
+    "max_price": 140,
+    "price_range": "\u20b9105 - \u20b9140 / kg",
+    "sell_to": "Stainless Scrap Dealer / Induction Furnace",
+    "reuse_tip": "Pharma, dairy, and chemical reactor vessels in 304/316 SS attract full stainless scrap price.",
+    "eco_impact": {
+      "co2_saved_per_unit": "3.2 kg CO\u2082/kg",
+      "energy_saved": "Nickel & chromium circular recovery",
+      "badge": "SS Equipment"
+    },
+    "icon": "\ud83e\uded9"
+  },
+  {
+    "key": "industrial pump casing impeller cast iron scrap",
+    "display_name": "Pump Casings & Impellers (CI/SS)",
+    "category": "Industrial Scrap",
+    "type": "Cast Iron & Duplex SS Pump Bodies",
+    "unit": "kg",
+    "base_price": 42,
+    "spot_price": 42,
+    "min_price": 35,
+    "max_price": 50,
+    "price_range": "\u20b935 - \u20b950 / kg",
+    "sell_to": "Cast Iron Foundry / Pump Remanufacturer",
+    "reuse_tip": "Remove shaft, bearings, and mechanical seals before selling pump casing as clean CI scrap.",
+    "eco_impact": {
+      "co2_saved_per_unit": "2.2 kg CO\u2082/kg",
+      "energy_saved": "Remelted into new pump casings",
+      "badge": "Cast Pump Iron"
+    },
+    "icon": "\ud83d\udca7"
+  },
+  {
+    "key": "control panel electrical cabinet steel enclosure scrap",
+    "display_name": "Electrical Panels & Control Cabinets",
+    "category": "Industrial Scrap",
+    "type": "Mild Steel Powder-Coated Enclosures",
+    "unit": "kg",
+    "base_price": 30,
+    "spot_price": 30,
+    "min_price": 24,
+    "max_price": 36,
+    "price_range": "\u20b924 - \u20b936 / kg",
+    "sell_to": "Sheet Metal Yard / Steel Shredder",
+    "reuse_tip": "Remove all wiring, bus bars, contactors, and MCBs before selling \u2014 copper content yields separate higher value.",
+    "eco_impact": {
+      "co2_saved_per_unit": "1.7 kg CO\u2082/kg",
+      "energy_saved": "Steel enclosure fully recyclable",
+      "badge": "MS Enclosure"
+    },
+    "icon": "\ud83d\udd0c"
+  }
+];
+
 const DEMO_ITEMS = {
   arduino: {
     detected_item: "Microcontroller Dev Board (Arduino/ESP32)",
@@ -2068,17 +5095,42 @@ const clearSearchBtn = document.getElementById("clearSearchBtn");
 
 async function loadCategories(city) {
   const selectedCity = city || (mandiCitySelect ? mandiCitySelect.value : "Pune") || "Pune";
+  const cityFactors = { "Pune": 1.0, "Mumbai": 1.04, "Delhi NCR": 1.02, "Bengaluru": 1.03, "Hyderabad": 0.99, "Jaipur": 0.97, "Ahmedabad": 0.98, "Chennai": 1.01, "Kolkata": 0.96 };
+  const factor = cityFactors[selectedCity] || 1.0;
   if (cityLoadingBar) cityLoadingBar.classList.add("active");
+
   try {
     const res = await fetch(`${API_BASE}/categories?city=${encodeURIComponent(selectedCity)}`);
     if (res.ok) {
       const data = await res.json();
-      allCategories = (data.categories || []).map(c => normalizeCategory(c));
+      if (data.categories && data.categories.length >= 100) {
+        allCategories = data.categories.map(c => normalizeCategory(c));
+      } else {
+        allCategories = STATIC_SCRAP_DATABASE.map(c => {
+          const norm = normalizeCategory(c);
+          norm.spot_price = norm.base_price >= 10 ? Math.round(norm.base_price * factor) : Number((norm.base_price * factor).toFixed(1));
+          norm.min_price = Math.round(norm.min_price * factor);
+          norm.max_price = Math.round(norm.max_price * factor);
+          return norm;
+        });
+      }
     } else {
-      allCategories = Object.entries(DEMO_ITEMS).map(([k, v]) => normalizeCategory(v, k));
+      allCategories = STATIC_SCRAP_DATABASE.map(c => {
+        const norm = normalizeCategory(c);
+        norm.spot_price = norm.base_price >= 10 ? Math.round(norm.base_price * factor) : Number((norm.base_price * factor).toFixed(1));
+        norm.min_price = Math.round(norm.min_price * factor);
+        norm.max_price = Math.round(norm.max_price * factor);
+        return norm;
+      });
     }
   } catch {
-    allCategories = Object.entries(DEMO_ITEMS).map(([k, v]) => normalizeCategory(v, k));
+    allCategories = STATIC_SCRAP_DATABASE.map(c => {
+      const norm = normalizeCategory(c);
+      norm.spot_price = norm.base_price >= 10 ? Math.round(norm.base_price * factor) : Number((norm.base_price * factor).toFixed(1));
+      norm.min_price = Math.round(norm.min_price * factor);
+      norm.max_price = Math.round(norm.max_price * factor);
+      return norm;
+    });
   }
 
   // Merge admin-added products on top

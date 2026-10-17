@@ -1421,38 +1421,10 @@ def payment_receipt(order_id: str, user: dict = Depends(get_current_user)):
 
 @app.get("/categories")
 def get_categories(city: str = "Pune"):
-    """Returns the full list of detectable categories with metadata and city spot prices from MongoDB."""
-    from categories import CITY_PRICE_FACTORS
+    """Returns the full exhaustive list of all 151 detectable categories with metadata and city spot prices."""
+    from categories import CITY_PRICE_FACTORS, WASTE_CATEGORIES
     factor = CITY_PRICE_FACTORS.get(city, 1.0)
     items = []
-    
-    try:
-        database = mongo_db()
-        db_cats = list(database.categories.find())
-        if len(db_cats) >= 50:
-            for info in db_cats:
-                base_p = info.get("base_price", info.get("min_price", 0))
-                calibrated_p = round(base_p * factor) if base_p >= 10 else round(base_p * factor, 1)
-                unit_label = info.get("unit", "kg")
-                items.append({
-                    "key": info.get("key", info.get("display_name")),
-                    "display_name": info["display_name"],
-                    "category": info["category"],
-                    "type": info.get("type", "Recyclable"),
-                    "unit": unit_label,
-                    "base_price": base_p,
-                    "spot_price": calibrated_p,
-                    "min_price": round(info.get("min_price", 0) * factor),
-                    "max_price": round(info.get("max_price", 0) * factor),
-                    "price_range": f"₹{calibrated_p} /{unit_label}",
-                    "sell_to": info.get("sell_to", "Contact admin for routing"),
-                    "reuse_tip": info.get("reuse_tip", ""),
-                    "eco_impact": info.get("eco_impact", {}),
-                    "icon": info.get("icon", "♻️"),
-                })
-            return {"categories": items, "city": city, "city_factor": factor, "source": "mongodb"}
-    except Exception:
-        pass
 
     for label, info in WASTE_CATEGORIES.items():
         base_p = info.get("base_price", info.get("min_price", 0))
@@ -1474,7 +1446,17 @@ def get_categories(city: str = "Pune"):
             "eco_impact": info.get("eco_impact", {}),
             "icon": info["icon"],
         })
-    return {"categories": items, "city": city, "city_factor": factor, "source": "memory"}
+
+    # Optional: background sync to MongoDB if available
+    try:
+        database = mongo_db()
+        if database.categories.count_documents({}) < len(items):
+            database.categories.delete_many({})
+            database.categories.insert_many([dict(item) for item in items])
+    except Exception:
+        pass
+
+    return {"categories": items, "city": city, "city_factor": factor, "total": len(items)}
 
 
 @app.get("/dealers")

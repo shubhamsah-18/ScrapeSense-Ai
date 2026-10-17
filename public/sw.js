@@ -33,16 +33,28 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: Network-first for API, cache-first for static
+// Fetch: Network-only for API and mutations, cache-first only for static assets
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Network-first for API calls
-  if (url.port === "8000" || url.pathname.startsWith("/api")) {
+  const isApiRoute =
+    url.port === "8000" ||
+    url.pathname.startsWith("/api") ||
+    url.pathname.startsWith("/auth") ||
+    url.pathname.startsWith("/listings") ||
+    url.pathname.startsWith("/orders") ||
+    url.pathname.startsWith("/dealers") ||
+    url.pathname.startsWith("/categories") ||
+    url.pathname.startsWith("/analytics") ||
+    url.pathname.startsWith("/predict") ||
+    url.pathname.startsWith("/approval-requests");
+
+  // Non-GET requests or dynamic API endpoints must never be served from or stored in cache
+  if (event.request.method !== "GET" || isApiRoute) {
     event.respondWith(
       fetch(event.request).catch(() => {
         return new Response(
-          JSON.stringify({ error: "Offline - Backend not reachable" }),
+          JSON.stringify({ error: "Offline - Service not reachable" }),
           { headers: { "Content-Type": "application/json" }, status: 503 }
         );
       })
@@ -50,12 +62,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Cache-first only for static frontend assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).then((response) => {
-        // Cache successful responses
+        // Cache successful responses for static GET requests only
         if (response.ok && event.request.method === "GET") {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));

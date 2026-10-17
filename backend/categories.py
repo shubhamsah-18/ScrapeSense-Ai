@@ -2,14 +2,14 @@
 # SCRAPSENSE AI - EXHAUSTIVE E-WASTE & SCRAP MATERIAL DATABASE
 # ============================================================
 # Realistic Indian Scrap Mandi Spot Prices & City Calibrated Index
-# Categorized into the 6 Standard Categories (20+ Items Each):
-# 1. Metal Scrap (22 items)
-# 2. Plastic Waste (22 items)
-# 3. Paper & Cardboard (20 items)
+# Categorized into the 6 Standard Categories (25 Items Each):
+# 1. Metal Scrap (25 items)
+# 2. Plastic Waste (25 items)
+# 3. Paper & Cardboard (25 items)
 # 4. E-Waste & Electronic Components (26 items)
-# 5. Glass & Rubber (20 items)
-# 6. Industrial Scrap (20 items)
-# Total: 130 Authentic Industrial & Domestic Scrap Items
+# 5. Glass & Rubber (25 items)
+# 6. Industrial Scrap (25 items)
+# Total: 151 Authentic Industrial & Domestic Scrap Items
 # ============================================================
 
 CITY_PRICE_FACTORS = {
@@ -336,9 +336,51 @@ WASTE_CATEGORIES = {
         "eco_impact": { "co2_saved_per_unit": "1.2 kg CO₂/kg", "energy_saved": "Recovers tin & mild steel sheet", "badge": "Tin Sheet" },
         "icon": "🛢️"
     },
+    "nickel alloy superalloy high temp scrap": {
+        "display_name": "Nickel Alloy & Superalloy Scrap",
+        "category": "Metal Scrap",
+        "type": "High-Nickel Heat Resistant Alloy",
+        "unit": "kg",
+        "base_price": 620,
+        "min_price": 550,
+        "max_price": 720,
+        "price_range": "₹550 - ₹720 / kg",
+        "sell_to": "Aerospace Alloy Recycler / Nickel Smelter",
+        "reuse_tip": "Inconel, Hastelloy, and Waspaloy turbine blades fetch premium; certify alloy grade with spectrometer.",
+        "eco_impact": { "co2_saved_per_unit": "5.5 kg CO₂/kg", "energy_saved": "Conserves scarce primary Nickel ore", "badge": "Superalloy" },
+        "icon": "✈️"
+    },
+    "silver scrap precious metal jewelry": {
+        "display_name": "Silver Scrap (Jewellery & Industrial)",
+        "category": "Metal Scrap",
+        "type": "Precious White Metal",
+        "unit": "gram",
+        "base_price": 95,
+        "min_price": 85,
+        "max_price": 108,
+        "price_range": "₹85 - ₹108 / gram",
+        "sell_to": "Bullion Dealer / Precious Metal Refinery",
+        "reuse_tip": "Old silverware, broken jewellery, and industrial silver contacts. Verify purity with acid test kit.",
+        "eco_impact": { "co2_saved_per_unit": "8.0 kg CO₂/gram", "energy_saved": "Infinite recyclability — no loss of purity", "badge": "Precious Silver" },
+        "icon": "🥈"
+    },
+    "titanium scrap aerospace medical implants": {
+        "display_name": "Titanium Scrap (Aerospace / Medical)",
+        "category": "Metal Scrap",
+        "type": "Grade 5 Ti-6Al-4V Alloy Scrap",
+        "unit": "kg",
+        "base_price": 480,
+        "min_price": 400,
+        "max_price": 580,
+        "price_range": "₹400 - ₹580 / kg",
+        "sell_to": "Specialty Metals Dealer / Titanium Smelter",
+        "reuse_tip": "Aircraft skin panels, medical bone screws, and bicycle frames. Identify with spark test — no sparks.",
+        "eco_impact": { "co2_saved_per_unit": "7.0 kg CO₂/kg", "energy_saved": "Saves 95% energy vs primary sponge", "badge": "Premium Ti Alloy" },
+        "icon": "🚀"
+    },
 
     # ============================================================
-    # 2. PLASTIC WASTE (22 Items)
+    # 2. PLASTIC WASTE (25 Items)
     # ============================================================
     "a plastic bottle or plastic container": {
         "display_name": "Plastic Bottles (PET Clear)",
@@ -648,9 +690,51 @@ WASTE_CATEGORIES = {
         "eco_impact": { "co2_saved_per_unit": "1.7 kg CO₂/kg", "energy_saved": "Saves washing & chipping steps", "badge": "Washed Flakes" },
         "icon": "🧪"
     },
+    "silicone rubber gaskets seals scrap": {
+        "display_name": "Silicone Rubber Scrap (Seals & Gaskets)",
+        "category": "Plastic Waste",
+        "type": "High Purity Polydimethylsiloxane",
+        "unit": "kg",
+        "base_price": 55,
+        "min_price": 45,
+        "max_price": 68,
+        "price_range": "₹45 - ₹68 / kg",
+        "sell_to": "Silicone Compounder / Medical Device Recycler",
+        "reuse_tip": "Food grade and medical silicone commands highest purity premium. Store clean and dry.",
+        "eco_impact": { "co2_saved_per_unit": "2.8 kg CO₂/kg", "energy_saved": "Conserves silicon ore and methyl chloride", "badge": "High-Purity Silicone" },
+        "icon": "⭕"
+    },
+    "foam pu polyurethane scrap mattress furniture": {
+        "display_name": "Polyurethane Foam Scrap (PU Foam)",
+        "category": "Plastic Waste",
+        "type": "Flexible Slabstock Polyurethane",
+        "unit": "kg",
+        "base_price": 18,
+        "min_price": 14,
+        "max_price": 23,
+        "price_range": "₹14 - ₹23 / kg",
+        "sell_to": "Foam Rebonding Plant / Carpet Underlay Manufacturer",
+        "reuse_tip": "Mattress, sofa, and cushion foam scrap is shredded and bonded into gym mats and underlay sheets.",
+        "eco_impact": { "co2_saved_per_unit": "1.4 kg CO₂/kg", "energy_saved": "Rebonded into durable noise insulation panels", "badge": "PU Rebond Foam" },
+        "icon": "🛋️"
+    },
+    "fibc jumbo bag big bag woven pp scrap": {
+        "display_name": "FIBC Jumbo Bags (1-Ton Bulk Bags)",
+        "category": "Plastic Waste",
+        "type": "Heavy Duty Woven Polypropylene FIBC",
+        "unit": "kg",
+        "base_price": 28,
+        "min_price": 23,
+        "max_price": 34,
+        "price_range": "₹23 - ₹34 / kg",
+        "sell_to": "PP Yarn Extruder / Fibre Manufacturer",
+        "reuse_tip": "Clean 1-tonne bulk bags from food or pharma industries command premium price over soiled industrial bags.",
+        "eco_impact": { "co2_saved_per_unit": "1.9 kg CO₂/kg", "energy_saved": "High tenacity PP fibre reuse", "badge": "Bulk Bag FIBC" },
+        "icon": "🛍️"
+    },
 
     # ============================================================
-    # 3. PAPER & CARDBOARD (20 Items)
+    # 3. PAPER & CARDBOARD (25 Items)
     # ============================================================
     "newspaper or old books paper waste": {
         "display_name": "Old Newspapers (Raddi)",
@@ -931,6 +1015,76 @@ WASTE_CATEGORIES = {
         "reuse_tip": "Heavy winding tubes used inside fabric, plastic film, and paper rolls.",
         "eco_impact": { "co2_saved_per_unit": "0.8 kg CO₂/kg", "energy_saved": "Extreme density board reclamation", "badge": "Spiral Cores" },
         "icon": "🪵"
+    },
+    "waxed laminated coated paper packaging scrap": {
+        "display_name": "Wax-Coated & Laminated Paper",
+        "category": "Paper & Cardboard",
+        "type": "Low-Grade Composite Paper",
+        "unit": "kg",
+        "base_price": 5,
+        "min_price": 3,
+        "max_price": 7,
+        "price_range": "₹3 - ₹7 / kg",
+        "sell_to": "Industrial Fuel Pellet Plant / Pyrolysis Unit",
+        "reuse_tip": "Waxed fruit cartons, frozen food boxes, and foil-laminated packages. Cannot be repulped; converted to fuel.",
+        "eco_impact": { "co2_saved_per_unit": "0.4 kg CO₂/kg", "energy_saved": "Thermal energy recovery via pelletization", "badge": "Fuel Pellet Feedstock" },
+        "icon": "🕯️"
+    },
+    "brown kraft wrapping paper packing sheets scrap": {
+        "display_name": "Kraft Wrapping Paper & Packing Sheets",
+        "category": "Paper & Cardboard",
+        "type": "Strong Unbleached Kraft Paper",
+        "unit": "kg",
+        "base_price": 13,
+        "min_price": 11,
+        "max_price": 16,
+        "price_range": "₹11 - ₹16 / kg",
+        "sell_to": "Kraft Paper Mill / Heavy Board Plant",
+        "reuse_tip": "Brown packaging paper wraps, butter paper, and interleaving kraft sheets from industrial pallets.",
+        "eco_impact": { "co2_saved_per_unit": "1.0 kg CO₂/kg", "energy_saved": "High-tensile long fibre recovery", "badge": "Unbleached Kraft" },
+        "icon": "🧻"
+    },
+    "stationery envelopes courier bags paper scrap": {
+        "display_name": "Envelopes & Courier Bags (Paper)",
+        "category": "Paper & Cardboard",
+        "type": "Woodfree White Stationery Grade",
+        "unit": "kg",
+        "base_price": 12,
+        "min_price": 10,
+        "max_price": 14,
+        "price_range": "₹10 - ₹14 / kg",
+        "sell_to": "Writing Paper Mill",
+        "reuse_tip": "Remove plastic windows from envelopes and peel off adhesive strips for higher purity grade.",
+        "eco_impact": { "co2_saved_per_unit": "1.0 kg CO₂/kg", "energy_saved": "Pulped into office copier stock", "badge": "Woodfree White" },
+        "icon": "✉️"
+    },
+    "cigarette paper tobacco packaging tissue scrap": {
+        "display_name": "Cigarette & Tobacco Industry Paper",
+        "category": "Paper & Cardboard",
+        "type": "Ultra-Thin Specialty Tissue Paper",
+        "unit": "kg",
+        "base_price": 20,
+        "min_price": 16,
+        "max_price": 25,
+        "price_range": "₹16 - ₹25 / kg",
+        "sell_to": "Specialty Paper Converter",
+        "reuse_tip": "Trimming waste from cigarette paper reels is ultra-clean long fibre; highest pulp grade.",
+        "eco_impact": { "co2_saved_per_unit": "1.5 kg CO₂/kg", "energy_saved": "High alpha cellulose fibre recovery", "badge": "Alpha Cellulose" },
+        "icon": "🚬"
+    },
+    "calendar art paper photo quality print waste": {
+        "display_name": "Art Paper & Calendar Offcuts",
+        "category": "Paper & Cardboard",
+        "type": "High-Gloss Coated Art Paper",
+        "unit": "kg",
+        "base_price": 10,
+        "min_price": 8,
+        "max_price": 13,
+        "price_range": "₹8 - ₹13 / kg",
+        "sell_to": "Coated Broke Paper Mill",
+        "reuse_tip": "High clay-coated art paper from printing presses and calendar trimmings.",
+        "eco_impact": { "co2_saved_per_unit": "0.85 kg CO₂/kg", "energy_saved": "Clay pigment recovery and fibre reuse", "badge": "Coated Art Broke" },
+        "icon": "📅"
     },
 
     # ============================================================
@@ -1584,9 +1738,79 @@ WASTE_CATEGORIES = {
         "eco_impact": { "co2_saved_per_unit": "1.3 kg CO₂/kg", "energy_saved": "Bonded foam underlay circularity", "badge": "Footwear Rubber" },
         "icon": "🩴"
     },
+    "laminated safety glass windscreen pvb interlayer": {
+        "display_name": "Laminated Windscreen Glass (PVB)",
+        "category": "Glass & Rubber",
+        "type": "PVB Interlayer Safety Glass",
+        "unit": "kg",
+        "base_price": 5.5,
+        "min_price": 4,
+        "max_price": 7.5,
+        "price_range": "₹4 - ₹7.5 / kg",
+        "sell_to": "Glass Recycling Plant / PVB Film Reclaimer",
+        "reuse_tip": "Automotive windshields with PVB interlayer require de-lamination before glass cullet use in furnace.",
+        "eco_impact": { "co2_saved_per_unit": "0.4 kg CO₂/kg", "energy_saved": "PVB recovered as acoustic insulation", "badge": "Safety Glass" },
+        "icon": "🚘"
+    },
+    "silica gel desiccant waste industrial scrap": {
+        "display_name": "Silica Gel Desiccant Waste",
+        "category": "Glass & Rubber",
+        "type": "Amorphous Silicon Dioxide Adsorbent",
+        "unit": "kg",
+        "base_price": 6,
+        "min_price": 4,
+        "max_price": 9,
+        "price_range": "₹4 - ₹9 / kg",
+        "sell_to": "Regeneration Plant / Chemical Recycler",
+        "reuse_tip": "Heat at 120°C to regenerate adsorption capacity; regenerated silica gel resells at up to 80% of new price.",
+        "eco_impact": { "co2_saved_per_unit": "0.35 kg CO₂/kg", "energy_saved": "Thermal regeneration eliminates disposal", "badge": "Silica Regen" },
+        "icon": "🧊"
+    },
+    "natural rubber crepe sheet block scrap": {
+        "display_name": "Natural Rubber Block Scrap (RSS Grade)",
+        "category": "Glass & Rubber",
+        "type": "Ribbed Smoked Sheet Rubber (RSS 4/5)",
+        "unit": "kg",
+        "base_price": 145,
+        "min_price": 125,
+        "max_price": 170,
+        "price_range": "₹125 - ₹170 / kg",
+        "sell_to": "Natural Rubber Compounder / Tyre Manufacturer",
+        "reuse_tip": "Factory reject RSS blocks and crepe offcuts from Kerala and Tamil Nadu latex farms.",
+        "eco_impact": { "co2_saved_per_unit": "2.0 kg CO₂/kg", "energy_saved": "Biobased polymer circularity", "badge": "Natural Latex RSS" },
+        "icon": "🌳"
+    },
+    "nitrile nbr rubber gloves industrial waste": {
+        "display_name": "Nitrile Rubber Gloves & Seals (NBR)",
+        "category": "Glass & Rubber",
+        "type": "Acrylonitrile-Butadiene Rubber Scrap",
+        "unit": "kg",
+        "base_price": 14,
+        "min_price": 10,
+        "max_price": 19,
+        "price_range": "₹10 - ₹19 / kg",
+        "sell_to": "Rubber Pyrolysis Oil Producer",
+        "reuse_tip": "Used industrial and medical examination gloves. Incinerate at certified facility or pyrolyze for carbon black.",
+        "eco_impact": { "co2_saved_per_unit": "1.5 kg CO₂/kg", "energy_saved": "Carbon black and fuel oil recovery", "badge": "NBR Pyrolysis" },
+        "icon": "🧤"
+    },
+    "fiberglass frp composite sheet panel scrap": {
+        "display_name": "Fibreglass / FRP Composite Panels",
+        "category": "Glass & Rubber",
+        "type": "Glass Fibre Reinforced Polymer",
+        "unit": "kg",
+        "base_price": 8,
+        "min_price": 5,
+        "max_price": 12,
+        "price_range": "₹5 - ₹12 / kg",
+        "sell_to": "Cement Kiln Co-Processing / FRP Shredder",
+        "reuse_tip": "Boat hulls, chemical tank offcuts, and wind turbine blade scrap. Shredded into cement kiln additive.",
+        "eco_impact": { "co2_saved_per_unit": "1.2 kg CO₂/kg", "energy_saved": "Thermal co-processing in cement kiln", "badge": "FRP Composite" },
+        "icon": "🛥️"
+    },
 
     # ============================================================
-    # 6. INDUSTRIAL SCRAP (20 Items)
+    # 6. INDUSTRIAL SCRAP (25 Items)
     # ============================================================
     "factory scrap debris or metal slag debris": {
         "display_name": "Factory Debris & Slag",
@@ -1867,6 +2091,76 @@ WASTE_CATEGORIES = {
         "reuse_tip": "Factory ventilation ductwork and exhaust hoods. Crush or bundle to maximize truckload weight.",
         "eco_impact": { "co2_saved_per_unit": "1.4 kg CO₂/kg", "energy_saved": "Secondary steel manufacturing", "badge": "HVAC Ducting" },
         "icon": "💨"
+    },
+    "hydraulic cylinder piston rod chrome steel scrap": {
+        "display_name": "Hydraulic Cylinder & Chrome Piston Rods",
+        "category": "Industrial Scrap",
+        "type": "Hard Chrome Plated Steel Shafts",
+        "unit": "kg",
+        "base_price": 52,
+        "min_price": 44,
+        "max_price": 62,
+        "price_range": "₹44 - ₹62 / kg",
+        "sell_to": "Chrome Stripping Plant / Steel Bar Manufacturer",
+        "reuse_tip": "Chrome plating must be stripped electrolytically before steel re-rolling; chrome hexavalent waste requires CPCB disposal.",
+        "eco_impact": { "co2_saved_per_unit": "2.8 kg CO₂/kg", "energy_saved": "Chrome recovery saves 80% vs virgin chrome ore", "badge": "Chrome Steel" },
+        "icon": "🔧"
+    },
+    "industrial chain sprocket gear pinion scrap": {
+        "display_name": "Chains, Sprockets & Gears Scrap",
+        "category": "Industrial Scrap",
+        "type": "Alloy Case Hardened Steel Drives",
+        "unit": "kg",
+        "base_price": 36,
+        "min_price": 30,
+        "max_price": 42,
+        "price_range": "₹30 - ₹42 / kg",
+        "sell_to": "Re-Rolling Mill / Alloy Steel Foundry",
+        "reuse_tip": "Case-hardened sprockets and precision gears; separate brass and bronze bushings for extra value.",
+        "eco_impact": { "co2_saved_per_unit": "1.9 kg CO₂/kg", "energy_saved": "Alloy content recycled into tool steel", "badge": "Drive Alloy Steel" },
+        "icon": "⚙️"
+    },
+    "stainless steel industrial tanks vessels scrap": {
+        "display_name": "Stainless Steel Tanks & Pressure Vessels",
+        "category": "Industrial Scrap",
+        "type": "304/316 Grade SS Fabricated Equipment",
+        "unit": "kg",
+        "base_price": 120,
+        "min_price": 105,
+        "max_price": 140,
+        "price_range": "₹105 - ₹140 / kg",
+        "sell_to": "Stainless Scrap Dealer / Induction Furnace",
+        "reuse_tip": "Pharma, dairy, and chemical reactor vessels in 304/316 SS attract full stainless scrap price.",
+        "eco_impact": { "co2_saved_per_unit": "3.2 kg CO₂/kg", "energy_saved": "Nickel & chromium circular recovery", "badge": "SS Equipment" },
+        "icon": "🫙"
+    },
+    "industrial pump casing impeller cast iron scrap": {
+        "display_name": "Pump Casings & Impellers (CI/SS)",
+        "category": "Industrial Scrap",
+        "type": "Cast Iron & Duplex SS Pump Bodies",
+        "unit": "kg",
+        "base_price": 42,
+        "min_price": 35,
+        "max_price": 50,
+        "price_range": "₹35 - ₹50 / kg",
+        "sell_to": "Cast Iron Foundry / Pump Remanufacturer",
+        "reuse_tip": "Remove shaft, bearings, and mechanical seals before selling pump casing as clean CI scrap.",
+        "eco_impact": { "co2_saved_per_unit": "2.2 kg CO₂/kg", "energy_saved": "Remelted into new pump casings", "badge": "Cast Pump Iron" },
+        "icon": "💧"
+    },
+    "control panel electrical cabinet steel enclosure scrap": {
+        "display_name": "Electrical Panels & Control Cabinets",
+        "category": "Industrial Scrap",
+        "type": "Mild Steel Powder-Coated Enclosures",
+        "unit": "kg",
+        "base_price": 30,
+        "min_price": 24,
+        "max_price": 36,
+        "price_range": "₹24 - ₹36 / kg",
+        "sell_to": "Sheet Metal Yard / Steel Shredder",
+        "reuse_tip": "Remove all wiring, bus bars, contactors, and MCBs before selling — copper content yields separate higher value.",
+        "eco_impact": { "co2_saved_per_unit": "1.7 kg CO₂/kg", "energy_saved": "Steel enclosure fully recyclable", "badge": "MS Enclosure" },
+        "icon": "🔌"
     }
 }
 

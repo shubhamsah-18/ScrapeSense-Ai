@@ -34,52 +34,57 @@ def hash_pw(password: str):
     return salt, digest
 
 
-def seed_database():
-    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-    db = client[DB_NAME]
-    print(f"[*] Connected to MongoDB: {MONGODB_URI} -> Database: '{DB_NAME}'")
+def seed_database(seed_if_empty: bool = False, db=None):
+    if db is None:
+        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        db = client[DB_NAME]
+        print(f"[*] Connected to MongoDB: {MONGODB_URI} -> Database: '{DB_NAME}'")
 
     now = datetime.now(timezone.utc)
 
     # -------------------------------------------------------------
     # 1. CATEGORIES COLLECTION (130 items)
     # -------------------------------------------------------------
-    print("\n[1/6] Seeding 'categories' collection...")
-    db.categories.delete_many({}) # Refresh with 130 canonical items
-    cat_docs = []
-    for label, info in WASTE_CATEGORIES.items():
-        base_p = info.get("base_price", info.get("min_price", 0))
-        unit = info.get("unit", "kg")
-        doc = {
-            "key": label,
-            "display_name": info["display_name"],
-            "category": info["category"],
-            "type": info["type"],
-            "unit": unit,
-            "base_price": base_p,
-            "min_price": info.get("min_price", 0),
-            "max_price": info.get("max_price", 0),
-            "spot_price": base_p,
-            "price_range": f"₹{base_p} /{unit}",
-            "sell_to": info.get("sell_to", "Authorized Recycler"),
-            "reuse_tip": info.get("reuse_tip", ""),
-            "eco_impact": info.get("eco_impact", {}),
-            "icon": info.get("icon", "♻️"),
-            "created_at": now,
-            "updated_at": now
-        }
-        cat_docs.append(doc)
-    
-    if cat_docs:
-        res = db.categories.insert_many(cat_docs)
-        print(f"  --> Inserted {len(res.inserted_ids)} scrap items across all 6 categories into 'categories'.")
+    print("\n[1/6] Checking 'categories' collection...")
+    cat_count = db.categories.count_documents({})
+    if cat_count == 0:
+        cat_docs = []
+        for label, info in WASTE_CATEGORIES.items():
+            base_p = info.get("base_price", info.get("min_price", 0))
+            unit = info.get("unit", "kg")
+            doc = {
+                "key": label,
+                "display_name": info["display_name"],
+                "category": info["category"],
+                "type": info["type"],
+                "unit": unit,
+                "base_price": base_p,
+                "min_price": info.get("min_price", 0),
+                "max_price": info.get("max_price", 0),
+                "spot_price": base_p,
+                "price_range": f"₹{base_p} /{unit}",
+                "sell_to": info.get("sell_to", "Authorized Recycler"),
+                "reuse_tip": info.get("reuse_tip", ""),
+                "eco_impact": info.get("eco_impact", {}),
+                "icon": info.get("icon", "♻️"),
+                "created_at": now,
+                "updated_at": now
+            }
+            cat_docs.append(doc)
+        
+        if cat_docs:
+            res = db.categories.insert_many(cat_docs)
+            print(f"  --> Inserted {len(res.inserted_ids)} scrap items across all 6 categories into 'categories'.")
+    else:
+        print(f"  --> Preserving existing {cat_count} categories (no purge).")
 
     # -------------------------------------------------------------
     # 2. DEALERS COLLECTION
     # -------------------------------------------------------------
-    print("\n[2/6] Seeding 'dealers' collection...")
-    db.dealers.delete_many({})
-    dealers = [
+    print("\n[2/6] Checking 'dealers' collection...")
+    dealer_count = db.dealers.count_documents({})
+    if dealer_count == 0:
+        dealers = [
         {
             "name": "EcoRecycle Tech Hub",
             "types": ["E-Waste", "Metal Scrap"],
@@ -159,98 +164,129 @@ def seed_database():
             "verified": True
         }
     ]
-    res = db.dealers.insert_many(dealers)
-    print(f"  --> Inserted {len(res.inserted_ids)} scrap dealers into 'dealers'.")
+    if dealer_count == 0:
+        res = db.dealers.insert_many(dealers)
+        print(f"  --> Inserted {len(res.inserted_ids)} scrap dealers into 'dealers'.")
+    else:
+        print(f"  --> Preserving existing {dealer_count} dealers (no purge).")
 
     # -------------------------------------------------------------
     # 3. USERS COLLECTION (Admin, Sellers, Buyers)
     # -------------------------------------------------------------
-    print("\n[3/6] Seeding 'users' collection...")
-    users = [
-        # Administrator
-        {
-            "name": "System Administrator",
-            "email": "7488114039",
-            "role": "admin",
-            "password": "password123",
-            "phone": "+91 7488114039",
-            "login_count": 42
-        },
-        # Verified Sellers
-        {
-            "name": "Rajesh Sharma (Apex Metals)",
-            "email": "apex.metals@scrapsense.org",
-            "role": "seller",
-            "password": "password123",
-            "phone": "+91 98290 11223",
-            "city": "Jaipur",
-            "state": "Rajasthan",
-            "login_count": 28
-        },
-        {
-            "name": "Karthik Nair (Silicon City)",
-            "email": "silicon.escrap@scrapsense.org",
-            "role": "seller",
-            "password": "password123",
-            "phone": "+91 98451 88990",
-            "city": "Bengaluru",
-            "state": "Karnataka",
-            "login_count": 19
-        },
-        {
-            "name": "Pooja Patel (CleanPoly)",
-            "email": "cleanpoly@scrapsense.org",
-            "role": "seller",
-            "password": "password123",
-            "phone": "+91 98260 55443",
-            "city": "Indore",
-            "state": "Madhya Pradesh",
-            "login_count": 14
-        },
-        {
-            "name": "Amit Verma (GreenPower Battery)",
-            "email": "greenpower@scrapsense.org",
-            "role": "seller",
-            "password": "password123",
-            "phone": "+91 98101 22334",
-            "city": "Delhi",
-            "state": "Delhi",
-            "login_count": 23
-        },
-        # Enterprise Buyers
-        {
-            "name": "Sunil Mehta - Tata Steel Circularity",
-            "email": "procurement@tatasteel.com",
-            "role": "buyer",
-            "password": "password123",
-            "phone": "+91 98220 99887",
-            "city": "Mumbai",
-            "state": "Maharashtra",
-            "login_count": 31
-        },
-        {
-            "name": "Vikram Singhania - Reliance Polymer Reclaim",
-            "email": "buyer.polymers@ril.com",
-            "role": "buyer",
-            "password": "password123",
-            "phone": "+91 98790 66778",
-            "city": "Ahmedabad",
-            "state": "Gujarat",
-            "login_count": 17
-        },
-        {
-            "name": "Dr. Ananya Roy - EcoRecycle Smelters",
-            "email": "purchase@ecorecycle.in",
-            "role": "buyer",
-            "password": "password123",
-            "phone": "+91 98230 44332",
-            "city": "Pune",
-            "state": "Maharashtra",
-            "login_count": 25
-        }
-    ]
+DEFAULT_USERS = [
+    # Administrator
+    {
+        "name": "System Administrator",
+        "email": "7488114039",
+        "role": "admin",
+        "password": "password123",
+        "phone": "+91 7488114039",
+        "login_count": 42
+    },
+    {
+        "name": "System Administrator",
+        "email": "admin@scrapsense.org",
+        "role": "admin",
+        "password": "password123",
+        "phone": "+91 7488114039",
+        "login_count": 42
+    },
+    # Verified Sellers
+    {
+        "name": "Rajesh Sharma (Apex Metals)",
+        "email": "apex.metals@scrapsense.org",
+        "role": "seller",
+        "password": "password123",
+        "phone": "+91 98290 11223",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "login_count": 28
+    },
+    {
+        "name": "Karthik Nair (Silicon City)",
+        "email": "silicon.escrap@scrapsense.org",
+        "role": "seller",
+        "password": "password123",
+        "phone": "+91 98451 88990",
+        "city": "Bengaluru",
+        "state": "Karnataka",
+        "login_count": 19
+    },
+    {
+        "name": "Pooja Patel (CleanPoly)",
+        "email": "cleanpoly@scrapsense.org",
+        "role": "seller",
+        "password": "password123",
+        "phone": "+91 98260 55443",
+        "city": "Indore",
+        "state": "Madhya Pradesh",
+        "login_count": 14
+    },
+    {
+        "name": "Amit Verma (GreenPower Battery)",
+        "email": "greenpower@scrapsense.org",
+        "role": "seller",
+        "password": "password123",
+        "phone": "+91 98101 22334",
+        "city": "Delhi",
+        "state": "Delhi",
+        "login_count": 23
+    },
+    # Enterprise Buyers
+    {
+        "name": "Sunil Mehta - Tata Steel Circularity",
+        "email": "procurement@tatasteel.com",
+        "role": "buyer",
+        "password": "password123",
+        "phone": "+91 98220 99887",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "login_count": 31
+    },
+    {
+        "name": "Vikram Singhania - Reliance Polymer Reclaim",
+        "email": "buyer.polymers@ril.com",
+        "role": "buyer",
+        "password": "password123",
+        "phone": "+91 98790 66778",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "login_count": 17
+    },
+    {
+        "name": "Dr. Ananya Roy - EcoRecycle Smelters",
+        "email": "purchase@ecorecycle.in",
+        "role": "buyer",
+        "password": "password123",
+        "phone": "+91 98230 44332",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "login_count": 25
+    }
+]
 
-    for u in users:
+
+def reset_all_registered_users(db=None):
+    """Resets users collection back to authentic default demonstration accounts."""
+    if db is None:
+        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=3000)
+        db = client[DB_NAME]
+
+    # Delete all users
+    db.users.delete_many({})
+
+    # Clear pending OTP requests and password resets
+    try:
+        db.otp_requests.delete_many({})
+    except Exception:
+        pass
+    try:
+        db.password_resets.delete_many({})
+    except Exception:
+        pass
+
+    now = datetime.now(timezone.utc)
+    for u in DEFAULT_USERS:
         salt, pw_hash = hash_pw(u["password"])
         db.users.update_one(
             {"email": u["email"].lower()},
@@ -270,13 +306,13 @@ def seed_database():
             }},
             upsert=True
         )
-    print(f"  --> Seeded {len(users)} user accounts into 'users' (Admin, Sellers, Buyers).")
+    return len(DEFAULT_USERS)
 
     # -------------------------------------------------------------
     # 4. LISTINGS COLLECTION (30 lots: 24 verified + 6 pending)
     # -------------------------------------------------------------
-    print("\n[4/6] Seeding 'listings' collection...")
-    db.listings.delete_many({}) # Refresh with comprehensive inventory
+    print("\n[4/6] Checking 'listings' collection...")
+    listing_count = db.listings.count_documents({})
     all_lots = [
         # --- Metal Scrap (4 verified, 1 pending) ---
         {"seller": "Rajesh Sharma", "seller_email": "apex.metals@scrapsense.org", "item": "HMS 1&2 Heavy Melting Scrap", "category": "Metal Scrap", "unit": "kg", "quantity": 1500.0, "city": "Jaipur", "state": "Rajasthan", "note": "Clean 6mm+ industrial structural cuts, furnace-ready baled lots.", "min_price": 38.0, "max_price": 44.0, "verified": True},
@@ -321,20 +357,23 @@ def seed_database():
         {"seller": "Baroda Chemical Packaging", "seller_email": "baroda.drums@scrapsense.org", "item": "1000-Litre Composite IBC Totes", "category": "Industrial Scrap", "unit": "unit", "quantity": 25.0, "city": "Vadodara", "state": "Gujarat", "note": "Galvanized steel tubular grid frame with blow-moulded HDPE bottle.", "min_price": 1800.0, "max_price": 2600.0, "verified": False}
     ]
 
-    for lot in all_lots:
-        lot["created_at"] = now
-        lot["verified_at"] = now if lot["verified"] else None
-        lot["photo"] = ""
-        lot["ownerEmail"] = lot["seller_email"]
+    if listing_count == 0:
+        for lot in all_lots:
+            lot["created_at"] = now
+            lot["verified_at"] = now if lot["verified"] else None
+            lot["photo"] = ""
+            lot["ownerEmail"] = lot["seller_email"]
 
-    res = db.listings.insert_many(all_lots)
-    print(f"  --> Inserted {len(res.inserted_ids)} scrap lots into 'listings' (24 verified + 6 pending admin approval).")
+        res = db.listings.insert_many(all_lots)
+        print(f"  --> Inserted {len(res.inserted_ids)} scrap lots into 'listings' (24 verified + 6 pending admin approval).")
+    else:
+        print(f"  --> Preserving existing {listing_count} marketplace listings (no purge).")
 
     # -------------------------------------------------------------
     # 5. ORDERS COLLECTION (Transactions, Approvals & RFQs)
     # -------------------------------------------------------------
-    print("\n[5/6] Seeding 'orders' collection...")
-    db.orders.delete_many({})
+    print("\n[5/6] Checking 'orders' collection...")
+    order_count = db.orders.count_documents({})
     orders = [
         # Completed / Admin-Approved Order 1
         {
@@ -445,32 +484,121 @@ def seed_database():
             "status": "Buyer RFQ Submitted - Admin Matching",
             "note": "Urgent requirement for pipe extrusion. Unplasticized white regrind only.",
             "created_at": now
+        },
+        # B2B Seller Sell Request - Pending Buyer Approval
+        {
+            "type": "sell_request",
+            "item": "Copper Wire Millberry Scrap",
+            "category": "Metal Scrap",
+            "seller": "Rajesh Sharma",
+            "seller_name": "Rajesh Sharma",
+            "seller_email": "apex.metals@scrapsense.org",
+            "seller_phone": "+91 98290 11223",
+            "quantity": 250.0,
+            "unit": "kg",
+            "expected_price": 760.0,
+            "total_expected_value": 190000.0,
+            "city": "Jaipur",
+            "state": "Rajasthan",
+            "address": "Godown 14, Vishwakarma Industrial Area (VKIA), Road No. 9, Jaipur",
+            "note": "99.9% bare clean bright copper wire scrap, unburnt, zero grease.",
+            "status": "Pending Buyer Approval",
+            "created_at": now
+        },
+        # B2B Deal - Buyer Approved, Awaiting Admin Clearance
+        {
+            "type": "sell_request",
+            "item": "Dual-Socket Server Motherboards & High-Gold E-Scrap",
+            "category": "E-Waste",
+            "seller": "Karthik Nair",
+            "seller_name": "Karthik Nair",
+            "seller_email": "silicon.escrap@scrapsense.org",
+            "seller_phone": "+91 98450 33445",
+            "quantity": 300.0,
+            "unit": "unit",
+            "expected_price": 850.0,
+            "total_expected_value": 255000.0,
+            "city": "Bengaluru",
+            "state": "Karnataka",
+            "address": "Electronics City Phase 1, Near Toll Gate, Bengaluru",
+            "note": "De-racked enterprise server boards, high yield gold pins and BGA chips intact.",
+            "status": "Buyer Approved · Awaiting Admin Clearance",
+            "buyer_name": "Dr. Ananya Roy",
+            "buyer_email": "purchase@ecorecycle.in",
+            "agreed_price": 880.0,
+            "deal_amount": 264000.0,
+            "delivery_type": "Seller Delivery to Warehouse",
+            "delivery_schedule": "Within 3 Days",
+            "delivery_address": "EcoRecycle Smelters Hydrometallurgy Unit, Bhosari MIDC, Pune, Maharashtra",
+            "payment_terms": "Instant RTGS / Bank Transfer on Weighment",
+            "deal_notes": "MoEFCC manifest required upon delivery. Gold yield sampling to be executed at lab.",
+            "buyer_approved_at": now,
+            "created_at": now
+        },
+        # B2B Deal - Admin Cleared & Active with Official Contract
+        {
+            "type": "sell_request",
+            "item": "HMS 1&2 Heavy Melting Steel Scrap",
+            "category": "Metal Scrap",
+            "seller": "Rajesh Sharma",
+            "seller_name": "Rajesh Sharma",
+            "seller_email": "apex.metals@scrapsense.org",
+            "seller_phone": "+91 98290 11223",
+            "quantity": 25000.0,
+            "unit": "kg",
+            "expected_price": 42.0,
+            "total_expected_value": 1050000.0,
+            "city": "Jaipur",
+            "state": "Rajasthan",
+            "address": "VKIA Road 14 Inward Yard, Jaipur",
+            "status": "Admin Cleared & Verified · Deal Active",
+            "buyer_name": "Sunil Mehta",
+            "buyer_email": "procurement@tatasteel.com",
+            "agreed_price": 44.0,
+            "deal_amount": 1100000.0,
+            "delivery_type": "Platform Certified Transporter",
+            "delivery_schedule": "Immediate (Within 24 Hours)",
+            "delivery_address": "Tata Steel Plant Inward Weighbridge Gate 2, Tarapur / Navi Mumbai",
+            "payment_terms": "50% Advance + 50% on Weighbridge Gate Pass",
+            "deal_notes": "Verified 6mm+ heavy cuts. Clean melting grade.",
+            "admin_cleared": True,
+            "admin_cleared_by": "admin@scrapsense.org",
+            "admin_cleared_at": now,
+            "contract_id": "CTR-202609-77821",
+            "buyer_approved_at": now,
+            "created_at": now
         }
     ]
-    res = db.orders.insert_many(orders)
-    print(f"  --> Inserted {len(res.inserted_ids)} transactions into 'orders'.")
+    if order_count == 0:
+        res = db.orders.insert_many(orders)
+        print(f"  --> Inserted {len(res.inserted_ids)} transactions into 'orders'.")
+    else:
+        print(f"  --> Preserving existing {order_count} user orders (no purge).")
 
     # -------------------------------------------------------------
     # 6. ANALYTICS & RECYCLING METRICS
     # -------------------------------------------------------------
-    print("\n[6/6] Seeding 'analytics' collection...")
-    db.analytics.delete_many({})
-    analytics_doc = {
-        "platform_name": "ScrapSense AI",
-        "version": "2.0.0",
-        "total_categories_tracked": len(cat_docs),
-        "total_active_dealers": len(dealers),
-        "total_registered_users": len(users),
-        "total_scrap_inventory_weight_kg": sum(l["quantity"] for l in all_lots if l.get("unit") == "kg"),
-        "total_scrap_inventory_units": sum(l["quantity"] for l in all_lots if l.get("unit") == "unit"),
-        "estimated_co2_offset_tonnes": 48.6,
-        "precious_metals_recovery_rate": "99.2%",
-        "active_mandi_cities": ["Pune", "Mumbai", "Delhi", "Jaipur", "Ahmedabad", "Bengaluru", "Chennai", "Hyderabad", "Kanpur", "Kolkata"],
-        "ai_model": "OpenAI CLIP ViT-B/32 Zero-Shot + Heuristic Pricing Engine",
-        "updated_at": now
-    }
-    db.analytics.insert_one(analytics_doc)
-    print("  --> Populated platform analytics & circular metrics into 'analytics'.")
+    print("\n[6/6] Checking 'analytics' collection...")
+    analytics_count = db.analytics.count_documents({})
+    if seed_if_empty and analytics_count > 0:
+        print(f"  --> Preserving existing analytics (seed-if-empty mode).")
+    else:
+        analytics_doc = {
+            "platform_name": "ScrapSense AI",
+            "version": "2.0.0",
+            "total_categories_tracked": len(cat_docs) if 'cat_docs' in locals() else 130,
+            "total_active_dealers": len(dealers) if 'dealers' in locals() else dealer_count,
+            "total_registered_users": len(users),
+            "total_scrap_inventory_weight_kg": sum(l["quantity"] for l in all_lots if l.get("unit") == "kg"),
+            "total_scrap_inventory_units": sum(l["quantity"] for l in all_lots if l.get("unit") == "unit"),
+            "estimated_co2_offset_tonnes": 48.6,
+            "precious_metals_recovery_rate": "99.2%",
+            "active_mandi_cities": ["Pune", "Mumbai", "Delhi", "Jaipur", "Ahmedabad", "Bengaluru", "Chennai", "Hyderabad", "Kanpur", "Kolkata"],
+            "ai_model": "OpenAI CLIP ViT-B/32 Zero-Shot + Heuristic Pricing Engine",
+            "updated_at": now
+        }
+        db.analytics.update_one({"platform_name": "ScrapSense AI"}, {"$set": analytics_doc}, upsert=True)
+        print("  --> Platform analytics & circular metrics synchronized.")
 
     print("\n" + "=" * 65)
     print("  DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -478,10 +606,14 @@ def seed_database():
     print("=" * 65)
 
     # Print summary table
-    print("\nSummary of Collections in MongoDB:")
-    for col in sorted(db.list_collection_names()):
-        count = db[col].count_documents({})
-        print(f"  • {col:18} : {count:4} documents")
+    if hasattr(db, "list_collection_names"):
+        try:
+            print("\nSummary of Collections in MongoDB:")
+            for col in sorted(db.list_collection_names()):
+                count = db[col].count_documents({})
+                print(f"  • {col:18} : {count:4} documents")
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

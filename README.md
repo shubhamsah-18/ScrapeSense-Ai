@@ -133,6 +133,10 @@ Populate the database with 130 scrap materials, 30 verified lots, and test accou
 python backend/seed_db.py
 ```
 
+> **📌 Phase 2 Seeding & Pricing Notice:**
+> - **Seed-if-Empty Startup**: The backend automatically runs in `seed-if-empty` mode at startup (`lifespan` in `backend/main.py`), only populating collections if they are uninitialized. Existing user accounts, lots, and orders are never purged or overwritten on restart. Full CLI reseeding (`python backend/seed_db.py`) upserts seed accounts by email without deleting any user records.
+> - **Baseline Price Estimates**: All scrap and Mandi prices displayed across the platform are baseline estimates and heuristic valuation ranges for recycling calculation, not live commodity exchange quotes.
+
 ### 4. Launch Application
 Start the unified application with a single command:
 ```bash
@@ -155,6 +159,9 @@ python run.py
 | `POST` | `/calculate` | Public | Instant scrap valuation calculator |
 | `POST` | `/auth/login` | Public | Role-based user authentication (JWT) |
 | `POST` | `/auth/request-otp` | Public | Email OTP generation for signup |
+| `POST` | `/auth/forgot-password` | Public | Dispatches 6-digit password reset OTP |
+| `POST` | `/auth/reset-password` | Public | Verifies OTP and updates account password |
+| `POST` | `/admin/reset-users` | Admin | Resets all registered accounts to demo seeds |
 | `GET` | `/listings` | JWT | Verified marketplace scrap lots |
 | `POST` | `/listings` | Seller | Publish new scrap lot for sale |
 | `GET` | `/seller/listings` | Seller | Retrieve seller's managed listings |
@@ -164,11 +171,16 @@ python run.py
 
 ---
 
-## 🍃 MongoDB Database & Analytics
+## 🍃 MongoDB Database & User Management
 
 Run the built-in database inspector anytime:
 ```bash
 python show_database.py
+```
+
+Reset registered users back to clean demo seed accounts:
+```bash
+python reset_users.py
 ```
 
 ```text

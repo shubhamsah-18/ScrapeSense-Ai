@@ -129,6 +129,9 @@ const registeredUserCount = document.getElementById("registeredUserCount");
 
 // Auth Elements
 const authScreen = document.getElementById("authScreen");
+const authFormPanel = document.getElementById("authFormPanel");
+const authRoleSelector = document.getElementById("authRoleSelector");
+const authQuickRoles = document.getElementById("authQuickRoles");
 const authForm = document.getElementById("authForm");
 const authMessage = document.getElementById("authMessage");
 const authEmailInput = document.getElementById("authEmailInput");
@@ -161,8 +164,34 @@ const logoutBtn = document.getElementById("logoutBtn");
 const sessionLabel = document.getElementById("sessionLabel");
 const authRoleBadgeIcon = document.getElementById("authRoleBadgeIcon");
 const authRoleBadgeLabel = document.getElementById("authRoleBadgeLabel");
-const authFormPanel = document.getElementById("authFormPanel");
 const modeRegisterBtn = document.getElementById("modeRegisterBtn");
+const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+const forgotPasswordCard = document.getElementById("forgotPasswordCard");
+const forgotTitle = document.getElementById("forgotTitle");
+const forgotSubtitle = document.getElementById("forgotSubtitle");
+const forgotReqForm = document.getElementById("forgotReqForm");
+const forgotEmailInput = document.getElementById("forgotEmailInput");
+const forgotReqSubmitBtn = document.getElementById("forgotReqSubmitBtn");
+const forgotReqMessage = document.getElementById("forgotReqMessage");
+const forgotResetForm = document.getElementById("forgotResetForm");
+const forgotTargetEmail = document.getElementById("forgotTargetEmail");
+const forgotOtpInput = document.getElementById("forgotOtpInput");
+const devForgotOtpBanner = document.getElementById("devForgotOtpBanner");
+const devForgotOtpCode = document.getElementById("devForgotOtpCode");
+const forgotNewPasswordInput = document.getElementById("forgotNewPasswordInput");
+const forgotConfirmPasswordInput = document.getElementById("forgotConfirmPasswordInput");
+const forgotResetSubmitBtn = document.getElementById("forgotResetSubmitBtn");
+const forgotCountdownText = document.getElementById("forgotCountdownText");
+const forgotResendOtpBtn = document.getElementById("forgotResendOtpBtn");
+const forgotResetMessage = document.getElementById("forgotResetMessage");
+const forgotBackToLoginBtn = document.getElementById("forgotBackToLoginBtn");
+const forgotPwdStrengthFill = document.getElementById("forgotPwdStrengthFill");
+const forgotPwdStrengthText = document.getElementById("forgotPwdStrengthText");
+const forgotCritLength = document.getElementById("forgotCritLength");
+const forgotCritUpper = document.getElementById("forgotCritUpper");
+const forgotCritLower = document.getElementById("forgotCritLower");
+const forgotCritNumber = document.getElementById("forgotCritNumber");
+const forgotCritSpecial = document.getElementById("forgotCritSpecial");
 const buyerNameHidden = document.getElementById("buyerNameHidden");
 
 // Seller Lot Submission
@@ -258,28 +287,86 @@ function sanitizeImageSrc(src) {
   return "";
 }
 
-// Persistent token & session storage helpers (localStorage with sessionStorage fallback)
-function getStoredToken() {
-  try {
-    return localStorage.getItem("scrapsense_token") || sessionStorage.getItem("scrapsense_token");
-  } catch {
-    return null;
+// ============================================================
+// SECURITY: Session Token Migration to httpOnly Cookie
+// No session/auth token is EVER stored in window.localStorage
+// ============================================================
+try {
+  localStorage.removeItem("scrapsense_token");
+  sessionStorage.removeItem("scrapsense_token");
+  localStorage.removeItem("scrapsense_session");
+} catch {}
+
+// Wrap window.fetch to automatically send httpOnly cookies with credentials: 'include'
+// and intercept 401 Unauthorized responses to prompt re-login
+const _nativeFetch = window.fetch;
+window.fetch = async function(resource, init = {}) {
+  const url = typeof resource === "string" ? resource : (resource?.url || "");
+  const isInternalApi =
+    url.startsWith(API_BASE) ||
+    url.includes(":8000") ||
+    url.startsWith("/api") ||
+    url.startsWith("/auth") ||
+    url.startsWith("/listings") ||
+    url.startsWith("/orders") ||
+    url.startsWith("/dealers") ||
+    url.startsWith("/categories") ||
+    url.startsWith("/analytics") ||
+    url.startsWith("/approval-requests");
+
+  if (isInternalApi) {
+    const authHeaders = authToken ? { "Authorization": `Bearer ${authToken}` } : {};
+    init = {
+      credentials: "include",
+      ...init,
+      headers: {
+        ...authHeaders,
+        ...(init.headers || {})
+      }
+    };
   }
+
+  const res = await _nativeFetch(resource, init);
+
+  if (
+    isInternalApi &&
+    (res.status === 401 || res.status === 403) &&
+    !url.includes("/auth/login") &&
+    !url.includes("/auth/register") &&
+    !url.includes("/auth/request-otp") &&
+    !url.includes("/auth/verify-otp") &&
+    !url.includes("/auth/me")
+  ) {
+    console.warn(`[Auth] ${res.status} encountered for API call:`, url);
+    if (typeof performLogout === "function" && currentSession) {
+      performLogout(true);
+    } else if (typeof authScreen !== "undefined" && authScreen) {
+      authScreen.hidden = false;
+    }
+  }
+
+  return res;
+};
+
+function getStoredToken() {
+  // Tokens are now stored exclusively in httpOnly cookies (invisible to JS)
+  return null;
 }
 
-function saveStoredToken(token) {
-  try { localStorage.setItem("scrapsense_token", token); } catch {}
-  try { sessionStorage.setItem("scrapsense_token", token); } catch {}
+function saveStoredToken() {
+  // Intentionally no-op: tokens must NEVER be stored in localStorage/sessionStorage
 }
 
 function clearStoredToken() {
-  try { localStorage.removeItem("scrapsense_token"); } catch {}
-  try { sessionStorage.removeItem("scrapsense_token"); } catch {}
+  try {
+    localStorage.removeItem("scrapsense_token");
+    sessionStorage.removeItem("scrapsense_token");
+  } catch {}
 }
 
 function getStoredSession() {
   try {
-    const raw = localStorage.getItem("scrapsense_session") || sessionStorage.getItem("scrapsense_session");
+    const raw = sessionStorage.getItem("scrapsense_user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -287,25 +374,30 @@ function getStoredSession() {
 }
 
 function saveStoredSession(session) {
-  try { localStorage.setItem("scrapsense_session", JSON.stringify(session)); } catch {}
-  try { sessionStorage.setItem("scrapsense_session", JSON.stringify(session)); } catch {}
+  try {
+    // Only safe profile metadata (name, email, role) is stored for optimistic UI
+    sessionStorage.setItem("scrapsense_user", JSON.stringify(session));
+  } catch {}
 }
 
 function clearStoredSession() {
-  try { localStorage.removeItem("scrapsense_session"); } catch {}
-  try { sessionStorage.removeItem("scrapsense_session"); } catch {}
+  try {
+    sessionStorage.removeItem("scrapsense_user");
+    localStorage.removeItem("scrapsense_session");
+  } catch {}
 }
 
-// JWT token management
+// Auth helper: returns Authorization Bearer header if token is present
+
 function getAuthHeaders() {
-  const token = authToken || getStoredToken();
-  return token ? { "Authorization": `Bearer ${token}` } : {};
+  if (authToken) {
+    return { "Authorization": `Bearer ${authToken}` };
+  }
+  return {};
 }
 
 function setAuthToken(token) {
-  authToken = token;
-  if (token) saveStoredToken(token);
-  else clearStoredToken();
+  authToken = token || null;
 }
 
 // Indian States & Major Scrap Hubs
@@ -330,6 +422,208 @@ function updateListingCities() {
 
 listingState?.addEventListener("change", updateListingCities);
 updateListingCities();
+
+// ============================================================
+// REAL SCRAP PRODUCT IMAGE LOOKUP (Unsplash Photo IDs)
+// Maps category keys / display names to real identification images
+// ============================================================
+const SCRAP_ITEM_IMAGES = {
+  // ── METAL SCRAP ──────────────────────────────────────────────
+  "steel or iron scrap metal": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "heavy melting steel scrap hms 1 and 2": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "cast iron scrap pipes machinery": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&q=80",
+  "rebar tmt steel scrap construction": "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400&q=80",
+  "galvanized iron sheet scrap gi sheet": "https://images.unsplash.com/photo-1567789884554-0b844b597180?w=400&q=80",
+  "stainless steel utensils or stainless scrap": "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&q=80",
+  "stainless steel 316 industrial scrap": "https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?w=400&q=80",
+  "copper wire scrap": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "copper birch cliff heavy copper scrap": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
+  "copper pipes and refrigeration tubes": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80",
+  "brass scrap metal": "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=400&q=80",
+  "brass honey scrap machinery parts": "https://images.unsplash.com/photo-1605152276897-4f618f831968?w=400&q=80",
+  "brass plumbing valves and faucets": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "aluminium scrap metal": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "aluminium extrusion profiles windows": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "aluminium engine castings auto scrap": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80",
+  "aluminium beverage cans ubc scrap": "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80",
+  "lead metal scrap": "https://images.unsplash.com/photo-1608889825205-eebdb9fc5806?w=400&q=80",
+  "lead battery plates scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "zinc die cast scrap zamak": "https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?w=400&q=80",
+  "gunmetal bronze bushings bearings": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&q=80",
+  "tin containers or sheet metal scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "nickel alloy superalloy high temp scrap": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80",
+  "silver scrap precious metal jewelry": "https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?w=400&q=80",
+  "titanium scrap aerospace medical implants": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+
+  // ── PLASTIC WASTE ────────────────────────────────────────────
+  "a plastic bottle or plastic container": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "green and brown colored pet bottles": "https://images.unsplash.com/photo-1562937700-83e4c9b2b8e7?w=400&q=80",
+  "hard plastic chairs buckets HDPE containers": "https://images.unsplash.com/photo-1589802829985-817e51171b92?w=400&q=80",
+  "hdpe milk pouches and oil containers": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80",
+  "hdpe industrial crates and pallets": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "pvc pipe plastic scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "pvc electrical conduit pipe off cuts": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "upvc window frame profile scrap": "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=400&q=80",
+  "soft plastic polythene bags or LDPE film scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "ldpe milk pouches washed clean": "https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?w=400&q=80",
+  "lldpe stretch film industrial pallet wrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "pp woven sacks gunny bags plastic": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "pp automotive bumpers plastic scrap": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=80",
+  "pp battery casing plastic polypropylene": "https://images.unsplash.com/photo-1609592806596-b0c60a0059a6?w=400&q=80",
+  "abs plastic casings appliance computer": "https://images.unsplash.com/photo-1551651653-c5dcb914d809?w=400&q=80",
+  "polycarbonate pc water dispenser bottles": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+  "acrylic pmma sheet offcuts transparent": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "nylon pa6 pa66 scrap engineering plastic": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "expanded polystyrene thermocol foam eps": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "rigid plastic buckets and domestic mugs": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "mix plastic waste or mixed domestic plastics": "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
+  "reground plastic granules mixed polymer flakes": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "silicone rubber gaskets seals scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "foam pu polyurethane scrap mattress furniture": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80",
+  "fibc jumbo bag big bag woven pp scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+
+  // ── PAPER & CARDBOARD ────────────────────────────────────────
+  "newspaper or old books paper waste": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
+  "old magazines glossy paper scrap": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&q=80",
+  "old notebooks text books paper scrap": "https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=400&q=80",
+  "hardcover library books and registers": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&q=80",
+  "school exam papers and blank white waste": "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&q=80",
+  "cardboard or paper waste": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "brown packing kraft boxes heavy corrugated": "https://images.unsplash.com/photo-1606526700234-1ca56c6e3437?w=400&q=80",
+  "duplex paperboard boxes medicine packaging": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&q=80",
+  "grey board file covers millboard scrap": "https://images.unsplash.com/photo-1453733190371-0a9bedd82893?w=400&q=80",
+  "office shredded paper scrap": "https://images.unsplash.com/photo-1588776814546-daab30f310ce?w=400&q=80",
+  "virgin white computer paper printouts": "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&q=80",
+  "continuous computer stationery form paper": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "kraft paper cement bags multiwall sacks": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "tetra pak carton packaging aseptic scrap": "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&q=80",
+  "molded pulp egg trays fruit packaging": "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=400&q=80",
+  "thermal paper cash register rolls": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&q=80",
+  "tissue paper and napkin manufacturing waste": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+  "paper printing press edge trimmings blank": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "sorted mixed waste paper domestic": "https://images.unsplash.com/photo-1588776814546-daab30f310ce?w=400&q=80",
+  "kraft paper tubes cores winding reels": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "waxed laminated coated paper packaging scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "brown kraft wrapping paper packing sheets scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "stationery envelopes courier bags paper scrap": "https://images.unsplash.com/photo-1588688843451-52e8a6ee0fc3?w=400&q=80",
+  "cigarette paper tobacco packaging tissue scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "calendar art paper photo quality print waste": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+
+  // ── E-WASTE ──────────────────────────────────────────────────
+  "old desktop computer tower or laptop scrap": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80",
+  "enterprise server computer motherboard scrap": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&q=80",
+  "a computer motherboard or circuit board": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "a broken mobile phone or smartphone": "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&q=80",
+  "old feature keypad phones basic": "https://images.unsplash.com/photo-1512054502232-10a0a035d672?w=400&q=80",
+  "a CRT monitor or television screen": "https://images.unsplash.com/photo-1593640408182-31c228ecca24?w=400&q=80",
+  "led lcd television screen broken panel": "https://images.unsplash.com/photo-1593640495253-23196b27a87f?w=400&q=80",
+  "a car or lead-acid battery": "https://images.unsplash.com/photo-1609592806596-b0c60a0059a6?w=400&q=80",
+  "lithium ion 18650 battery cells laptop powerbank": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&q=80",
+  "an electric vehicle battery pack": "https://images.unsplash.com/photo-1593941707882-a56bbc8ba53f?w=400&q=80",
+  "an electrical wire or cable": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "a computer CPU or microprocessor chip or processor with gold pins": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "ceramic cpu processor 486 pentium gold cap": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "a computer RAM memory stick": "https://images.unsplash.com/photo-1562408590-e32931084e23?w=400&q=80",
+  "server ecc registered ram modules": "https://images.unsplash.com/photo-1562408590-e32931084e23?w=400&q=80",
+  "a computer graphics card or GPU video card": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80",
+  "an arduino or esp32 or raspberry pi microcontroller development board": "https://images.unsplash.com/photo-1608474547051-b80e8d7e6d0f?w=400&q=80",
+  "raspberry pi single board microcomputer": "https://images.unsplash.com/photo-1608474547051-b80e8d7e6d0f?w=400&q=80",
+  "an integrated circuit chip or microchip or smd ic": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "computer hard disk drive hdd scrap": "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=400&q=80",
+  "solid state drive ssd nvme sata scrap": "https://images.unsplash.com/photo-1580331451062-99ff652288d7?w=400&q=80",
+  "computer smps power supply unit scrap": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80",
+  "a power transformer or copper coil transformer": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "an electrolytic capacitor or ceramic capacitor": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "electronic resistors smd or through hole": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "telecom bts tower base station card gold": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
+
+  // ── GLASS & RUBBER ───────────────────────────────────────────
+  "a glass bottle or broken glass": "https://images.unsplash.com/photo-1563241527-3004b7be0b46?w=400&q=80",
+  "amber brown glass beer bottles": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "green wine and soda glass bottles": "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&q=80",
+  "broken glass shards cullet scrap": "https://images.unsplash.com/photo-1563241527-3004b7be0b46?w=400&q=80",
+  "amber and coloured broken glass cullet": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "float window sheet glass building scrap": "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=400&q=80",
+  "laminated auto windshield glass pvb layer": "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=400&q=80",
+  "borosilicate laboratory glassware test tubes": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&q=80",
+  "glass jars food containers pickle jars": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+  "truck and bus radial tyres heavy commercial": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "a car or bike tyre": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "motorcycle and scooter two wheeler tyres": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "tractor and heavy earthmover agricultural tyres": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&q=80",
+  "crumb rubber granules 30 mesh asphalt": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "tyre tread buffing dust retreading byproduct": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "industrial rubber scrap or conveyor belt": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "natural rubber gaskets and seals industrial": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "butyl inner tubes automotive punctured": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "rubber hose pipes hydraulic and radiator": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "footwear rubber soles hawai chappal scrap": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
+  "laminated safety glass windscreen pvb interlayer": "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=400&q=80",
+  "silica gel desiccant waste industrial scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "natural rubber crepe sheet block scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "nitrile nbr rubber gloves industrial waste": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+  "fiberglass frp composite sheet panel scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+
+  // ── INDUSTRIAL SCRAP ─────────────────────────────────────────
+  "factory scrap debris or metal slag debris": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "automobile scrap parts engine block chassis": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80",
+  "electric motor scrap copper stator winding": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "air conditioner ac compressor scrap copper": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "industrial gearboxes and speed reducers": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "machine tool cast iron beds lathe scrap": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "lathe mild steel turnings swarf borings": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "foundry furnace slag and metallic dross": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "chemical drum barrel steel or plastic container": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "hdpe plastic blue barrels 200 litre industrial": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "ibc totes 1000 litre industrial intermediate container": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "boiler tubes and heavy seamless carbon steel pipes": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "overhead gantry crane scrap rails tracks": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "transformer core silicon steel lamination sheets crgo": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80",
+  "structural steel i beams and heavy columns demolition": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "automobile cast iron engine block scrap": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80",
+  "automobile transmission gearbox cases scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "automobile alloy wheels aluminium scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "hydraulic cylinders and heavy ram shafts": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "galvanized air ducting scrap and ventilation hoods": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "hydraulic cylinder piston rod chrome steel scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "industrial chain sprocket gear pinion scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "stainless steel industrial tanks vessels scrap": "https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?w=400&q=80",
+  "industrial pump casing impeller cast iron scrap": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+  "control panel electrical cabinet steel enclosure scrap": "https://images.unsplash.com/photo-1558618047-f4e04b35c1f4?w=400&q=80"
+};
+
+// Category-level fallback images (used when item key not found)
+const CATEGORY_FALLBACK_IMAGES = {
+  "Metal Scrap": "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80",
+  "Plastic Waste": "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
+  "Paper & Cardboard": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
+  "E-Waste": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80",
+  "Glass & Rubber": "https://images.unsplash.com/photo-1563241527-3004b7be0b46?w=400&q=80",
+  "Industrial Scrap": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80"
+};
+
+/**
+ * Resolves the best real image URL for a scrap item.
+ * Priority: exact key match > display name partial match > category fallback
+ */
+function getScrapItemImage(item) {
+  if (!item) return "";
+  const key = (item.key || "").toLowerCase().trim();
+  const name = (item.display_name || "").toLowerCase().trim();
+  const category = item.category || "";
+
+  // 1. Exact key match
+  if (SCRAP_ITEM_IMAGES[key]) return SCRAP_ITEM_IMAGES[key];
+
+  // 2. Partial key / name scan
+  for (const [k, url] of Object.entries(SCRAP_ITEM_IMAGES)) {
+    if (key.includes(k) || k.includes(key.split(" ").slice(0, 3).join(" "))) return url;
+    if (name.includes(k.split(" ")[0]) && k.split(" ").length > 1) return url;
+  }
+
+  // 3. Category fallback
+  return CATEGORY_FALLBACK_IMAGES[category] || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80";
+}
 
 // ============================================================
 // COMPREHENSIVE ELECTRONIC COMPONENTS & SCRAP DATASET
@@ -875,6 +1169,7 @@ function setSellerView(tabName) {
       }
     }
     renderSellerMyLots();
+    loadSellerDeals();
   } else if (tabName === "orders") {
     heroSection.hidden = true;
     categoriesSection.hidden = true;
@@ -1058,20 +1353,32 @@ function renderCategoryValuationHub(categoryName) {
     } else {
       categoryCardsGrid.innerHTML = categoryItems.map(item => {
         const spotPrice = item.spot_price > 0 ? item.spot_price : (item.min_price || 20);
+        const imgUrl = getScrapItemImage(item);
         return `
           <div class="cat-hub-card" data-key="${escapeHTML(item.key || item.display_name)}">
-            <div class="chc-top">
-              <span class="chc-icon">${escapeHTML(item.icon || "📦")}</span>
-              <div class="chc-info">
-                <div class="chc-name">${escapeHTML(item.display_name)}</div>
-                <div class="chc-price">₹${spotPrice} <span class="chc-unit">/ ${escapeHTML(item.unit || "kg")}</span></div>
+            <div class="chc-img-wrap">
+              <img
+                class="chc-product-img"
+                src="${imgUrl}"
+                alt="${escapeHTML(item.display_name)}"
+                loading="lazy"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+              />
+              <div class="chc-img-fallback" style="display:none">
+                <span>${escapeHTML(item.icon || "📦")}</span>
               </div>
+              <span class="chc-img-badge">${escapeHTML(item.icon || "📦")}</span>
+              <div class="chc-price-overlay">₹${spotPrice}<span class="chc-unit"> / ${escapeHTML(item.unit || "kg")}</span></div>
             </div>
-            <div class="chc-range">Mandi Band: ₹${item.min_price} - ₹${item.max_price} / ${escapeHTML(item.unit || "kg")}</div>
-            <div class="chc-tip">${escapeHTML(item.reuse_tip || "")}</div>
-            <button type="button" class="btn btn-secondary btn-sm chc-select-btn" data-key="${escapeHTML(item.key || item.display_name)}">
-              ⚡ Calculate Payout
-            </button>
+            <div class="chc-body">
+              <div class="chc-name">${escapeHTML(item.display_name)}</div>
+              <div class="chc-type">${escapeHTML(item.type || item.category || "")}</div>
+              <div class="chc-range">📊 Mandi Band: ₹${item.min_price} – ₹${item.max_price} / ${escapeHTML(item.unit || "kg")}</div>
+              <div class="chc-tip">💡 ${escapeHTML((item.reuse_tip || "").slice(0, 80))}${item.reuse_tip && item.reuse_tip.length > 80 ? "…" : ""}</div>
+              <button type="button" class="btn btn-secondary btn-sm chc-select-btn" data-key="${escapeHTML(item.key || item.display_name)}">
+                ⚡ Calculate Payout
+              </button>
+            </div>
           </div>
         `;
       }).join("");
@@ -1109,7 +1416,7 @@ function updateCategoryCalculator(selectedItem) {
   }
   if (!item) return;
 
-  const qty = parseFloat(catCalcQty?.value || 10) || 10;
+  const qty = Math.max(1, Math.round(parseFloat(catCalcQty?.value || 10) || 10));
   const spot = item.spot_price || item.base_price || item.min_price || 20;
   const minRate = item.min_price || Math.round(spot * 0.85);
   const maxRate = item.max_price || Math.round(spot * 1.15);
@@ -1139,6 +1446,11 @@ catCalcItemSelect?.addEventListener("change", () => {
 });
 
 catCalcQty?.addEventListener("input", () => {
+  // Enforce whole numbers only
+  const raw = catCalcQty.value;
+  if (raw.includes(".") || raw.includes("-")) {
+    catCalcQty.value = String(Math.max(1, Math.floor(parseFloat(raw) || 1)));
+  }
   updateCategoryCalculator();
 });
 
@@ -1160,7 +1472,7 @@ catCalcSellBtn?.addEventListener("click", () => {
     }
   }
   const qtyInput = listingForm?.querySelector("input[name='quantity']");
-  if (qtyInput && catCalcQty) qtyInput.value = catCalcQty.value;
+  if (qtyInput && catCalcQty) qtyInput.value = Math.max(1, Math.round(Number(catCalcQty.value) || 10));
   if (lotUnitSelect) {
     for (let opt of lotUnitSelect.options) {
       if (opt.value === item.unit) {
@@ -1506,6 +1818,12 @@ analyzeBtn?.addEventListener("click", async () => {
     });
 
     if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      if (res.status >= 400 && res.status < 500) {
+        statusMsg.textContent = `⚠️ Analysis error: ${errData.detail || `Upload failed (${res.status})`}`;
+        if (typeof showToast !== "undefined") showToast(errData.detail || "Invalid image upload", "error");
+        return;
+      }
       throw new Error(`Server returned ${res.status}`);
     }
 
@@ -1514,14 +1832,18 @@ analyzeBtn?.addEventListener("click", async () => {
     const engineTag = data.ai_engine ? ` [${data.ai_engine}]` : "";
     statusMsg.textContent = `Identified${engineTag}: ${data.detected_item} (${data.confidence}%)`;
   } catch (err) {
-    console.warn("Backend unavailable, activating smart detection simulation:", err);
-    // Intelligent simulation fallback across all expanded electronic components
-    const sampleKeys = Object.keys(DEMO_ITEMS);
-    const randomKey = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
-    const fallbackData = DEMO_ITEMS[randomKey];
-    
-    renderResult(fallbackData);
-    statusMsg.textContent = `[AI Identification] Matched: ${fallbackData.detected_item} (${fallbackData.confidence}%)`;
+    if (!isBackendOnline) {
+      console.warn("Backend unavailable, activating smart detection simulation:", err);
+      // Intelligent simulation fallback across all expanded electronic components
+      const sampleKeys = Object.keys(DEMO_ITEMS);
+      const randomKey = sampleKeys[Math.floor(Math.random() * sampleKeys.length)];
+      const fallbackData = DEMO_ITEMS[randomKey];
+      
+      renderResult(fallbackData);
+      statusMsg.textContent = `[AI Identification] Matched: ${fallbackData.detected_item} (${fallbackData.confidence}%)`;
+    } else {
+      statusMsg.textContent = `⚠️ Connection error: ${err.message}`;
+    }
   } finally {
     analyzeBtn.disabled = false;
     btnSpinner.hidden = true;
@@ -1549,13 +1871,15 @@ function renderResult(data) {
   calcUnitLabel.textContent = `Quantity (${unit})`;
   calcUnitTag.textContent = unit;
 
-  // Set default quantity
+  // Set default quantity (natural whole numbers)
   const defaultQty = unit === "unit" ? 1 : 5;
   calcQty.value = defaultQty;
+  calcQty.min = "1";
+  calcQty.step = "1";
   calcSlider.value = defaultQty;
-  calcSlider.min = unit === "unit" ? 1 : 0.5;
+  calcSlider.min = 1;
   calcSlider.max = unit === "unit" ? 50 : 100;
-  calcSlider.step = unit === "unit" ? 1 : 0.5;
+  calcSlider.step = 1;
 
   // Update calculator
   updateCalculations();
@@ -1594,6 +1918,11 @@ function renderResult(data) {
 // DYNAMIC RESALE VALUE CALCULATOR
 // ============================================================
 calcQty?.addEventListener("input", () => {
+  // Enforce whole numbers only
+  const raw = calcQty.value;
+  if (raw.includes(".") || raw.includes("-")) {
+    calcQty.value = String(Math.max(1, Math.floor(parseFloat(raw) || 1)));
+  }
   calcSlider.value = calcQty.value;
   updateCalculations();
 });
@@ -1606,7 +1935,7 @@ calcSlider?.addEventListener("input", () => {
 function updateCalculations() {
   if (!currentResult) return;
 
-  const qty = parseFloat(calcQty.value) || 1;
+  const qty = Math.max(1, Math.round(parseFloat(calcQty.value) || 1));
   const minRate = currentResult.min_price || 0;
   const maxRate = currentResult.max_price || 0;
   const avgRate = (minRate + maxRate) / 2;
@@ -1631,7 +1960,7 @@ printReceiptBtn?.addEventListener("click", () => {
 saveHistoryBtn?.addEventListener("click", () => {
   if (!currentResult) return;
 
-  const qty = parseFloat(calcQty.value) || 1;
+  const qty = Math.max(1, Math.floor(parseFloat(calcQty.value) || 1));
   const avgRate = ((currentResult.min_price || 0) + (currentResult.max_price || 0)) / 2;
   const totalVal = Math.round(qty * avgRate);
 
@@ -1815,21 +2144,35 @@ function renderCategoryGrid() {
     const priceLabel = spotPrice >= 1 ? `₹${Number(spotPrice).toLocaleString("en-IN")}` : `₹${spotPrice}`;
     const unitLabel = `/${item.unit}`;
     const defaultQty = item.unit === "unit" || item.unit === "pcs" ? 1 : 5;
-    const stepQty = item.unit === "unit" || item.unit === "pcs" ? 1 : 0.5;
     const initialTotal = Math.round(defaultQty * spotPrice);
+    const imgUrl = getScrapItemImage(item);
 
     return `
       <article class="mandi-card" data-key="${escapeHTML(item.key)}" data-unit="${escapeHTML(item.unit)}" data-price="${spotPrice}">
+        <!-- Product Image Header -->
+        <div class="mandi-card-img-wrap">
+          <img
+            class="mandi-card-img"
+            src="${imgUrl}"
+            alt="${escapeHTML(item.display_name)}"
+            loading="lazy"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+          />
+          <div class="mandi-card-img-fallback" style="display:none">
+            <span style="font-size:2.5rem">${escapeHTML(item.icon)}</span>
+          </div>
+          <span class="mandi-card-img-badge">${escapeHTML(item.icon)}</span>
+          <span class="mandi-card-cat-badge">${escapeHTML(item.category)}</span>
+        </div>
+
         <!-- Top Info Header (Clickable for full details modal) -->
         <div class="mandi-card-top" data-key="${escapeHTML(item.key)}" role="button" tabindex="0" title="Click to view details &amp; recycling insights">
-          <div class="mandi-icon-circle">${escapeHTML(item.icon)}</div>
           <div class="mandi-card-info">
             <div class="mandi-item-name" title="${escapeHTML(item.display_name)}">${escapeHTML(item.display_name)}</div>
             <div class="mandi-price-tag">
               <span class="mandi-price-amount">${priceLabel}</span>
               <span class="mandi-price-unit">${unitLabel}</span>
             </div>
-            <span class="mandi-cat-label">${escapeHTML(item.category)}</span>
           </div>
         </div>
 
@@ -1837,7 +2180,7 @@ function renderCategoryGrid() {
         <div class="mandi-card-calculator">
           <div class="mandi-qty-control">
             <button type="button" class="mandi-qty-btn mandi-qty-minus" data-key="${escapeHTML(item.key)}" aria-label="Decrease quantity">−</button>
-            <input type="number" class="mandi-qty-input" data-key="${escapeHTML(item.key)}" value="${defaultQty}" min="0.1" step="${stepQty}" aria-label="Quantity in ${escapeHTML(item.unit)}" />
+            <input type="number" class="mandi-qty-input" data-key="${escapeHTML(item.key)}" value="${defaultQty}" min="1" step="1" aria-label="Quantity in ${escapeHTML(item.unit)}" />
             <button type="button" class="mandi-qty-btn mandi-qty-plus" data-key="${escapeHTML(item.key)}" aria-label="Increase quantity">+</button>
             <span class="mandi-unit-tag">${escapeHTML(item.unit)}</span>
           </div>
@@ -1868,13 +2211,13 @@ function renderCategoryGrid() {
     if (!item) return;
 
     const spotPrice = item.spot_price > 0 ? item.spot_price : (item.min_price || 50);
-    const step = item.unit === "unit" || item.unit === "pcs" ? 1 : 0.5;
+    const step = 1;
     const qtyInput = card.querySelector(".mandi-qty-input");
     const totalValEl = card.querySelector(`.mandi-total-val[data-total-key="${CSS.escape(key)}"]`);
 
     const updateCardTotal = () => {
       if (!qtyInput || !totalValEl) return;
-      const qty = Math.max(0.1, parseFloat(qtyInput.value) || step);
+      const qty = Math.max(1, Math.round(parseFloat(qtyInput.value) || 1));
       const total = Math.round(qty * spotPrice);
       totalValEl.textContent = `₹${total.toLocaleString("en-IN")}`;
     };
@@ -1883,8 +2226,8 @@ function renderCategoryGrid() {
     card.querySelector(".mandi-qty-minus")?.addEventListener("click", (e) => {
       e.stopPropagation();
       if (!qtyInput) return;
-      const current = parseFloat(qtyInput.value) || step;
-      qtyInput.value = Math.max(step, Math.round((current - step) * 10) / 10);
+      const current = Math.max(1, Math.round(parseFloat(qtyInput.value) || 1));
+      qtyInput.value = Math.max(1, current - 1);
       updateCardTotal();
     });
 
@@ -1892,8 +2235,8 @@ function renderCategoryGrid() {
     card.querySelector(".mandi-qty-plus")?.addEventListener("click", (e) => {
       e.stopPropagation();
       if (!qtyInput) return;
-      const current = parseFloat(qtyInput.value) || step;
-      qtyInput.value = Math.round((current + step) * 10) / 10;
+      const current = Math.max(1, Math.round(parseFloat(qtyInput.value) || 1));
+      qtyInput.value = Math.max(1, current + 1);
       updateCardTotal();
     });
 
@@ -1909,7 +2252,7 @@ function renderCategoryGrid() {
     // Direct Sell Request Button
     card.querySelector(".btn-mandi-sell")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      const currentQty = qtyInput ? (parseFloat(qtyInput.value) || step) : step;
+      const currentQty = qtyInput ? Math.max(1, Math.round(parseFloat(qtyInput.value) || 1)) : 1;
       openQuickSell(item, currentQty);
     });
 
@@ -1977,7 +2320,7 @@ function formatINR(val) {
 
 function updateModalCalculator() {
   if (!currentModalItem) return;
-  const qty = Math.max(0.1, parseFloat(itemModalQty.value) || 1);
+  const qty = Math.max(1, Math.round(parseFloat(itemModalQty.value) || 1));
   const minRate = currentModalItem.min_price || 0;
   const maxRate = currentModalItem.max_price || 0;
   const avgRate = (minRate + maxRate) / 2;
@@ -2003,7 +2346,8 @@ function openItemDetailModal(item) {
   if (itemModalUnit) itemModalUnit.textContent = unit;
   if (itemModalQty) {
     itemModalQty.value = unit === "pcs" || unit === "unit" ? 1 : 5;
-    itemModalQty.step = unit === "pcs" || unit === "unit" ? 1 : 0.5;
+    itemModalQty.step = "1";
+    itemModalQty.min = "1";
   }
   updateModalCalculator();
 
@@ -2044,7 +2388,7 @@ itemModalScanBtn?.addEventListener("click", () => {
 // Sell CTA from Detail Modal
 itemModalSellBtn?.addEventListener("click", () => {
   if (!currentModalItem) return;
-  const qty = parseFloat(itemModalQty?.value) || (currentModalItem.unit === "unit" || currentModalItem.unit === "pcs" ? 1 : 5);
+  const qty = Math.max(1, Math.round(parseFloat(itemModalQty?.value) || (currentModalItem.unit === "unit" || currentModalItem.unit === "pcs" ? 1 : 5)));
   if (itemDetailModal) itemDetailModal.hidden = true;
   document.body.style.overflow = "";
   openQuickSell(currentModalItem, qty);
@@ -2082,7 +2426,7 @@ let currentQuickSellItem = null;
 
 function updateQuickSellPayout() {
   if (!currentQuickSellItem || !qsQtyInput || !qsTotalPayout) return;
-  const qty = Math.max(0.1, parseFloat(qsQtyInput.value) || 1);
+  const qty = Math.max(1, Math.round(parseFloat(qsQtyInput.value) || 1));
   const spotPrice = currentQuickSellItem.spot_price > 0 ? currentQuickSellItem.spot_price : (currentQuickSellItem.min_price || 50);
   const total = Math.round(qty * spotPrice);
   qsTotalPayout.textContent = `₹${total.toLocaleString("en-IN")}`;
@@ -2093,7 +2437,7 @@ function openQuickSell(item, initialQty = null) {
   currentQuickSellItem = item;
 
   const unit = item.unit || "kg";
-  const defaultQty = initialQty != null ? initialQty : (unit === "unit" || unit === "pcs" ? 1 : 5);
+  const defaultQty = initialQty != null ? Math.max(1, Math.round(Number(initialQty) || 1)) : (unit === "unit" || unit === "pcs" ? 1 : 5);
   const spotPrice = item.spot_price > 0 ? item.spot_price : (item.min_price || 50);
 
   if (qsItemIcon) qsItemIcon.textContent = item.icon || "♻️";
@@ -2104,7 +2448,8 @@ function openQuickSell(item, initialQty = null) {
 
   if (qsQtyInput) {
     qsQtyInput.value = defaultQty;
-    qsQtyInput.step = unit === "unit" || unit === "pcs" ? "1" : "0.5";
+    qsQtyInput.step = "1";
+    qsQtyInput.min = "1";
   }
   updateQuickSellPayout();
 
@@ -2141,17 +2486,15 @@ quickSellModal?.addEventListener("click", (e) => {
 
 qsMinusBtn?.addEventListener("click", () => {
   if (!qsQtyInput || !currentQuickSellItem) return;
-  const step = currentQuickSellItem.unit === "unit" || currentQuickSellItem.unit === "pcs" ? 1 : 0.5;
-  const current = parseFloat(qsQtyInput.value) || step;
-  qsQtyInput.value = Math.max(step, Math.round((current - step) * 10) / 10);
+  const current = Math.max(1, Math.round(parseFloat(qsQtyInput.value) || 1));
+  qsQtyInput.value = Math.max(1, current - 1);
   updateQuickSellPayout();
 });
 
 qsPlusBtn?.addEventListener("click", () => {
   if (!qsQtyInput || !currentQuickSellItem) return;
-  const step = currentQuickSellItem.unit === "unit" || currentQuickSellItem.unit === "pcs" ? 1 : 0.5;
-  const current = parseFloat(qsQtyInput.value) || step;
-  qsQtyInput.value = Math.round((current + step) * 10) / 10;
+  const current = Math.max(1, Math.round(parseFloat(qsQtyInput.value) || 1));
+  qsQtyInput.value = Math.max(1, current + 1);
   updateQuickSellPayout();
 });
 
@@ -2161,7 +2504,7 @@ quickSellForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentQuickSellItem) return;
 
-  const qty = Math.max(0.1, parseFloat(qsQtyInput.value) || 1);
+  const qty = Math.max(1, Math.round(parseFloat(qsQtyInput.value) || 1));
   const spotPrice = currentQuickSellItem.spot_price > 0 ? currentQuickSellItem.spot_price : (currentQuickSellItem.min_price || 50);
   const totalVal = Math.round(qty * spotPrice);
   const bookingId = `SELL-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -2403,7 +2746,9 @@ function setRoleVisibility() {
   }
 
   if (sessionLabel) {
-    sessionLabel.textContent = currentSession ? `${currentSession.name} · ${currentSession.role.toUpperCase()}` : "";
+    sessionLabel.textContent = (currentSession && currentSession.role)
+      ? `${currentSession.name || "User"} · ${String(currentSession.role).toUpperCase()}`
+      : (currentSession?.name || "");
   }
 
   if (isSeller) {
@@ -2417,7 +2762,10 @@ function setRoleVisibility() {
     howSection.hidden = true;
     if (buyerAddSection) buyerAddSection.hidden = true;
     if (buyerRequestsSection) buyerRequestsSection.hidden = true;
+    const buyerIncomingSection = document.getElementById("buyerIncomingRequestsSection");
+    if (buyerIncomingSection) buyerIncomingSection.hidden = true;
     setSellerView(activeSellerTab || "scanner");
+    loadSellerDeals();
 
   } else if (isBuyer) {
     // BUYER: only buyer sections visible via tab navigation
@@ -2429,6 +2777,7 @@ function setRoleVisibility() {
     historySection.hidden = true;
     howSection.hidden = true;
     setBuyerView(activeBuyerTab || "marketplace");
+    loadBuyerIncomingRequests();
 
   } else if (isAdmin) {
     // ADMIN: only admin panel
@@ -2442,6 +2791,9 @@ function setRoleVisibility() {
     if (marketSection) marketSection.hidden = true;
     if (buyerAddSection) buyerAddSection.hidden = true;
     if (buyerRequestsSection) buyerRequestsSection.hidden = true;
+    const buyerIncomingSection = document.getElementById("buyerIncomingRequestsSection");
+    if (buyerIncomingSection) buyerIncomingSection.hidden = true;
+    loadAdminDeals();
   }
 
   // Update marketplace action button text and visibility based on role
@@ -2488,19 +2840,30 @@ function setBuyerView(tabName) {
   const isBuyer = currentSession && currentSession.role === "buyer";
   if (!isBuyer) return;
 
+  const buyerIncomingSection = document.getElementById("buyerIncomingRequestsSection");
+
   if (tabName === "marketplace") {
     if (marketSection) marketSection.hidden = false;
     if (buyerAddSection) buyerAddSection.hidden = true;
     if (buyerRequestsSection) buyerRequestsSection.hidden = true;
+    if (buyerIncomingSection) buyerIncomingSection.hidden = true;
     renderMarketplace();
+  } else if (tabName === "seller-requests") {
+    if (marketSection) marketSection.hidden = true;
+    if (buyerAddSection) buyerAddSection.hidden = true;
+    if (buyerRequestsSection) buyerRequestsSection.hidden = true;
+    if (buyerIncomingSection) buyerIncomingSection.hidden = false;
+    loadBuyerIncomingRequests();
   } else if (tabName === "add-item") {
     if (marketSection) marketSection.hidden = true;
     if (buyerAddSection) buyerAddSection.hidden = false;
     if (buyerRequestsSection) buyerRequestsSection.hidden = true;
+    if (buyerIncomingSection) buyerIncomingSection.hidden = true;
   } else if (tabName === "my-requests") {
     if (marketSection) marketSection.hidden = true;
     if (buyerAddSection) buyerAddSection.hidden = true;
     if (buyerRequestsSection) buyerRequestsSection.hidden = false;
+    if (buyerIncomingSection) buyerIncomingSection.hidden = true;
     renderBuyerRequests();
   } else if (tabName === "chatbot") {
     if (window.openCopilot) window.openCopilot();
@@ -2536,6 +2899,484 @@ function renderBuyerRequests() {
 }
 
 // ============================================================
+// B2B DEAL LIFECYCLE CONTROLLER (SELLER, BUYER & ADMIN)
+// ============================================================
+
+// 1. SELLER DEALS TABLE LOADER
+async function loadSellerDeals() {
+  const tbody = document.getElementById("sellerDealsTbody");
+  const countBadge = document.getElementById("sellerDealsCount");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/seller/sell-requests`);
+    if (res.ok) {
+      const deals = await res.json();
+      if (countBadge) countBadge.textContent = `${deals.length} Deals`;
+      if (!deals.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-lots-cell">No sell requests created yet. Send a sell request above to get buyer offers.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = deals.map(d => {
+        let badgeClass = "badge-pending-buyer";
+        let statusText = d.status || "Pending Buyer Approval";
+        if (statusText.includes("Admin Cleared")) {
+          badgeClass = "badge-admin-cleared";
+        } else if (statusText.includes("Buyer Approved")) {
+          badgeClass = "badge-buyer-approved";
+        } else if (statusText.includes("Rejected")) {
+          badgeClass = "badge-deal-rejected";
+        }
+
+        const askingRate = d.asking_price_min || d.asking_price_max || d.price || 0;
+        const agreedPriceText = d.agreed_price ? `₹${Number(d.agreed_price).toLocaleString("en-IN")}` : `Asking: ₹${Number(askingRate).toLocaleString("en-IN")}`;
+        const totalAmountText = d.deal_amount ? `₹${Number(d.deal_amount).toLocaleString("en-IN")}` : "Awaiting Buyer";
+        const deliveryText = d.delivery_method ? `${escapeHTML(d.delivery_method)}` : "Pending Terms";
+
+        const contractBtn = (d.status && d.status.includes("Admin Cleared")) 
+          ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openDealContractModal('${escapeHTML(d.id)}')" style="border-radius:9999px; padding:4px 12px; font-size:0.75rem;">📜 Contract</button>`
+          : `<span style="font-size:0.75rem; color:var(--text-dim);">-</span>`;
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700; color:#fff;">${escapeHTML(d.item || "Scrap Lot")}</div>
+              <div style="font-size:0.74rem; color:var(--text-muted); font-family:var(--font-mono);">${escapeHTML(d.id || "")} · ${escapeHTML(d.date || "")}</div>
+            </td>
+            <td><strong>${escapeHTML(String(d.quantity || ""))} ${escapeHTML(d.unit || "kg")}</strong></td>
+            <td>${escapeHTML(agreedPriceText)} / unit</td>
+            <td><strong class="deal-highlight-val">${escapeHTML(totalAmountText)}</strong></td>
+            <td><small style="color:var(--text-muted);">${escapeHTML(deliveryText)}</small></td>
+            <td><span class="badge-deal ${badgeClass}">${escapeHTML(statusText)}</span></td>
+            <td style="text-align: right;">${contractBtn}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  } catch (err) {
+    console.warn("Notice loading seller deals:", err);
+  }
+}
+
+// 2. BUYER INCOMING REQUESTS & BADGE LOADER
+async function loadBuyerIncomingRequests() {
+  const grid = document.getElementById("buyerIncomingRequestsGrid");
+  const badge = document.getElementById("buyerIncomingReqCountBadge");
+
+  try {
+    const res = await fetch(`${API_BASE}/buyer/sell-requests`);
+    if (res.ok) {
+      const list = await res.json();
+      if (badge) {
+        badge.textContent = list.length;
+        badge.hidden = list.length === 0;
+      }
+      if (!grid) return;
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty-market">No incoming seller requests pending approval at this time.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(req => {
+        const askingRate = req.asking_price_min || req.asking_price_max || req.price || 0;
+        const reqStr = JSON.stringify(req).replace(/"/g, '&quot;');
+        return `
+          <div class="buyer-incoming-card">
+            <div class="bic-head">
+              <div>
+                <span class="deal-kicker">${escapeHTML(req.category || "Scrap Material")}</span>
+                <div class="bic-title">${escapeHTML(req.item || "Scrap Lot")}</div>
+              </div>
+              <span class="badge-deal badge-pending-buyer">Pending Buyer</span>
+            </div>
+            <div class="bic-meta">
+              <div class="bic-meta-item">
+                <span>Available Qty:</span>
+                <strong>${escapeHTML(String(req.quantity || ""))} ${escapeHTML(req.unit || "kg")}</strong>
+              </div>
+              <div class="bic-meta-item">
+                <span>Seller Asking Rate:</span>
+                <strong class="glow-price">₹${Number(askingRate).toLocaleString("en-IN")} / ${escapeHTML(req.unit || "kg")}</strong>
+              </div>
+              <div class="bic-meta-item">
+                <span>Origin Location:</span>
+                <strong>${escapeHTML(req.city || "")}, ${escapeHTML(req.state || "")}</strong>
+              </div>
+              <div class="bic-meta-item">
+                <span>Proposal Date:</span>
+                <strong>${escapeHTML(req.date || "Today")}</strong>
+              </div>
+            </div>
+            ${req.note ? `<p style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">${escapeHTML(req.note)}</p>` : ""}
+            <button type="button" class="btn btn-primary" onclick="openBuyerDealModalFromData('${req.id}')" style="margin-top:auto;">
+              🤝 Review &amp; Finalize Deal Terms
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+  } catch (err) {
+    console.warn("Notice loading buyer incoming requests:", err);
+  }
+}
+
+// 3. BUYER DEAL MODAL CONTROLLER
+let currentDealOrder = null;
+let cachedBuyerRequests = [];
+
+async function openBuyerDealModalFromData(orderId) {
+  try {
+    const res = await fetch(`${API_BASE}/buyer/sell-requests`);
+    if (res.ok) {
+      const list = await res.json();
+      cachedBuyerRequests = list;
+      const order = list.find(r => r.id === orderId) || { id: orderId, item: "Scrap Lot", quantity: 100, unit: "kg" };
+      openBuyerDealModal(order);
+    }
+  } catch {
+    openBuyerDealModal({ id: orderId, item: "Scrap Lot", quantity: 100, unit: "kg" });
+  }
+}
+
+function openBuyerDealModal(order) {
+  currentDealOrder = order;
+  const modal = document.getElementById("buyerDealModal");
+  if (!modal) return;
+
+  const orderIdInput = document.getElementById("buyerDealOrderId");
+  const qtyInput = document.getElementById("buyerDealLotQuantity");
+  const itemName = document.getElementById("buyerDealItemName");
+  const itemSub = document.getElementById("buyerDealItemSub");
+  const askingRate = document.getElementById("buyerDealAskingRate");
+  const agreedPriceInput = document.getElementById("buyerDealAgreedPrice");
+  const scheduleInput = document.getElementById("buyerDealSchedule");
+  const addressInput = document.getElementById("buyerDealAddress");
+
+  const askingPrice = order.asking_price_min || order.asking_price_max || order.price || 100;
+  const qty = Number(order.quantity) || 1;
+  const unit = order.unit || "kg";
+
+  if (orderIdInput) orderIdInput.value = order.id || "";
+  if (qtyInput) qtyInput.value = qty;
+  if (itemName) itemName.textContent = order.item || "Scrap Component Lot";
+  if (itemSub) itemSub.textContent = `Category: ${order.category || "Scrap"} · Quantity: ${qty} ${unit} · Location: ${order.city || ""}, ${order.state || ""}`;
+  if (askingRate) askingRate.textContent = `₹${Number(askingPrice).toLocaleString("en-IN")} / ${unit}`;
+  if (agreedPriceInput) agreedPriceInput.value = askingPrice;
+
+  // Set default schedule date = 3 days from now
+  if (scheduleInput) {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    scheduleInput.value = d.toISOString().split("T")[0];
+  }
+
+  // Pre-fill default warehouse address
+  if (addressInput && !addressInput.value) {
+    addressInput.value = "Central Processing Facility, MIDC Industrial Hub, Bhosari";
+  }
+
+  updateBuyerDealCalc();
+  modal.hidden = false;
+}
+
+function updateBuyerDealCalc() {
+  const agreedPriceInput = document.getElementById("buyerDealAgreedPrice");
+  const formulaEl = document.getElementById("buyerDealCalcFormula");
+  const totalAmountEl = document.getElementById("buyerDealTotalAmount");
+  if (!currentDealOrder || !agreedPriceInput) return;
+
+  const qty = Number(currentDealOrder.quantity) || 1;
+  const unit = currentDealOrder.unit || "kg";
+  const rate = Number(agreedPriceInput.value) || 0;
+  const total = qty * rate;
+
+  if (formulaEl) formulaEl.textContent = `${qty} ${unit} × ₹${rate.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (totalAmountEl) totalAmountEl.textContent = `₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+document.getElementById("buyerDealAgreedPrice")?.addEventListener("input", updateBuyerDealCalc);
+
+// Handle Buyer Deal Approval Form Submission
+document.getElementById("buyerDealForm")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!currentDealOrder) return;
+
+  const form = document.getElementById("buyerDealForm");
+  const msg = document.getElementById("buyerDealMessage");
+  const submitBtn = document.getElementById("submitBuyerDealApprovalBtn");
+  const values = Object.fromEntries(new FormData(form));
+
+  const qty = Number(currentDealOrder.quantity) || 1;
+  const agreedPrice = Number(values.agreed_price) || 0;
+  const dealAmount = qty * agreedPrice;
+
+  const payload = {
+    agreed_price: agreedPrice,
+    deal_amount: dealAmount,
+    delivery_method: values.delivery_method,
+    delivery_schedule: values.delivery_schedule,
+    delivery_address: values.delivery_address,
+    payment_terms: values.payment_terms,
+    buyer_notes: values.buyer_notes || ""
+  };
+
+  try {
+    if (submitBtn) submitBtn.disabled = true;
+    if (msg) {
+      msg.className = "form-message";
+      msg.textContent = "Finalizing deal terms & submitting for Admin clearance...";
+    }
+
+    const res = await fetch(`${API_BASE}/buyer/sell-requests/${currentDealOrder.id}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      if (typeof showToast !== "undefined") {
+        showToast("✅ Deal Approved! Submitted for Admin Clearance.", "success");
+      }
+      const modal = document.getElementById("buyerDealModal");
+      if (modal) modal.hidden = true;
+      loadBuyerIncomingRequests();
+      renderOrders();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      if (msg) {
+        msg.className = "form-message error";
+        msg.textContent = `❌ ${err.detail || "Failed to approve deal."}`;
+      }
+    }
+  } catch (err) {
+    if (msg) {
+      msg.className = "form-message error";
+      msg.textContent = "Network error approving deal.";
+    }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+});
+
+// Handle Buyer Deal Rejection
+document.getElementById("rejectBuyerDealBtn")?.addEventListener("click", async () => {
+  if (!currentDealOrder) return;
+  if (!confirm("Decline this seller lot proposal?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/buyer/sell-requests/${currentDealOrder.id}/reject`, {
+      method: "POST"
+    });
+    if (res.ok) {
+      if (typeof showToast !== "undefined") {
+        showToast("❌ Deal proposal declined.", "info");
+      }
+      const modal = document.getElementById("buyerDealModal");
+      if (modal) modal.hidden = true;
+      loadBuyerIncomingRequests();
+      renderOrders();
+    }
+  } catch (err) {
+    alert("Network error declining proposal.");
+  }
+});
+
+// 4. ADMIN MASTER DEAL LEDGER & CLEARANCE AUTHORIZATION
+async function loadAdminDeals() {
+  const tbody = document.getElementById("adminDealsTbody");
+  const countBadge = document.getElementById("adminDealsLedgerCount");
+  const tabBadge = document.getElementById("adminDealsBadge");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/deals`);
+    if (res.ok) {
+      const deals = await res.json();
+      if (countBadge) countBadge.textContent = `${deals.length} Deals`;
+      
+      const pendingAdminClearance = deals.filter(d => (d.status || "").includes("Buyer Approved")).length;
+      if (tabBadge) {
+        tabBadge.textContent = pendingAdminClearance;
+        tabBadge.hidden = pendingAdminClearance === 0;
+      }
+
+      if (!deals.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-lots-cell">No active deals found in the ledger.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = deals.map(d => {
+        let badgeClass = "badge-pending-buyer";
+        let statusText = d.status || "Pending Buyer Approval";
+        if (statusText.includes("Admin Cleared")) {
+          badgeClass = "badge-admin-cleared";
+        } else if (statusText.includes("Buyer Approved")) {
+          badgeClass = "badge-buyer-approved";
+        } else if (statusText.includes("Rejected")) {
+          badgeClass = "badge-deal-rejected";
+        }
+
+        const agreedPriceText = d.agreed_price 
+          ? `₹${Number(d.agreed_price).toLocaleString("en-IN")}` 
+          : `Asking: ₹${d.asking_price_min || d.asking_price_max || 0}`;
+        const totalAmountText = d.deal_amount 
+          ? `₹${Number(d.deal_amount).toLocaleString("en-IN")}` 
+          : "Pending Agreement";
+
+        let actionHtml = "";
+        if (statusText.includes("Buyer Approved")) {
+          actionHtml = `<button type="button" class="btn btn-primary btn-sm" onclick="authorizeAdminClearance('${escapeHTML(d.id)}')" style="padding: 5px 12px; font-size: 0.78rem;">🛡️ Authorize Clearance</button>`;
+        } else if (statusText.includes("Admin Cleared")) {
+          actionHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="openDealContractModal('${escapeHTML(d.id)}')" style="padding: 5px 12px; font-size: 0.78rem;">📜 View Contract</button>`;
+        } else {
+          actionHtml = `<span style="font-size:0.75rem; color:var(--text-dim);">Awaiting Buyer</span>`;
+        }
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700; color:#fff;">${escapeHTML(d.item || "Scrap Lot")}</div>
+              <div style="font-size:0.74rem; color:var(--text-muted); font-family:var(--font-mono);">${escapeHTML(d.id || "")} · ${escapeHTML(d.date || "")}</div>
+            </td>
+            <td><strong>${escapeHTML(String(d.quantity || ""))} ${escapeHTML(d.unit || "kg")}</strong></td>
+            <td>${escapeHTML(d.seller || "Registered Seller")}</td>
+            <td>${escapeHTML(d.buyer || d.buyer_name || "Enterprise Buyer")}</td>
+            <td>
+              <div>${escapeHTML(agreedPriceText)} / unit</div>
+              <strong class="deal-highlight-val">${escapeHTML(totalAmountText)}</strong>
+            </td>
+            <td>
+              <div style="font-size:0.8rem; font-weight:600;">${escapeHTML(d.delivery_method || "Pending")}</div>
+              <div style="font-size:0.74rem; color:var(--text-muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(d.delivery_address || "")}</div>
+            </td>
+            <td><span class="badge-deal ${badgeClass}">${escapeHTML(statusText)}</span></td>
+            <td style="text-align: right;">${actionHtml}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  } catch (err) {
+    console.warn("Notice loading admin deals:", err);
+  }
+}
+
+async function authorizeAdminClearance(dealId) {
+  if (!confirm("Authorize official platform clearance for this verified deal? This will generate the signed clearance certificate and contract slip.")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/deals/${dealId}/clear`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clearance_notes: "Platform compliance and KYC verified. Deal cleared for fulfillment.",
+        admin_name: currentSession?.name || "ScrapSense Administrator"
+      })
+    });
+    if (res.ok) {
+      if (typeof showToast !== "undefined") {
+        showToast("✅ Deal Cleared & Verified by Admin!", "success");
+      }
+      loadAdminDeals();
+      renderOrders();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(`Error: ${err.detail || "Failed to clear deal."}`);
+    }
+  } catch (err) {
+    alert("Network error authorizing deal clearance.");
+  }
+}
+
+// 5. OFFICIAL DEAL CONTRACT SLIP MODAL
+async function openDealContractModal(dealId) {
+  const modal = document.getElementById("dealContractModal");
+  if (!modal) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/deals/${dealId}/contract`);
+    if (res.ok) {
+      const data = await res.json();
+      const contract = data.contract || data;
+      
+      const elNum = document.getElementById("contractNumberBadge");
+      const elClearId = document.getElementById("contractClearanceId");
+      const elItem = document.getElementById("contractItemSpec");
+      const elQty = document.getElementById("contractQuantity");
+      const elRate = document.getElementById("contractAgreedRate");
+      const elTotal = document.getElementById("contractTotalAmount");
+      const elSeller = document.getElementById("contractSellerName");
+      const elBuyer = document.getElementById("contractBuyerName");
+      const elDelivery = document.getElementById("contractDeliveryMethod");
+      const elPayment = document.getElementById("contractPaymentTerms");
+      const elAddress = document.getElementById("contractDeliveryAddress");
+      const elHash = document.getElementById("contractHash");
+      const elTime = document.getElementById("contractTimestamp");
+      const qrBox = document.getElementById("contractQrBox");
+
+      if (elNum) elNum.textContent = contract.contract_number || "CTR-202609-00000";
+      if (elClearId) elClearId.textContent = `CLR-${(contract.deal_id || "DEAL").toUpperCase()}`;
+      if (elItem) elItem.textContent = contract.item || "Verified Scrap Lot";
+      if (elQty) elQty.textContent = `${contract.quantity || 0} ${contract.unit || "kg"}`;
+      if (elRate) elRate.textContent = `₹${Number(contract.agreed_price || 0).toLocaleString("en-IN")} / ${contract.unit || "kg"}`;
+      if (elTotal) elTotal.textContent = `₹${Number(contract.total_deal_amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+      if (elSeller) elSeller.textContent = `${contract.seller || "Verified Seller"} (KYC Verified)`;
+      if (elBuyer) elBuyer.textContent = `${contract.buyer || "Certified Enterprise Buyer"} (KYC Verified)`;
+      if (elDelivery) elDelivery.textContent = contract.delivery_method || "Direct Delivery to Warehouse";
+      if (elPayment) elPayment.textContent = contract.payment_terms || "Instant RTGS upon Weighbridge Confirmation";
+      if (elAddress) elAddress.textContent = contract.delivery_address || "Designated Delivery Facility";
+      if (elHash) elHash.textContent = contract.integrity_hash || "0x9f83a42b10e5d9c7";
+      if (elTime) elTime.textContent = contract.cleared_at || new Date().toLocaleString("en-IN");
+
+      // Generate verification QR Code
+      if (qrBox) {
+        qrBox.innerHTML = "";
+        if (typeof QRCode !== "undefined") {
+          new QRCode(qrBox, {
+            text: `SCRAPSENSE-CONTRACT:${contract.contract_number || dealId}|HASH:${contract.integrity_hash || ""}|VAL:INR_${contract.total_deal_amount || 0}`,
+            width: 78,
+            height: 78,
+            colorDark: "#06020e",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      }
+
+      modal.hidden = false;
+    }
+  } catch (err) {
+    console.warn("Notice loading deal contract:", err);
+  }
+}
+
+// Modal Close Listeners for Deal Modals
+document.getElementById("closeBuyerDealModal")?.addEventListener("click", () => {
+  const m = document.getElementById("buyerDealModal");
+  if (m) m.hidden = true;
+});
+document.getElementById("buyerDealModal")?.addEventListener("click", (e) => {
+  const m = document.getElementById("buyerDealModal");
+  if (e.target === m) m.hidden = true;
+});
+
+document.getElementById("closeDealContractModal")?.addEventListener("click", () => {
+  const m = document.getElementById("dealContractModal");
+  if (m) m.hidden = true;
+});
+document.getElementById("dealContractModal")?.addEventListener("click", (e) => {
+  const m = document.getElementById("dealContractModal");
+  if (e.target === m) m.hidden = true;
+});
+
+document.getElementById("printDealContractBtn")?.addEventListener("click", () => {
+  window.print();
+});
+
+// Expose globals for inline HTML triggers
+window.openDealContractModal = openDealContractModal;
+window.openBuyerDealModalFromData = openBuyerDealModalFromData;
+window.authorizeAdminClearance = authorizeAdminClearance;
+
+// ============================================================
 // AUTHENTICATION & LOGIN/REGISTRATION
 // ============================================================
 function setAuthMode(mode) {
@@ -2547,12 +3388,28 @@ function setAuthMode(mode) {
     modeLoginBtn?.classList.remove("active");
     if (registerCard) registerCard.hidden = false;
     if (loginCard) loginCard.hidden = true;
+    if (forgotPasswordCard) forgotPasswordCard.hidden = true;
     if (registrationMessage) registrationMessage.textContent = "";
+  } else if (mode === "forgot") {
+    modeLoginBtn?.classList.remove("active");
+    modeRegisterBtn?.classList.remove("active");
+    if (loginCard) loginCard.hidden = true;
+    if (registerCard) registerCard.hidden = true;
+    if (forgotPasswordCard) forgotPasswordCard.hidden = false;
+    if (forgotReqForm) forgotReqForm.hidden = false;
+    if (forgotResetForm) forgotResetForm.hidden = true;
+    if (forgotReqMessage) forgotReqMessage.textContent = "";
+    if (forgotResetMessage) forgotResetMessage.textContent = "";
+    if (devForgotOtpBanner) devForgotOtpBanner.hidden = true;
+    if (authEmailInput && authEmailInput.value.trim() && forgotEmailInput) {
+      forgotEmailInput.value = authEmailInput.value.trim();
+    }
   } else {
     modeLoginBtn?.classList.add("active");
     modeRegisterBtn?.classList.remove("active");
     if (loginCard) loginCard.hidden = false;
     if (registerCard) registerCard.hidden = true;
+    if (forgotPasswordCard) forgotPasswordCard.hidden = true;
     if (authMessage) authMessage.textContent = "";
   }
 }
@@ -2561,6 +3418,8 @@ modeLoginBtn?.addEventListener("click", () => setAuthMode("login"));
 modeRegisterBtn?.addEventListener("click", () => setAuthMode("register"));
 goToRegisterBtn?.addEventListener("click", () => setAuthMode("register"));
 goToLoginBtn?.addEventListener("click", () => setAuthMode("login"));
+forgotPasswordBtn?.addEventListener("click", () => setAuthMode("forgot"));
+forgotBackToLoginBtn?.addEventListener("click", () => setAuthMode("login"));
 
 // Role config per role
 const ROLE_CONFIG = {
@@ -2573,6 +3432,8 @@ const ROLE_CONFIG = {
     btnText: "Sign In as Seller",
     registerTitle: "Create Seller Account",
     registerSubtitle: "Register to scan components, check live mandi rates, and submit lots for sale.",
+    forgotTitle: "Reset Seller Password",
+    forgotSubtitle: "Enter your registered seller email to receive a password reset verification code.",
     canRegister: true
   },
   buyer: {
@@ -2584,6 +3445,8 @@ const ROLE_CONFIG = {
     btnText: "Sign In as Buyer",
     registerTitle: "Create Buyer Account",
     registerSubtitle: "Register to browse lots, approve seller listings, and send price requests to admin.",
+    forgotTitle: "Reset Buyer Password",
+    forgotSubtitle: "Enter your registered enterprise buyer email to receive a password reset verification code.",
     canRegister: true
   },
   admin: {
@@ -2593,6 +3456,8 @@ const ROLE_CONFIG = {
     loginTitle: "Administrator Sign In",
     loginSubtitle: "Enter administrator credentials to manage approvals, buyer records, and product rates.",
     btnText: "Sign In as Administrator",
+    forgotTitle: "Reset Admin Password",
+    forgotSubtitle: "Enter registered admin email (admin@scrapsense.org) to receive a verification code.",
     canRegister: false
   }
 };
@@ -2654,6 +3519,8 @@ function setRole(role) {
 
   if (loginTitle) loginTitle.textContent = config.loginTitle;
   if (loginSubtitle) loginSubtitle.textContent = config.loginSubtitle;
+  if (forgotTitle && config.forgotTitle) forgotTitle.textContent = config.forgotTitle;
+  if (forgotSubtitle && config.forgotSubtitle) forgotSubtitle.textContent = config.forgotSubtitle;
   const txt = loginSubmitBtn?.querySelector(".btn-text");
   if (txt) txt.textContent = config.btnText;
 
@@ -2675,6 +3542,240 @@ document.querySelectorAll(".quick-role-pill").forEach(pill => {
   });
 });
 
+// ============================================================
+// PASSWORD STRENGTH METER & VALIDATION
+// ============================================================
+const pwdStrengthFill = document.getElementById("pwdStrengthFill");
+const pwdStrengthText = document.getElementById("pwdStrengthText");
+const critLength = document.getElementById("critLength");
+const critUpper = document.getElementById("critUpper");
+const critLower = document.getElementById("critLower");
+const critNumber = document.getElementById("critNumber");
+const critSpecial = document.getElementById("critSpecial");
+
+function checkPasswordStrength(pwd) {
+  const hasLength = (pwd || "").length >= 10;
+  const hasUpper = /[A-Z]/.test(pwd || "");
+  const hasLower = /[a-z]/.test(pwd || "");
+  const hasNumber = /[0-9]/.test(pwd || "");
+  const hasSpecial = /[^A-Za-z0-9]/.test(pwd || "");
+
+  if (critLength) {
+    critLength.className = `crit-item ${hasLength ? "valid" : ""}`;
+    critLength.textContent = `${hasLength ? "✓" : "❌"} 10+ characters`;
+  }
+  if (critUpper) {
+    critUpper.className = `crit-item ${hasUpper ? "valid" : ""}`;
+    critUpper.textContent = `${hasUpper ? "✓" : "❌"} Uppercase (A-Z)`;
+  }
+  if (critLower) {
+    critLower.className = `crit-item ${hasLower ? "valid" : ""}`;
+    critLower.textContent = `${hasLower ? "✓" : "❌"} Lowercase (a-z)`;
+  }
+  if (critNumber) {
+    critNumber.className = `crit-item ${hasNumber ? "valid" : ""}`;
+    critNumber.textContent = `${hasNumber ? "✓" : "❌"} Number (0-9)`;
+  }
+  if (critSpecial) {
+    critSpecial.className = `crit-item ${hasSpecial ? "valid" : ""}`;
+    critSpecial.textContent = `${hasSpecial ? "✓" : "❌"} Symbol (!@#$%^&*)`;
+  }
+
+  const score = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+  if (pwdStrengthFill && pwdStrengthText) {
+    pwdStrengthFill.className = "pwd-strength-fill";
+    if (!pwd) {
+      pwdStrengthText.textContent = "Too short";
+      pwdStrengthText.style.color = "#94a3b8";
+    } else if (score <= 2) {
+      pwdStrengthFill.classList.add("weak");
+      pwdStrengthText.textContent = "Weak";
+      pwdStrengthText.style.color = "#ef4444";
+    } else if (score < 5) {
+      pwdStrengthFill.classList.add("medium");
+      pwdStrengthText.textContent = "Moderate";
+      pwdStrengthText.style.color = "#f59e0b";
+    } else {
+      pwdStrengthFill.classList.add("strong");
+      pwdStrengthText.textContent = "Strong & Secure";
+      pwdStrengthText.style.color = "#10b981";
+    }
+  }
+
+  return hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+}
+
+regPasswordInput?.addEventListener("input", (e) => {
+  checkPasswordStrength(e.target.value);
+});
+
+// ============================================================
+// OTP VERIFICATION STATE & CONTROLLER
+// ============================================================
+let pendingRegistration = null;
+let otpTimerInterval = null;
+let otpExpiresAt = 0;
+
+const otpModal = document.getElementById("otpModal");
+const closeOtpModal = document.getElementById("closeOtpModal");
+const otpTargetEmail = document.getElementById("otpTargetEmail");
+const otpCodeInput = document.getElementById("otpCodeInput");
+const devOtpBanner = document.getElementById("devOtpBanner");
+const devOtpCode = document.getElementById("devOtpCode");
+const verifyOtpSubmitBtn = document.getElementById("verifyOtpSubmitBtn");
+const resendOtpBtn = document.getElementById("resendOtpBtn");
+const otpCountdownText = document.getElementById("otpCountdownText");
+const otpMessage = document.getElementById("otpMessage");
+
+function openOtpModal(email, devCode = null) {
+  if (!otpModal) return;
+  otpModal.hidden = false;
+  if (otpTargetEmail) otpTargetEmail.textContent = email;
+  if (otpCodeInput) {
+    // In local dev mode, auto-fill the generated test code immediately
+    otpCodeInput.value = devCode ? String(devCode).trim() : "";
+    otpCodeInput.focus();
+    if (devCode) otpCodeInput.select();
+  }
+  if (otpMessage) {
+    if (devCode) {
+      otpMessage.innerHTML = `<span style="color: #10b981; font-weight: 600;">✓ Verification code auto-filled! Click "Verify & Activate Account" below.</span>`;
+    } else {
+      otpMessage.textContent = "";
+    }
+  }
+
+  if (devCode && devOtpBanner) {
+    devOtpBanner.innerHTML = `
+      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 10px 14px; text-align: left; margin: 8px 0;">
+        <div style="color: #34d399; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+          <span>⚡ Local Dev Mode (No SMTP Email Needed)</span>
+        </div>
+        <div style="color: #cbd5e1; font-size: 0.82rem; margin-top: 4px;">
+          Verification Code: <b style="font-family: monospace; font-size: 1.15rem; color: #10b981; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; letter-spacing: 2px;">${devCode}</b> (Auto-Filled)
+        </div>
+      </div>
+    `;
+    devOtpBanner.hidden = false;
+    showToast(`⚡ Dev Mode: OTP code ${devCode} auto-filled!`, "success");
+  } else if (devOtpBanner) {
+    devOtpBanner.hidden = true;
+  }
+
+  // 10 minutes countdown
+  otpExpiresAt = Date.now() + 10 * 60 * 1000;
+  clearInterval(otpTimerInterval);
+  updateOtpCountdown();
+  otpTimerInterval = setInterval(updateOtpCountdown, 1000);
+}
+
+function closeOtpVerificationModal() {
+  if (otpModal) otpModal.hidden = true;
+  clearInterval(otpTimerInterval);
+  if (otpCodeInput) otpCodeInput.value = "";
+  if (otpMessage) otpMessage.textContent = "";
+}
+
+closeOtpModal?.addEventListener("click", closeOtpVerificationModal);
+
+function updateOtpCountdown() {
+  const remaining = Math.max(0, Math.floor((otpExpiresAt - Date.now()) / 1000));
+  const mins = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const secs = String(remaining % 60).padStart(2, "0");
+  if (otpCountdownText) {
+    otpCountdownText.innerHTML = remaining > 0
+      ? `Code expires in <b>${mins}:${secs}</b>`
+      : `<b style="color: #ef4444">Code expired. Please resend.</b>`;
+  }
+  if (remaining === 0) {
+    clearInterval(otpTimerInterval);
+  }
+}
+
+// Resend OTP handler
+resendOtpBtn?.addEventListener("click", async () => {
+  if (!pendingRegistration) return;
+  if (otpMessage) otpMessage.textContent = "Sending new verification code...";
+  try {
+    const res = await fetch(`${API_BASE}/auth/request-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pendingRegistration)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 429) {
+        if (otpMessage) otpMessage.textContent = data.detail || "Rate limit reached. Please wait before retrying.";
+        return;
+      }
+      throw new Error(data.detail || "Failed to resend OTP");
+    }
+    openOtpModal(pendingRegistration.email, data.otp_demo_preview);
+    if (otpMessage) otpMessage.textContent = "✓ A new verification code has been dispatched!";
+  } catch (err) {
+    if (otpMessage) otpMessage.textContent = err.message;
+  }
+});
+
+// Verify OTP submit handler
+async function submitVerifyOtp() {
+  if (!pendingRegistration) return;
+  const code = (otpCodeInput?.value || "").trim();
+  if (code.length !== 6) {
+    if (otpMessage) otpMessage.textContent = "Please enter the complete 6-digit verification code.";
+    return;
+  }
+
+  if (verifyOtpSubmitBtn) {
+    verifyOtpSubmitBtn.disabled = true;
+    verifyOtpSubmitBtn.textContent = "Verifying...";
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: pendingRegistration.email, otp: code })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 429) {
+        if (otpMessage) otpMessage.textContent = data.detail || "Too many attempts. Account locked temporarily.";
+        return;
+      }
+      throw new Error(data.detail || "Invalid verification code");
+    }
+
+    // Success: backend sets httpOnly session cookie and returns token
+    if (data.token) setAuthToken(data.token);
+    currentSession = { name: data.name, email: data.email, role: data.role };
+    saveStoredSession(currentSession);
+    closeOtpVerificationModal();
+    pendingRegistration = null;
+    authScreen.hidden = true;
+    setRoleVisibility();
+    showToast(`🎉 Email verified! Welcome, ${escapeHTML(data.name || "User")}!`, "success");
+  } catch (err) {
+    if (otpMessage) otpMessage.textContent = err.message;
+  } finally {
+    if (verifyOtpSubmitBtn) {
+      verifyOtpSubmitBtn.disabled = false;
+      verifyOtpSubmitBtn.textContent = "Verify & Activate Account";
+    }
+  }
+}
+
+verifyOtpSubmitBtn?.addEventListener("click", submitVerifyOtp);
+otpCodeInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    submitVerifyOtp();
+  }
+});
+
+// ============================================================
+// AUTH: LOGIN & REGISTRATION HANDLERS
+// ============================================================
 // Handle Login
 authForm?.addEventListener("submit", async event => {
   event.preventDefault();
@@ -2692,15 +3793,22 @@ authForm?.addEventListener("submit", async event => {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Authentication failed");
+    if (!res.ok) {
+      if (res.status === 429) {
+        authMessage.innerHTML = `<span style="color: #ef4444; font-weight: 600;">⛔ ${escapeHTML(data.detail || "Too many login attempts. Account temporarily locked.")}</span>`;
+        return;
+      }
+      throw new Error(data.detail || "Authentication failed");
+    }
 
-    currentSession = { name: data.name, email: data.email, role: data.role };
+    // Session token is stored in httpOnly cookie by backend
     if (data.token) setAuthToken(data.token);
+    currentSession = { name: data.name, email: data.email, role: data.role };
     saveStoredSession(currentSession);
     authScreen.hidden = true;
     setRoleVisibility();
+    showToast(`👋 Welcome back, ${escapeHTML(data.name || "User")}!`, "success");
   } catch (err) {
-    // Local demo login fallback if offline
     if (!isBackendOnline) {
       currentSession = { name: values.email.split("@")[0] || "User", email: values.email, role: authRole };
       saveStoredSession(currentSession);
@@ -2712,11 +3820,18 @@ authForm?.addEventListener("submit", async event => {
   }
 });
 
-// Handle Register
+// Handle Register: Trigger Email OTP Verification
 registrationForm?.addEventListener("submit", async event => {
   event.preventDefault();
   const values = Object.fromEntries(new FormData(registrationForm));
   registrationMessage.textContent = "";
+
+  const pwd = values.password;
+  const isStrong = checkPasswordStrength(pwd);
+  if (!isStrong) {
+    registrationMessage.textContent = "Password must be at least 10 characters and satisfy all 5 complexity rules.";
+    return;
+  }
 
   const payload = {
     name: values.name.trim(),
@@ -2725,20 +3840,55 @@ registrationForm?.addEventListener("submit", async event => {
     role: authRole
   };
 
+  const submitBtn = document.getElementById("registerSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.querySelector(".btn-text").textContent = "Sending Verification Code...";
+  }
+
   try {
-    const res = await fetch(`${API_BASE}/auth/register`, {
+    const res = await fetch(`${API_BASE}/auth/request-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Registration failed");
+    if (!res.ok) {
+      if (res.status === 409) {
+        registrationMessage.innerHTML = `
+          <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 14px; margin-top: 12px; text-align: left;">
+            <div style="color: #fbbf24; font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">⚠️ Email Already Registered</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 10px;">
+              An account for <b>${escapeHTML(payload.email)}</b> already exists. You can sign in right now!
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btnGoToLoginAlready" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 600;">
+              🔑 Sign In as ${authRole.toUpperCase()} →
+            </button>
+          </div>
+        `;
+        document.getElementById("btnGoToLoginAlready")?.addEventListener("click", () => {
+          setAuthMode("login");
+          if (authEmailInput) {
+            authEmailInput.value = payload.email;
+            if (authPasswordInput) {
+              authPasswordInput.value = "";
+              authPasswordInput.focus();
+            }
+          }
+        });
+        showToast("⚠️ This email is already registered! Click 'Sign In' to access your account.", "warning");
+        return;
+      }
+      if (res.status === 429) {
+        registrationMessage.innerHTML = `<div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px; color: #fca5a5; font-size: 0.86rem; margin-top: 8px;">⛔ ${escapeHTML(data.detail || "Too many OTP requests. Please wait before retrying.")}</div>`;
+        showToast(data.detail || "Too many OTP requests. Please wait.", "error");
+        return;
+      }
+      throw new Error(data.detail || "Failed to initiate verification");
+    }
 
-    currentSession = { name: data.name, email: data.email, role: data.role };
-    if (data.token) setAuthToken(data.token);
-    saveStoredSession(currentSession);
-    authScreen.hidden = true;
-    setRoleVisibility();
+    pendingRegistration = payload;
+    openOtpModal(payload.email, data.otp_demo_preview);
   } catch (err) {
     if (!isBackendOnline) {
       currentSession = { name: values.name, email: values.email, role: authRole };
@@ -2746,7 +3896,250 @@ registrationForm?.addEventListener("submit", async event => {
       authScreen.hidden = true;
       setRoleVisibility();
     } else {
-      registrationMessage.textContent = err.message;
+      registrationMessage.innerHTML = `<div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px; color: #fca5a5; font-size: 0.86rem; margin-top: 8px;">❌ ${escapeHTML(err.message)}</div>`;
+      showToast(`❌ ${err.message}`, "error");
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.querySelector(".btn-text").textContent = "🔒 Verify Email & Create Account";
+    }
+  }
+});
+
+// ============================================================
+// FORGOT PASSWORD CONTROLLER & EVENT HANDLERS
+// ============================================================
+let pendingForgotEmail = "";
+let forgotCountdownTimer = null;
+
+function checkForgotPwdStrength(pwd) {
+  const hasLength = (pwd || "").length >= 10;
+  const hasUpper = /[A-Z]/.test(pwd || "");
+  const hasLower = /[a-z]/.test(pwd || "");
+  const hasNumber = /[0-9]/.test(pwd || "");
+  const hasSpecial = /[^A-Za-z0-9]/.test(pwd || "");
+
+  if (forgotCritLength) {
+    forgotCritLength.className = `crit-item ${hasLength ? "valid" : ""}`;
+    forgotCritLength.textContent = `${hasLength ? "✓" : "❌"} 10+ characters`;
+  }
+  if (forgotCritUpper) {
+    forgotCritUpper.className = `crit-item ${hasUpper ? "valid" : ""}`;
+    forgotCritUpper.textContent = `${hasUpper ? "✓" : "❌"} Uppercase (A-Z)`;
+  }
+  if (forgotCritLower) {
+    forgotCritLower.className = `crit-item ${hasLower ? "valid" : ""}`;
+    forgotCritLower.textContent = `${hasLower ? "✓" : "❌"} Lowercase (a-z)`;
+  }
+  if (forgotCritNumber) {
+    forgotCritNumber.className = `crit-item ${hasNumber ? "valid" : ""}`;
+    forgotCritNumber.textContent = `${hasNumber ? "✓" : "❌"} Number (0-9)`;
+  }
+  if (forgotCritSpecial) {
+    forgotCritSpecial.className = `crit-item ${hasSpecial ? "valid" : ""}`;
+    forgotCritSpecial.textContent = `${hasSpecial ? "✓" : "❌"} Symbol (!@#$%^&*)`;
+  }
+
+  const score = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+  if (forgotPwdStrengthFill && forgotPwdStrengthText) {
+    forgotPwdStrengthFill.className = "pwd-strength-fill";
+    if (!pwd) {
+      forgotPwdStrengthText.textContent = "Too short";
+      forgotPwdStrengthText.style.color = "#94a3b8";
+    } else if (score <= 2) {
+      forgotPwdStrengthFill.classList.add("weak");
+      forgotPwdStrengthText.textContent = "Weak";
+      forgotPwdStrengthText.style.color = "#ef4444";
+    } else if (score < 5) {
+      forgotPwdStrengthFill.classList.add("medium");
+      forgotPwdStrengthText.textContent = "Moderate";
+      forgotPwdStrengthText.style.color = "#f59e0b";
+    } else {
+      forgotPwdStrengthFill.classList.add("strong");
+      forgotPwdStrengthText.textContent = "Strong & Secure";
+      forgotPwdStrengthText.style.color = "#10b981";
+    }
+  }
+
+  return hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
+}
+
+forgotNewPasswordInput?.addEventListener("input", (e) => {
+  checkForgotPwdStrength(e.target.value);
+});
+
+function startForgotCountdown(seconds) {
+  if (forgotCountdownTimer) clearInterval(forgotCountdownTimer);
+  let remaining = seconds;
+  const updateText = () => {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    if (forgotCountdownText) {
+      forgotCountdownText.innerHTML = `Code expires in <b>${m}:${s < 10 ? "0" : ""}${s}</b>`;
+    }
+    if (remaining <= 0) {
+      clearInterval(forgotCountdownTimer);
+      if (forgotCountdownText) forgotCountdownText.textContent = "Code has expired. Please request a new one.";
+    }
+    remaining--;
+  };
+  updateText();
+  forgotCountdownTimer = setInterval(updateText, 1000);
+}
+
+// Step 1: Send Password Reset Code
+forgotReqForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = (forgotEmailInput?.value || "").trim().toLowerCase();
+  if (!email) return;
+  if (forgotReqMessage) forgotReqMessage.textContent = "";
+
+  const submitBtn = document.getElementById("forgotReqSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.querySelector(".btn-text").textContent = "Sending Verification Code...";
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, role: authRole })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 429) {
+        if (forgotReqMessage) forgotReqMessage.innerHTML = `<span style="color: #ef4444; font-weight: 600;">⛔ ${escapeHTML(data.detail || "Too many attempts. Please wait.")}</span>`;
+        return;
+      }
+      throw new Error(data.detail || "Unable to send password reset code.");
+    }
+
+    pendingForgotEmail = email;
+    if (forgotTargetEmail) forgotTargetEmail.textContent = email;
+    if (forgotReqForm) forgotReqForm.hidden = true;
+    if (forgotResetForm) forgotResetForm.hidden = false;
+
+    if (data.otp_demo_preview) {
+      if (devForgotOtpBanner) devForgotOtpBanner.hidden = false;
+      if (devForgotOtpCode) devForgotOtpCode.textContent = data.otp_demo_preview;
+    } else if (devForgotOtpBanner) {
+      devForgotOtpBanner.hidden = true;
+    }
+
+    startForgotCountdown(data.expires_in || 600);
+    showToast("📨 6-digit verification code dispatched!", "success");
+    setTimeout(() => forgotOtpInput?.focus(), 150);
+  } catch (err) {
+    if (forgotReqMessage) {
+      forgotReqMessage.innerHTML = `<span style="color: #ef4444;">❌ ${escapeHTML(err.message)}</span>`;
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.querySelector(".btn-text").textContent = "📨 Send Reset Verification Code";
+    }
+  }
+});
+
+// Resend OTP
+forgotResendOtpBtn?.addEventListener("click", async () => {
+  if (!pendingForgotEmail) return;
+  try {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: pendingForgotEmail, role: authRole })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to resend code");
+    if (data.otp_demo_preview) {
+      if (devForgotOtpBanner) devForgotOtpBanner.hidden = false;
+      if (devForgotOtpCode) devForgotOtpCode.textContent = data.otp_demo_preview;
+    }
+    startForgotCountdown(data.expires_in || 600);
+    showToast("✓ A fresh verification code has been dispatched!", "success");
+  } catch (err) {
+    showToast(`❌ ${err.message}`, "error");
+  }
+});
+
+// Step 2: Verify OTP and Set New Password
+forgotResetForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const otp = (forgotOtpInput?.value || "").trim();
+  const new_password = forgotNewPasswordInput?.value || "";
+  const confirm_password = forgotConfirmPasswordInput?.value || "";
+
+  if (forgotResetMessage) forgotResetMessage.textContent = "";
+
+  if (otp.length !== 6) {
+    if (forgotResetMessage) forgotResetMessage.innerHTML = `<span style="color: #ef4444;">Please enter the full 6-digit code.</span>`;
+    return;
+  }
+
+  if (new_password !== confirm_password) {
+    if (forgotResetMessage) forgotResetMessage.innerHTML = `<span style="color: #ef4444;">Passwords do not match. Please re-check.</span>`;
+    return;
+  }
+
+  const isStrong = checkForgotPwdStrength(new_password);
+  if (!isStrong) {
+    if (forgotResetMessage) forgotResetMessage.innerHTML = `<span style="color: #ef4444;">Password must be at least 10 characters and satisfy all 5 complexity criteria.</span>`;
+    return;
+  }
+
+  const submitBtn = document.getElementById("forgotResetSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.querySelector(".btn-text").textContent = "Updating Password...";
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: pendingForgotEmail,
+        otp,
+        new_password,
+        role: authRole
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 429) {
+        if (forgotResetMessage) forgotResetMessage.innerHTML = `<span style="color: #ef4444; font-weight: 600;">⛔ ${escapeHTML(data.detail || "Too many attempts. Locked out.")}</span>`;
+        return;
+      }
+      throw new Error(data.detail || "Password reset failed");
+    }
+
+    if (forgotResetMessage) {
+      forgotResetMessage.innerHTML = `<span style="color: #10b981; font-weight: 600;">✓ ${escapeHTML(data.message)}</span>`;
+    }
+    showToast("🎉 Password updated successfully! Redirecting to sign in...", "success");
+
+    setTimeout(() => {
+      setAuthMode("login");
+      if (authEmailInput) authEmailInput.value = pendingForgotEmail;
+      if (authPasswordInput) {
+        authPasswordInput.value = "";
+        authPasswordInput.focus();
+      }
+      if (authMessage) {
+        authMessage.innerHTML = `<span style="color: #10b981;">✓ Password updated! Please sign in.</span>`;
+      }
+    }, 1400);
+  } catch (err) {
+    if (forgotResetMessage) {
+      forgotResetMessage.innerHTML = `<span style="color: #ef4444;">❌ ${escapeHTML(err.message)}</span>`;
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.querySelector(".btn-text").textContent = "🔒 Update Password & Sign In";
     }
   }
 });
@@ -2754,24 +4147,36 @@ registrationForm?.addEventListener("submit", async event => {
 // ============================================================
 // UNIVERSAL LOGOUT CONTROLLER
 // ============================================================
-function performLogout() {
+async function performLogout(sessionExpired = false) {
   const previousRole = currentSession?.role || "seller";
+  
+  // Call backend to clear the httpOnly session cookie
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method: "POST" });
+  } catch {}
+
   currentSession = null;
   authToken = null;
   clearStoredSession();
   clearStoredToken();
+
   if (authScreen) authScreen.hidden = false;
   setRole(previousRole);
   setAuthMode("login");
   setRoleVisibility();
-  showToast("🚪 You have been logged out.", "info");
+
+  if (sessionExpired) {
+    showToast("⚠️ Your session has expired. Please sign in again.", "warning");
+  } else {
+    showToast("🚪 You have been safely logged out.", "info");
+  }
 }
 
-logoutBtn?.addEventListener("click", performLogout);
-document.getElementById("headerLogoutBtn")?.addEventListener("click", performLogout);
-document.getElementById("sellerLogoutBtn")?.addEventListener("click", performLogout);
-document.getElementById("buyerLogoutBtn")?.addEventListener("click", performLogout);
-document.getElementById("adminLogoutBtn")?.addEventListener("click", performLogout);
+logoutBtn?.addEventListener("click", () => performLogout(false));
+document.getElementById("headerLogoutBtn")?.addEventListener("click", () => performLogout(false));
+document.getElementById("sellerLogoutBtn")?.addEventListener("click", () => performLogout(false));
+document.getElementById("buyerLogoutBtn")?.addEventListener("click", () => performLogout(false));
+document.getElementById("adminLogoutBtn")?.addEventListener("click", () => performLogout(false));
 
 // ============================================================
 // SELLER LOT SUBMISSION
@@ -2842,6 +4247,14 @@ if (autoDetectLocationBtn) {
     });
   });
 }
+// Enforce whole-number-only quantity in post lot form
+document.getElementById("lotQuantityInput")?.addEventListener("input", function() {
+  const raw = this.value;
+  if (raw.includes(".") || raw.includes("-")) {
+    this.value = String(Math.max(1, Math.floor(parseFloat(raw) || 1)));
+  }
+});
+
 listingForm?.addEventListener("submit", async event => {
   event.preventDefault();
   if (!currentSession) return;
@@ -2877,7 +4290,7 @@ listingForm?.addEventListener("submit", async event => {
     item: itemName,
     category: categoryName,
     unit: values.unit || "kg",
-    quantity: Number(values.quantity),
+    quantity: Math.max(1, Math.round(Number(values.quantity) || 1)),
     state: values.state,
     city: values.city,
     note: values.note,
@@ -2898,6 +4311,10 @@ listingForm?.addEventListener("submit", async event => {
     if (response.ok) {
       const serverListing = await response.json();
       listingId = serverListing.id || listingId;
+    } else if (response.status === 403) {
+      const err = await response.json().catch(() => ({}));
+      if (typeof showToast !== "undefined") showToast(`⛔ ${err.detail || "Only sellers can create listings"}`, "error");
+      return;
     }
   } catch {
     // Storage fallback
@@ -2922,10 +4339,36 @@ listingForm?.addEventListener("submit", async event => {
 
   listings.unshift(publicListing);
   saveAdminData("scrapsense_listings", listings);
+
+  // Send Sell Request to Buyers for B2B deal workflow
+  try {
+    const sellReqPayload = {
+      item: listing.item,
+      category: listing.category,
+      quantity: listing.quantity,
+      unit: listing.unit,
+      asking_price_min: listing.min_price,
+      asking_price_max: listing.max_price,
+      state: listing.state,
+      city: listing.city,
+      address: listing.address || "",
+      phone: listing.seller_phone || "",
+      note: listing.note || ""
+    };
+    await fetch(`${API_BASE}/sell-requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sellReqPayload)
+    });
+  } catch (err) {
+    console.warn("Sell request sync note:", err);
+  }
+
   listingForm.reset();
-  listingMessage.textContent = "✅ Lot submitted successfully! Admin will verify and publish for buyers.";
+  listingMessage.textContent = "✅ Sell Request sent to buyers! Track status & direct buyer offers in 'My Sell Requests & Deals' below.";
   renderMarketplace();
   renderSellerMyLots();
+  loadSellerDeals();
 });
 
 function compressImage(blob, maxKB = 150) {
@@ -3120,12 +4563,20 @@ function closeEditLotModal() {
 closeEditLotModalBtn?.addEventListener("click", closeEditLotModal);
 cancelEditLotBtn?.addEventListener("click", closeEditLotModal);
 
+// Enforce whole-number-only quantity in edit lot modal
+document.getElementById("editLotQuantity")?.addEventListener("input", function() {
+  const raw = this.value;
+  if (raw.includes(".") || raw.includes("-")) {
+    this.value = String(Math.max(1, Math.floor(parseFloat(raw) || 1)));
+  }
+});
+
 editLotForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const id = document.getElementById("editLotId").value;
   const item = document.getElementById("editLotItem").value.trim();
   const category = document.getElementById("editLotCategory").value;
-  const quantity = parseFloat(document.getElementById("editLotQuantity").value) || 0;
+  const quantity = Math.max(1, Math.round(parseFloat(document.getElementById("editLotQuantity").value) || 1));
   const unit = document.getElementById("editLotUnit").value;
   const min_price = parseFloat(document.getElementById("editLotMinPrice").value) || 0;
   const max_price = parseFloat(document.getElementById("editLotMaxPrice").value) || 0;
@@ -3296,7 +4747,7 @@ purchaseForm?.addEventListener("submit", async event => {
   if (!lot) return;
   const values = Object.fromEntries(new FormData(purchaseForm));
   const orders = getOrders();
-  const requestedQuantity = Number(values.quantity);
+  const requestedQuantity = Math.max(1, Math.round(Number(values.quantity) || 1));
   if (requestedQuantity > lot.quantity) {
     purchaseMessage.textContent = `Only ${lot.quantity} ${lot.unit} is available.`;
     return;
@@ -3323,6 +4774,10 @@ purchaseForm?.addEventListener("submit", async event => {
     if (res.ok) {
       const data = await res.json();
       receiptId = data.id || receiptId;
+    } else if (res.status === 403) {
+      const err = await res.json().catch(() => ({}));
+      if (typeof showToast !== "undefined") showToast(`⛔ ${err.detail || "Only registered buyers can send buy requests"}`, "error");
+      return;
     }
   } catch {
     orders.unshift({
@@ -3504,6 +4959,31 @@ async function loadRegisteredUsers() {
     registeredUsers.innerHTML = '<div class="empty-market">MongoDB accounts unavailable.</div>';
   }
 }
+
+// Admin Reset Users button handler
+const adminResetUsersBtn = document.getElementById("adminResetUsersBtn");
+adminResetUsersBtn?.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to reset all registered users back to clean demo seed accounts? Test accounts will be cleared.")) return;
+  adminResetUsersBtn.disabled = true;
+  const originalText = adminResetUsersBtn.textContent;
+  adminResetUsersBtn.textContent = "Resetting...";
+  try {
+    const res = await fetch(`${API_BASE}/admin/reset-users`, {
+      method: "POST",
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Failed to reset users");
+    showToast(`✓ ${data.message || "Users reset successfully!"}`, "success");
+    await loadRegisteredUsers();
+    if (typeof loadAdminAnalytics === "function") await loadAdminAnalytics();
+  } catch (err) {
+    showToast(`❌ ${err.message}`, "error");
+  } finally {
+    adminResetUsersBtn.disabled = false;
+    adminResetUsersBtn.textContent = originalText;
+  }
+});
 
 function renderAdmin() {
   const products = getAdminProducts();
@@ -3789,7 +5269,7 @@ buyerItemForm?.addEventListener("submit", async event => {
   
   const manualLotId = `lot-manual-${Date.now()}`;
   const unitVal = values.unit || "kg";
-  const qtyVal = Number(values.quantity) || 10;
+  const qtyVal = Math.max(1, Math.round(Number(values.quantity) || 10));
   const targetPrice = Number(values.offered_price) || 100;
   const minPrice = targetPrice;
   const maxPrice = Math.round(targetPrice * 1.2);
@@ -3881,6 +5361,10 @@ buyerItemForm?.addEventListener("submit", async event => {
     if (res.ok) {
       const data = await res.json();
       newOrder.id = data.id || requestId;
+    } else if (res.status === 403) {
+      const err = await res.json().catch(() => ({}));
+      if (typeof showToast !== "undefined") showToast(`⛔ ${err.detail || "Only registered buyers can post RFQs"}`, "error");
+      return;
     }
   } catch {}
 
@@ -3903,6 +5387,7 @@ buyerItemForm?.addEventListener("submit", async event => {
 const adminTabBtns = document.querySelectorAll(".admin-tab-btn");
 const adminTabContents = {
   approvals: document.getElementById("adminTabApprovals"),
+  deals: document.getElementById("adminTabDeals"),
   analytics: document.getElementById("adminTabAnalytics"),
   rates: document.getElementById("adminTabRates"),
   buyers: document.getElementById("adminTabBuyers"),
@@ -3917,6 +5402,7 @@ adminTabBtns.forEach(btn => {
     Object.entries(adminTabContents).forEach(([key, el]) => {
       if (el) el.hidden = key !== tab;
     });
+    if (tab === "deals") loadAdminDeals();
     if (tab === "users") loadRegisteredUsers();
     if (tab === "approvals") renderAdmin();
     if (tab === "analytics") loadAdminAnalytics();
@@ -3927,13 +5413,11 @@ adminTabBtns.forEach(btn => {
 // BOOTSTRAP INITIALIZATION
 // ============================================================
 async function init() {
-  // 1. Immediately restore persistent session & role so UI does not flicker or require relogin
+  // 1. Immediately check cached session for smooth initial paint
   if (!currentSession) {
     const stored = getStoredSession();
-    const storedToken = getStoredToken();
     if (stored) {
       currentSession = stored;
-      if (storedToken) authToken = storedToken;
       authScreen.hidden = true;
       setRoleVisibility();
     } else {
@@ -3950,6 +5434,28 @@ async function init() {
   startBackendHeartbeat();
   await loadCategories();
   setSellerCategory("All Categories");
+
+  // 3. Verify real authentication session with backend via httpOnly cookie
+  try {
+    const meRes = await fetch(`${API_BASE}/auth/me`);
+    if (meRes.ok) {
+      const userData = await meRes.json();
+      currentSession = { name: userData.name, email: userData.email, role: userData.role };
+      saveStoredSession(currentSession);
+      authScreen.hidden = true;
+      setRoleVisibility();
+    } else if (meRes.status === 401) {
+      // Cookie is missing or expired - prompt login
+      currentSession = null;
+      clearStoredSession();
+      authScreen.hidden = false;
+      setRole("seller");
+      setAuthMode("login");
+      setRoleVisibility();
+    }
+  } catch {
+    // If backend is unreachable, retain cached session for offline demonstration
+  }
 
   if (currentSession) {
     authScreen.hidden = true;
@@ -4523,3 +6029,387 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+// ============================================================
+// ADVANCED FEATURE 1: ECO IMPACT RIBBON + MARKET STATS
+// ============================================================
+// CO2 coefficients (kg CO2 saved per kg of material recycled)
+const ECO_CO2_FACTORS = {
+  "metal scrap": 1.8,
+  "iron": 1.5,
+  "copper": 3.2,
+  "aluminium": 8.1,
+  "e-waste": 2.5,
+  "electronic": 2.5,
+  "plastic": 1.2,
+  "paper": 0.9,
+  "glass": 0.5,
+  "battery": 1.6,
+  "industrial": 1.3
+};
+
+function getCO2Factor(category) {
+  const cat = (category || "").toLowerCase();
+  for (const [key, val] of Object.entries(ECO_CO2_FACTORS)) {
+    if (cat.includes(key)) return val;
+  }
+  return 1.0;
+}
+
+function updateEcoRibbon() {
+  const listings = getListings().filter(l => l.verified === true);
+  if (!listings.length) return;
+
+  const totalLots = listings.length;
+  const totalKg = listings.reduce((s, l) => {
+    const qty = Number(l.quantity) || 0;
+    const unit = (l.unit || "kg").toLowerCase();
+    return s + (unit === "ton" ? qty * 1000 : qty);
+  }, 0);
+
+  const totalCO2 = listings.reduce((s, l) => {
+    const qty = Number(l.quantity) || 0;
+    const unit = (l.unit || "kg").toLowerCase();
+    const kg = unit === "ton" ? qty * 1000 : qty;
+    return s + kg * getCO2Factor(l.category);
+  }, 0);
+
+  const totalPrices = listings.map(l => ((Number(l.min_price) + Number(l.max_price)) / 2));
+  const avgPrice = totalPrices.reduce((a, b) => a + b, 0) / totalPrices.length;
+  const categories = new Set(listings.map(l => (l.category || "").trim()).filter(Boolean)).size;
+
+  const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + "k" : Math.round(n).toLocaleString("en-IN");
+
+  const el = id => document.getElementById(id);
+  if (el("ecoTotalLots")) el("ecoTotalLots").textContent = totalLots;
+  if (el("ecoTotalTons")) el("ecoTotalTons").textContent = fmt(totalKg);
+  if (el("ecoCO2Saved")) el("ecoCO2Saved").textContent = fmt(totalCO2);
+  if (el("ecoAvgPrice")) el("ecoAvgPrice").textContent = "\u20b9" + Math.round(avgPrice).toLocaleString("en-IN");
+  if (el("ecoCategories")) el("ecoCategories").textContent = categories;
+}
+
+// ============================================================
+// ADVANCED FEATURE 2: QUICK PRICE CALCULATOR WIDGET
+// ============================================================
+// Base rates (INR per kg, approximate mandi rates)
+const QCW_RATES = {
+  copper:    { min: 420, max: 480, co2: 3.2 },
+  aluminium: { min: 85,  max: 110, co2: 8.1 },
+  iron:      { min: 22,  max: 32,  co2: 1.5 },
+  pcb:       { min: 180, max: 280, co2: 2.5 },
+  plastic:   { min: 8,   max: 20,  co2: 1.2 },
+  paper:     { min: 6,   max: 12,  co2: 0.9 },
+  battery:   { min: 55,  max: 80,  co2: 1.6 },
+  brass:     { min: 260, max: 320, co2: 2.8 }
+};
+
+(function initQuickPriceCalc() {
+  const toggleBtn = document.getElementById("qcwToggleBtn");
+  const body = document.getElementById("qcwBody");
+  const chevron = document.getElementById("qcwChevron");
+  const calcBtn = document.getElementById("qcwCalcBtn");
+  const resultDiv = document.getElementById("qcwResult");
+
+  if (!toggleBtn || !body) return;
+
+  function toggleCalc() {
+    const open = !body.hidden;
+    body.hidden = open;
+    toggleBtn.setAttribute("aria-expanded", String(!open));
+    chevron?.classList.toggle("open", !open);
+  }
+
+  toggleBtn.addEventListener("click", toggleCalc);
+  toggleBtn.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCalc(); } });
+
+  calcBtn?.addEventListener("click", () => {
+    const material = document.getElementById("qcwMaterial")?.value || "iron";
+    const qty = parseFloat(document.getElementById("qcwQty")?.value) || 100;
+    const unit = document.getElementById("qcwUnit")?.value || "kg";
+    const rate = QCW_RATES[material] || QCW_RATES.iron;
+
+    const kgQty = unit === "ton" ? qty * 1000 : (unit === "piece" ? qty * 0.5 : qty);
+    const minVal = Math.round(kgQty * rate.min);
+    const maxVal = Math.round(kgQty * rate.max);
+    const co2Saved = Math.round(kgQty * rate.co2);
+
+    const el = id => document.getElementById(id);
+    if (el("qcwValueRange")) el("qcwValueRange").textContent = `\u20b9${minVal.toLocaleString("en-IN")} \u2013 \u20b9${maxVal.toLocaleString("en-IN")}`;
+    if (el("qcwRate")) el("qcwRate").textContent = `\u20b9${rate.min}\u2013\u20b9${rate.max} / kg`;
+    if (el("qcwCO2")) el("qcwCO2").textContent = `${co2Saved.toLocaleString("en-IN")} kg CO\u2082`;
+
+    if (resultDiv) resultDiv.hidden = false;
+  });
+})();
+
+// ============================================================
+// ADVANCED FEATURE 3: RECENTLY VIEWED LOTS TRACKER
+// ============================================================
+const RV_KEY = "scrapsense_recently_viewed";
+const RV_MAX = 6;
+
+function getRecentlyViewed() {
+  try { return JSON.parse(localStorage.getItem(RV_KEY) || "[]"); } catch { return []; }
+}
+function addRecentlyViewed(lot) {
+  if (!lot || !lot.id) return;
+  let rv = getRecentlyViewed().filter(r => r.id !== lot.id);
+  rv.unshift({ id: lot.id, item: lot.item, category: lot.category, min_price: lot.min_price, unit: lot.unit });
+  if (rv.length > RV_MAX) rv = rv.slice(0, RV_MAX);
+  try { localStorage.setItem(RV_KEY, JSON.stringify(rv)); } catch {}
+  renderRecentlyViewed();
+}
+function clearRecentlyViewed() {
+  try { localStorage.removeItem(RV_KEY); } catch {}
+  renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+  const container = document.getElementById("recentlyViewedPanel");
+  if (!container) return;
+  const rv = getRecentlyViewed();
+  if (!rv.length) { container.hidden = true; return; }
+  container.hidden = false;
+  const list = rv.map(r => `
+    <button type="button" class="rvp-chip" data-lot-id="${escapeHTML(r.id)}" title="Jump to ${escapeHTML(r.item)}">
+      <span>${escapeHTML((r.category || "Scrap").split(" ")[0])}</span>
+      <span>${escapeHTML(r.item.length > 22 ? r.item.slice(0, 22) + "\u2026" : r.item)}</span>
+      <span class="rvp-chip-price">\u20b9${Number(r.min_price || 0).toLocaleString("en-IN")}/${escapeHTML(r.unit || "kg")}</span>
+    </button>`).join("");
+  container.innerHTML = `
+    <div class="recently-viewed-panel">
+      <div class="rvp-header">
+        <span class="rvp-title">\ud83d\udd52 Recently Viewed</span>
+        <button type="button" class="rvp-clear" id="rvpClearBtn">Clear</button>
+      </div>
+      <div class="rvp-list">${list}</div>
+    </div>`;
+  document.getElementById("rvpClearBtn")?.addEventListener("click", clearRecentlyViewed);
+  container.querySelectorAll(".rvp-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const lotId = chip.dataset.lotId;
+      const buyBtn = document.querySelector(`.buy-btn[data-id="${lotId}"]`);
+      if (buyBtn) {
+        buyBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        buyBtn.closest(".market-card")?.classList.add("market-card--highlight");
+        setTimeout(() => buyBtn.closest(".market-card")?.classList.remove("market-card--highlight"), 2000);
+      }
+    });
+  });
+}
+
+// ============================================================
+// ADVANCED FEATURE 4: LOT URGENCY BADGES + WISHLIST
+// ============================================================
+const WISHLIST_KEY = "scrapsense_wishlist";
+
+function getWishlist() {
+  try { return JSON.parse(localStorage.getItem(WISHLIST_KEY) || "[]"); } catch { return []; }
+}
+function toggleWishlist(lotId) {
+  let wl = getWishlist();
+  if (wl.includes(lotId)) {
+    wl = wl.filter(id => id !== lotId);
+    showToast("Removed from saved lots", "info");
+  } else {
+    wl.push(lotId);
+    showToast("\u2764\ufe0f Lot saved! View in your wishlist.", "success");
+  }
+  try { localStorage.setItem(WISHLIST_KEY, JSON.stringify(wl)); } catch {}
+  // Update button state without full re-render
+  const btn = document.querySelector(`.btn-wishlist[data-lot-id="${lotId}"]`);
+  if (btn) {
+    const saved = wl.includes(lotId);
+    btn.textContent = saved ? "\u2764\ufe0f" : "\u2661";
+    btn.classList.toggle("saved", saved);
+    btn.title = saved ? "Remove from saved lots" : "Save this lot";
+  }
+}
+
+function getLotUrgencyBadge(lot) {
+  if (!lot.created_at) return "";
+  const ageMs = Date.now() - new Date(lot.created_at).getTime();
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  if (ageDays < 1) return '<span class="lot-badge lot-badge-new">New</span>';
+  if (ageDays < 3 && lot.quantity > 500) return '<span class="lot-badge lot-badge-hot">\ud83d\udd25 Hot</span>';
+  if (ageDays > 25) return '<span class="lot-badge lot-badge-expiring">\u23f3 Expiring</span>';
+  return "";
+}
+
+// ============================================================
+// ADVANCED FEATURE 5: APPROVAL STEPPER UPDATER
+// ============================================================
+function updateApprovalStepper(orders) {
+  if (!orders || !orders.length) return;
+  const hasApproved = orders.some(o => (o.status || "").toLowerCase().includes("approved"));
+  const hasPending = orders.some(o => (o.status || "").toLowerCase().includes("pending"));
+
+  const el = id => document.getElementById(id);
+  // Step 2 - Admin Review (always active when there's a pending order)
+  if (el("stepAdminReview")) {
+    el("stepAdminReview").className = hasPending ? "asl-dot asl-active" : "asl-dot asl-done";
+  }
+  // Step 3 - Seller Notified (active on approval)
+  if (el("stepSellerNotified")) {
+    el("stepSellerNotified").className = hasApproved ? "asl-dot asl-done" : "asl-dot";
+  }
+  // Step 4 - Contact Unlocked
+  if (el("stepContactUnlocked")) {
+    el("stepContactUnlocked").className = hasApproved ? "asl-dot asl-done" : "asl-dot";
+  }
+  // Step 5 - Deal Closed
+  const hasClosed = orders.some(o => (o.status || "").toLowerCase().includes("cleared") || (o.status || "").toLowerCase().includes("closed"));
+  if (el("stepDealClosed")) {
+    el("stepDealClosed").className = hasClosed ? "asl-dot asl-done" : "asl-dot";
+  }
+}
+
+// ============================================================
+// ADVANCED FEATURE 6: ENHANCED MARKET CARD WITH BADGES + WISHLIST
+// ============================================================
+// Patch renderMarketplace to inject badges, wishlist, recently-viewed tracking
+(function patchMarketplaceWithAdvancedFeatures() {
+  // Insert recently viewed panel into DOM (before marketGrid)
+  const marketGrid = document.getElementById("marketGrid");
+  if (marketGrid && !document.getElementById("recentlyViewedPanel")) {
+    const rvPanel = document.createElement("div");
+    rvPanel.id = "recentlyViewedPanel";
+    rvPanel.hidden = true;
+    marketGrid.parentElement.insertBefore(rvPanel, marketGrid);
+  }
+
+  // Override buy button click to track recently viewed
+  document.addEventListener("click", (e) => {
+    // Track "Review & Purchase" click
+    const buyBtn = e.target.closest(".buy-btn");
+    if (buyBtn) {
+      const lotId = buyBtn.dataset.id;
+      const lot = typeof getListings === "function" ? getListings().find(l => l.id === lotId) : null;
+      if (lot) addRecentlyViewed(lot);
+    }
+
+    // Wishlist toggle
+    const wlBtn = e.target.closest(".btn-wishlist");
+    if (wlBtn) {
+      e.stopPropagation();
+      toggleWishlist(wlBtn.dataset.lotId);
+    }
+  });
+
+  // Inject urgency badges + wishlist buttons after renderMarketplace is called
+  // We hook into the cityFilter change and DOMContentLoaded via MutationObserver on marketGrid
+  const gridObserver = marketGrid ? new MutationObserver(() => {
+    injectAdvancedMarketFeatures();
+  }) : null;
+
+  if (gridObserver && marketGrid) {
+    gridObserver.observe(marketGrid, { childList: true });
+  }
+
+  function injectAdvancedMarketFeatures() {
+    const wl = getWishlist();
+    // Inject urgency badges into market card headings
+    document.querySelectorAll(".market-card").forEach(card => {
+      const buyBtn = card.querySelector(".buy-btn");
+      if (!buyBtn) return;
+      const lotId = buyBtn.dataset.id;
+      const lot = typeof getListings === "function" ? getListings().find(l => l.id === lotId) : null;
+      if (!lot) return;
+
+      // Add urgency badge next to category chip if not already there
+      const tagChip = card.querySelector(".tag-chip");
+      if (tagChip && !card.querySelector(".lot-badge")) {
+        const badge = getLotUrgencyBadge(lot);
+        if (badge) tagChip.insertAdjacentHTML("afterend", badge);
+      }
+
+      // Add wishlist button in market-actions if not already there
+      const actions = card.querySelector(".market-actions");
+      if (actions && !actions.querySelector(".btn-wishlist")) {
+        const saved = wl.includes(lotId);
+        const wlBtn = document.createElement("button");
+        wlBtn.type = "button";
+        wlBtn.className = "btn-wishlist" + (saved ? " saved" : "");
+        wlBtn.dataset.lotId = lotId;
+        wlBtn.textContent = saved ? "\u2764\ufe0f" : "\u2661";
+        wlBtn.title = saved ? "Remove from saved lots" : "Save this lot";
+        actions.insertBefore(wlBtn, actions.firstChild);
+      }
+    });
+
+    // Update eco ribbon when market data changes
+    updateEcoRibbon();
+
+    // Update recently viewed panel
+    renderRecentlyViewed();
+  }
+
+  // Initial call on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      injectAdvancedMarketFeatures();
+      renderRecentlyViewed();
+    }, 800);
+  });
+  // Also call when section becomes visible
+  if (typeof syncAll === "function") {
+    const origSync = window.syncAll || (() => {});
+    window.syncAll = async function() {
+      await origSync.call(this);
+      setTimeout(injectAdvancedMarketFeatures, 200);
+    };
+  }
+})();
+
+// ============================================================
+// ADVANCED FEATURE 7: BUYER REQUESTS - SYNC APPROVAL STEPPER
+// ============================================================
+// Hook into buyerRequestsList rendering to update stepper
+(function hookBuyerRequestsStepper() {
+  const buyerRequestsList = document.getElementById("buyerRequestsList");
+  if (!buyerRequestsList) return;
+  const stepperObserver = new MutationObserver(() => {
+    const orders = typeof getOrders === "function" ? getOrders().filter(o => o.buyerEmail === (typeof currentSession !== "undefined" ? currentSession?.email : "")) : [];
+    updateApprovalStepper(orders);
+  });
+  stepperObserver.observe(buyerRequestsList, { childList: true, subtree: true });
+})();
+
+// ============================================================
+// ADVANCED FEATURE 8: SMART TOAST NOTIFICATIONS FOR APPROVAL
+// ============================================================
+// Poll for approval status changes and notify buyer
+(function watchApprovalStatus() {
+  let lastKnownStatuses = {};
+
+  function checkForApprovalChanges() {
+    if (typeof currentSession === "undefined" || !currentSession || currentSession.role !== "buyer") return;
+    const orders = typeof getOrders === "function" ? getOrders() : [];
+    orders.forEach(order => {
+      const prev = lastKnownStatuses[order.id];
+      const curr = order.status || "";
+      if (prev !== undefined && prev !== curr) {
+        if (curr.toLowerCase().includes("approved")) {
+          showToast(`\u2705 Your request for "${order.lot || "scrap lot"}" has been approved! Seller contact unlocked.`, "success");
+        } else if (curr.toLowerCase().includes("rejected") || curr.toLowerCase().includes("declined")) {
+          showToast(`\u274c Request for "${order.lot || "scrap lot"}" was not approved this time.`, "error");
+        }
+      }
+      lastKnownStatuses[order.id] = curr;
+    });
+  }
+
+  // Initial population of known statuses
+  setTimeout(() => {
+    const orders = typeof getOrders === "function" ? getOrders() : [];
+    orders.forEach(o => { lastKnownStatuses[o.id] = o.status || ""; });
+    // Poll every 30s for status changes
+    setInterval(async () => {
+      if (typeof syncOrders === "function") {
+        await syncOrders().catch(() => {});
+      }
+      checkForApprovalChanges();
+    }, 30000);
+  }, 3000);
+})();
+

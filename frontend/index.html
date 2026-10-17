@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2.2" />
   <!-- Standalone QR Code Library for Instant Mobile Scan -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Chart.js for Admin Analytics Dashboard -->
@@ -115,9 +115,13 @@
           <label id="authEmailLabel">Email Address
             <input name="email" id="authEmailInput" type="email" required placeholder="you@example.com" autocomplete="username" />
           </label>
-          <label>Password
+          <div class="auth-input-wrapper">
+            <div class="auth-label-row">
+              <label for="authPasswordInput">Password</label>
+              <button type="button" class="link-forgot-pwd" id="forgotPasswordBtn">Forgot Password?</button>
+            </div>
             <input name="password" id="authPasswordInput" type="password" required placeholder="Enter your password" autocomplete="current-password" />
-          </label>
+          </div>
           <button class="btn btn-primary btn-auth" type="submit" id="loginSubmitBtn">
             <span class="btn-text">Sign In as Seller</span>
           </button>
@@ -148,11 +152,26 @@
           <label>Email Address
             <input name="email" id="regEmailInput" type="email" required placeholder="you@example.com" />
           </label>
-          <label>Password (minimum 6 characters)
-            <input name="password" id="regPasswordInput" type="password" minlength="6" required placeholder="Create your password" />
+          <label>Password (min 10 characters)
+            <input name="password" id="regPasswordInput" type="password" minlength="10" required placeholder="Create a strong password" autocomplete="new-password" />
           </label>
+          <div class="pwd-strength-container" id="pwdStrengthContainer">
+            <div class="pwd-strength-bar">
+              <div class="pwd-strength-fill" id="pwdStrengthFill"></div>
+            </div>
+            <div class="pwd-strength-header">
+              <span class="pwd-strength-label">Password Strength: <b id="pwdStrengthText">Too short</b></span>
+            </div>
+            <ul class="pwd-criteria-list" id="pwdCriteriaList">
+              <li id="critLength" class="crit-item">❌ 10+ characters</li>
+              <li id="critUpper" class="crit-item">❌ Uppercase (A-Z)</li>
+              <li id="critLower" class="crit-item">❌ Lowercase (a-z)</li>
+              <li id="critNumber" class="crit-item">❌ Number (0-9)</li>
+              <li id="critSpecial" class="crit-item">❌ Symbol (!@#$%^&*)</li>
+            </ul>
+          </div>
           <button class="btn btn-secondary btn-auth" type="submit" id="registerSubmitBtn">
-            <span class="btn-text">Create Account</span>
+            <span class="btn-text">🔒 Verify Email &amp; Create Account</span>
           </button>
           <p id="registrationMessage" class="form-message" aria-live="polite"></p>
         </form>
@@ -160,6 +179,80 @@
         <div class="auth-switch-prompt">
           <span>Already have an account?</span>
           <button type="button" class="link-switch-btn" id="goToLoginBtn">Sign in to your account →</button>
+        </div>
+      </div>
+
+      <!-- 3. FORGOT / RESET PASSWORD FORM -->
+      <div class="auth-form-card" id="forgotPasswordCard" hidden>
+        <div class="card-intro">
+          <h2 id="forgotTitle">Reset Password</h2>
+          <p id="forgotSubtitle">Enter your registered email to receive a 6-digit verification code to reset your password.</p>
+        </div>
+
+        <!-- Step 1: Request Code -->
+        <form id="forgotReqForm" class="auth-form">
+          <label id="forgotEmailLabel">Registered Email Address
+            <input name="email" id="forgotEmailInput" type="email" required placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <button class="btn btn-primary btn-auth" type="submit" id="forgotReqSubmitBtn">
+            <span class="btn-text">📨 Send Reset Verification Code</span>
+          </button>
+          <p id="forgotReqMessage" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <!-- Step 2: Verify Code & Set New Password -->
+        <form id="forgotResetForm" class="auth-form" hidden>
+          <div class="reset-code-info">
+            <span>Verification code dispatched to <b id="forgotTargetEmail">your email</b></span>
+          </div>
+
+          <label>6-Digit Verification Code
+            <input name="otp" id="forgotOtpInput" type="text" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required placeholder="------" autocomplete="one-time-code" />
+          </label>
+
+          <div id="devForgotOtpBanner" class="dev-otp-banner" hidden>
+            <span>💡 <b>Dev Mode Code:</b> <code id="devForgotOtpCode">-</code></span>
+          </div>
+
+          <label>New Password (min 10 characters)
+            <input name="new_password" id="forgotNewPasswordInput" type="password" minlength="10" required placeholder="Create a strong password" autocomplete="new-password" />
+          </label>
+
+          <div class="pwd-strength-container" id="forgotPwdStrengthContainer">
+            <div class="pwd-strength-bar">
+              <div class="pwd-strength-fill" id="forgotPwdStrengthFill"></div>
+            </div>
+            <div class="pwd-strength-header">
+              <span class="pwd-strength-label">Password Strength: <b id="forgotPwdStrengthText">Too short</b></span>
+            </div>
+            <ul class="pwd-criteria-list" id="forgotPwdCriteriaList">
+              <li id="forgotCritLength" class="crit-item">❌ 10+ characters</li>
+              <li id="forgotCritUpper" class="crit-item">❌ Uppercase (A-Z)</li>
+              <li id="forgotCritLower" class="crit-item">❌ Lowercase (a-z)</li>
+              <li id="forgotCritNumber" class="crit-item">❌ Number (0-9)</li>
+              <li id="forgotCritSpecial" class="crit-item">❌ Symbol (!@#$%^&*)</li>
+            </ul>
+          </div>
+
+          <label>Confirm New Password
+            <input name="confirm_password" id="forgotConfirmPasswordInput" type="password" minlength="10" required placeholder="Confirm your new password" autocomplete="new-password" />
+          </label>
+
+          <button class="btn btn-primary btn-auth" type="submit" id="forgotResetSubmitBtn">
+            <span class="btn-text">🔒 Update Password &amp; Sign In</span>
+          </button>
+
+          <div class="otp-timer-row">
+            <span id="forgotCountdownText">Code expires in <b>10:00</b></span>
+            <button type="button" class="link-switch-btn" id="forgotResendOtpBtn">Resend Code</button>
+          </div>
+
+          <p id="forgotResetMessage" class="form-message" aria-live="polite"></p>
+        </form>
+
+        <div class="auth-switch-prompt">
+          <span>Remember your password?</span>
+          <button type="button" class="link-switch-btn" id="forgotBackToLoginBtn">← Back to Sign In</button>
         </div>
       </div>
 
@@ -267,6 +360,11 @@
       <button type="button" class="buyer-tab-btn active" data-buyer-tab="marketplace">
         <span class="tab-icon">🏪</span>
         <span class="tab-text">Browse Marketplace</span>
+      </button>
+      <button type="button" class="buyer-tab-btn" data-buyer-tab="seller-requests">
+        <span class="tab-icon">📥</span>
+        <span class="tab-text">Seller Requests</span>
+        <span class="deal-badge-count" id="buyerIncomingReqCountBadge" hidden>0</span>
       </button>
       <button type="button" class="buyer-tab-btn" data-buyer-tab="add-item">
         <span class="tab-icon">➕</span>
@@ -444,7 +542,7 @@
 
               <div class="form-row-calc">
                 <label>Weight / Quantity:
-                  <input type="number" id="catCalcQty" min="0.5" step="0.5" value="10" />
+                  <input type="number" id="catCalcQty" min="1" step="1" value="10" inputmode="numeric" pattern="[0-9]*" />
                 </label>
                 <div class="calc-unit-display">
                   <span>Unit:</span>
@@ -526,10 +624,10 @@
             </div>
             <div class="calc-controls">
               <div class="calc-input-row">
-                <input type="number" id="calcQty" min="0.1" step="0.5" value="5" class="calc-input" />
+                <input type="number" id="calcQty" min="1" step="1" value="5" class="calc-input" inputmode="numeric" pattern="[0-9]*" />
                 <span class="calc-unit-tag" id="calcUnitTag">kg</span>
               </div>
-              <input type="range" id="calcSlider" min="0.5" max="50" step="0.5" value="5" class="calc-slider" />
+              <input type="range" id="calcSlider" min="1" max="100" step="1" value="5" class="calc-slider" />
             </div>
 
             <div class="calc-payout-box">
@@ -708,7 +806,7 @@
 
           <div class="form-row">
             <label>Available Quantity
-              <input name="quantity" type="number" min="0.1" step="0.1" value="5" required />
+              <input name="quantity" id="lotQuantityInput" type="number" min="1" step="1" value="5" required inputmode="numeric" pattern="[0-9]*" />
             </label>
             <label>Unit
               <select name="unit" id="lotUnitSelect">
@@ -761,7 +859,7 @@
             <textarea name="note" rows="3" placeholder="Describe component condition, purity, quantity, packaging, or pickup availability..."></textarea>
           </label>
 
-          <button class="btn btn-primary btn-submit-lot" type="submit">Publish Lot for Verification</button>
+          <button class="btn btn-primary btn-submit-lot" type="submit">📤 Send Sell Request to Buyers</button>
           <p id="listingMessage" class="form-message" aria-live="polite"></p>
         </form>
 
@@ -797,6 +895,40 @@
             </table>
           </div>
         </div>
+
+        <!-- Seller's Sell Requests & Finalized Deals Table -->
+        <div class="seller-my-lots-card seller-deals-card" id="sellerDealsCard" style="margin-top: 2rem;">
+          <div class="sml-header">
+            <div class="sml-title-group">
+              <span class="sml-icon">🤝</span>
+              <div>
+                <h3>My Sell Requests &amp; Direct Buyer Deals</h3>
+                <p class="sml-sub">Real-time status of your lot proposals, buyer agreed rates, total payout calculations, delivery terms, and Admin clearance certificates.</p>
+              </div>
+            </div>
+            <span class="sml-count-badge" id="sellerDealsCount">0 Deals</span>
+          </div>
+          <div class="sml-table-responsive">
+            <table class="sml-table" id="sellerDealsTable">
+              <thead>
+                <tr>
+                  <th>Deal ID &amp; Item</th>
+                  <th>Quantity</th>
+                  <th>Asking / Agreed Price</th>
+                  <th>Total Deal Amount</th>
+                  <th>Delivery Terms</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Contract Slip</th>
+                </tr>
+              </thead>
+              <tbody id="sellerDealsTbody">
+                <tr>
+                  <td colspan="7" class="empty-lots-cell">No sell requests created yet. Send a sell request above to get buyer offers.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -813,6 +945,98 @@
             <option value="all">All cities</option>
           </select>
           <span class="market-count" id="marketCount">0 active lots</span>
+        </div>
+      </div>
+
+      <!-- ===== MARKET STATS + ECO IMPACT RIBBON ===== -->
+      <div class="market-eco-ribbon" id="marketEcoRibbon">
+        <div class="eco-ribbon-item eco-stat-item">
+          <span class="eco-icon">🏪</span>
+          <div class="eco-stat-body">
+            <div class="eco-stat-value" id="ecoTotalLots">–</div>
+            <div class="eco-stat-label">Active Lots</div>
+          </div>
+        </div>
+        <div class="eco-ribbon-item eco-stat-item">
+          <span class="eco-icon">⚖️</span>
+          <div class="eco-stat-body">
+            <div class="eco-stat-value" id="ecoTotalTons">–</div>
+            <div class="eco-stat-label">Total Material (kg)</div>
+          </div>
+        </div>
+        <div class="eco-ribbon-item eco-stat-item eco-green">
+          <span class="eco-icon">🌱</span>
+          <div class="eco-stat-body">
+            <div class="eco-stat-value" id="ecoCO2Saved">–</div>
+            <div class="eco-stat-label">CO₂ Prevented (kg)</div>
+          </div>
+        </div>
+        <div class="eco-ribbon-item eco-stat-item">
+          <span class="eco-icon">💰</span>
+          <div class="eco-stat-body">
+            <div class="eco-stat-value" id="ecoAvgPrice">–</div>
+            <div class="eco-stat-label">Avg. Price / unit</div>
+          </div>
+        </div>
+        <div class="eco-ribbon-item eco-stat-item eco-blue">
+          <span class="eco-icon">🔄</span>
+          <div class="eco-stat-body">
+            <div class="eco-stat-value" id="ecoCategories">–</div>
+            <div class="eco-stat-label">Categories</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== QUICK PRICE CALCULATOR WIDGET ===== -->
+      <div class="quick-calc-widget" id="quickPriceCalcWidget">
+        <div class="qcw-header" id="qcwToggleBtn" role="button" tabindex="0" aria-expanded="false">
+          <span class="qcw-icon">🧮</span>
+          <span class="qcw-title">Quick Price Estimator</span>
+          <span class="qcw-subtitle">Instantly estimate scrap value before placing a bid</span>
+          <span class="qcw-chevron" id="qcwChevron">▼</span>
+        </div>
+        <div class="qcw-body" id="qcwBody" hidden>
+          <div class="qcw-form">
+            <label class="qcw-label">Material Type
+              <select id="qcwMaterial" class="qcw-select">
+                <option value="copper">🔴 Copper Wire / Cable</option>
+                <option value="aluminium">⚪ Aluminium Scrap</option>
+                <option value="iron">🔩 Iron / Steel (HMS-1)</option>
+                <option value="pcb">🟢 PCB / Circuit Boards</option>
+                <option value="plastic">🧴 Mixed Plastic (PET/HDPE)</option>
+                <option value="paper">📦 Corrugated Paper / Cardboard</option>
+                <option value="battery">🔋 Lead Acid Battery</option>
+                <option value="brass">🟡 Brass / Bronze</option>
+              </select>
+            </label>
+            <label class="qcw-label">Quantity
+              <div class="qcw-qty-wrap">
+                <input type="number" id="qcwQty" class="qcw-input" min="1" max="100000" value="100" placeholder="e.g. 500" />
+                <select id="qcwUnit" class="qcw-unit-select">
+                  <option value="kg">kg</option>
+                  <option value="ton">ton</option>
+                  <option value="piece">piece</option>
+                  <option value="liter">liter</option>
+                </select>
+              </div>
+            </label>
+            <button type="button" class="btn btn-primary qcw-calc-btn" id="qcwCalcBtn">Calculate Estimate</button>
+          </div>
+          <div class="qcw-result" id="qcwResult" hidden>
+            <div class="qcw-result-row">
+              <span class="qcw-res-label">Estimated Value Range</span>
+              <span class="qcw-res-value" id="qcwValueRange">₹0 – ₹0</span>
+            </div>
+            <div class="qcw-result-row">
+              <span class="qcw-res-label">Market Rate (approx.)</span>
+              <span class="qcw-res-value" id="qcwRate">₹0 / kg</span>
+            </div>
+            <div class="qcw-result-row eco-result-row">
+              <span class="qcw-res-label">🌱 CO₂ Prevented</span>
+              <span class="qcw-res-value" id="qcwCO2">0 kg CO₂</span>
+            </div>
+            <div class="qcw-disclaimer">⚠️ Indicative rates. Actual prices depend on purity, lot size and market conditions.</div>
+          </div>
         </div>
       </div>
 
@@ -874,7 +1098,7 @@
           </div>
           <div class="form-row">
             <label>Required Quantity
-              <input name="quantity" type="number" min="0.1" step="0.1" value="100" required />
+              <input name="quantity" type="number" min="1" step="1" value="100" required />
             </label>
             <label>Unit of Measurement
               <select name="unit" id="buyerUnitSelect">
@@ -928,7 +1152,50 @@
           <p class="section-sub">Track all your purchase requests and approval status from admin.</p>
         </div>
       </div>
+
+      <!-- Approval Progress Stepper Legend -->
+      <div class="approval-stepper-legend">
+        <div class="asl-step">
+          <div class="asl-dot asl-done">1</div>
+          <div class="asl-label">Request Placed</div>
+        </div>
+        <div class="asl-connector"></div>
+        <div class="asl-step">
+          <div class="asl-dot asl-active" id="stepAdminReview">2</div>
+          <div class="asl-label">Admin Review</div>
+        </div>
+        <div class="asl-connector"></div>
+        <div class="asl-step">
+          <div class="asl-dot" id="stepSellerNotified">3</div>
+          <div class="asl-label">Seller Notified</div>
+        </div>
+        <div class="asl-connector"></div>
+        <div class="asl-step">
+          <div class="asl-dot" id="stepContactUnlocked">4</div>
+          <div class="asl-label">Contact Unlocked</div>
+        </div>
+        <div class="asl-connector"></div>
+        <div class="asl-step">
+          <div class="asl-dot" id="stepDealClosed">5</div>
+          <div class="asl-label">Deal Closed</div>
+        </div>
+      </div>
+
       <div id="buyerRequestsList" class="orders-list"><div class="empty-market">No requests submitted yet.</div></div>
+    </section>
+
+    <!-- ================= BUYER: INCOMING SELLER REQUESTS ================= -->
+    <section class="buyer-incoming-section" id="buyerIncomingRequestsSection" hidden>
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">ENTERPRISE BUYER DESK</span>
+          <h2>📥 Incoming Seller Requests &amp; Deals</h2>
+          <p class="section-sub">Review incoming scrap lots directly submitted by sellers. Set your agreed rate, logistics terms, delivery schedule, and approve the deal for Admin clearance.</p>
+        </div>
+      </div>
+      <div class="buyer-incoming-grid" id="buyerIncomingRequestsGrid">
+        <div class="empty-market">No incoming seller requests pending approval.</div>
+      </div>
     </section>
 
     <!-- ================= 5. SELLER ORDERS & PAYMENT DESK ================= -->
@@ -1054,6 +1321,7 @@
       <!-- Admin Tab Navigation -->
       <div class="admin-tab-bar">
         <button type="button" class="admin-tab-btn active" data-admin-tab="approvals">🔔 Approval Requests</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="deals">🤝 Seller-Buyer Deals <span class="deal-badge-count" id="adminDealsBadge" hidden>0</span></button>
         <button type="button" class="admin-tab-btn" data-admin-tab="analytics">📊 Analytics Dashboard</button>
         <button type="button" class="admin-tab-btn" data-admin-tab="rates">₹ Product Rates</button>
         <button type="button" class="admin-tab-btn" data-admin-tab="buyers">⌂ Buyer Records</button>
@@ -1076,6 +1344,40 @@
             <span id="approvedCount">0</span>
           </div>
           <div id="adminApproved" class="admin-list"></div>
+        </div>
+      </div>
+
+      <!-- Admin Tab: Seller-Buyer Deals (Master Deal Ledger) -->
+      <div class="admin-tab-content" id="adminTabDeals" hidden>
+        <div class="admin-list-block approval-block">
+          <div class="list-title">
+            <div>
+              <h3>🤝 Master Deal Ledger &amp; Platform Clearance Desk</h3>
+              <p class="section-sub" style="margin-top: 4px;">Review buyer-approved scrap lots, verify agreed rates and delivery terms, and authorize official platform clearance.</p>
+            </div>
+            <span id="adminDealsLedgerCount" class="sml-count-badge">0 Deals</span>
+          </div>
+          <div class="deal-table-responsive">
+            <table class="deal-table" id="adminDealsTable">
+              <thead>
+                <tr>
+                  <th>Deal ID &amp; Item</th>
+                  <th>Quantity</th>
+                  <th>Seller</th>
+                  <th>Buyer</th>
+                  <th>Agreed Price &amp; Total Amount</th>
+                  <th>Delivery Terms</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Clearance / Contract</th>
+                </tr>
+              </thead>
+              <tbody id="adminDealsTbody">
+                <tr>
+                  <td colspan="8" class="empty-lots-cell">No active deals found in the ledger.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1120,7 +1422,15 @@
       <!-- Admin Tab: Registered Users -->
       <div class="admin-tab-content" id="adminTabUsers" hidden>
         <div class="admin-list-block approval-block">
-          <div class="list-title"><h3>Registered Seller &amp; Buyer Accounts</h3><span id="registeredUserCount">0</span></div>
+          <div class="list-title user-list-title-row">
+            <div>
+              <h3>Registered Seller &amp; Buyer Accounts</h3>
+              <span id="registeredUserCount">0</span>
+            </div>
+            <button type="button" class="btn btn-outline-danger" id="adminResetUsersBtn" title="Reset all registered users to default demo accounts">
+              🔄 Reset All Registered Users
+            </button>
+          </div>
           <div id="registeredUsers" class="admin-list"><div class="empty-market">Connect backend to load accounts.</div></div>
         </div>
       </div>
@@ -1265,6 +1575,38 @@
     </div>
   </div>
 
+  <!-- ================= 🔐 OTP VERIFICATION MODAL ================= -->
+  <div class="modal-backdrop" id="otpModal" hidden role="dialog" aria-modal="true" aria-labelledby="otpModalTitle">
+    <div class="phone-modal-card otp-modal-card">
+      <button class="modal-close" id="closeOtpModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      
+      <div class="phone-modal-head">
+        <span class="phone-modal-icon">🔐</span>
+        <div>
+          <h2 id="otpModalTitle">Email Verification Code</h2>
+          <p class="phone-modal-sub">We sent a 6-digit verification code to <b id="otpTargetEmail">your email</b>.</p>
+        </div>
+      </div>
+
+      <div class="otp-modal-body">
+        <div class="otp-input-group">
+          <input type="text" id="otpCodeInput" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="------" class="otp-code-input" autocomplete="one-time-code" />
+        </div>
+        <div id="devOtpBanner" class="dev-otp-banner" hidden>
+          <span>💡 <b>Dev Mode Code:</b> <code id="devOtpCode">-</code></span>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="verifyOtpSubmitBtn">
+          Verify &amp; Activate Account
+        </button>
+        <div class="otp-timer-row">
+          <span id="otpCountdownText">Code expires in <b>10:00</b></span>
+          <button type="button" class="link-switch-btn" id="resendOtpBtn">Resend Code</button>
+        </div>
+        <p id="otpMessage" class="form-message" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= BUYER DECISION MODAL ================= -->
   <div class="modal-backdrop" id="purchaseModal" hidden role="dialog" aria-modal="true" aria-labelledby="purchaseModalTitle">
     <form class="purchase-modal" id="purchaseForm">
@@ -1281,7 +1623,7 @@
 
       <div class="purchase-form-grid">
         <label>Quantity Required
-          <input name="quantity" id="purchaseQtyInput" type="number" min="0.1" step="0.1" required placeholder="Quantity needed" />
+          <input name="quantity" id="purchaseQtyInput" type="number" min="1" step="1" required placeholder="Quantity needed" />
         </label>
 
         <label>Your Decision
@@ -1360,7 +1702,7 @@
 
       <div class="form-row">
         <label>Available Quantity
-          <input name="quantity" id="editLotQuantity" type="number" min="0.1" step="0.1" required />
+          <input name="quantity" id="editLotQuantity" type="number" min="1" step="1" required inputmode="numeric" pattern="[0-9]*" />
         </label>
         <label>Unit
           <select name="unit" id="editLotUnit">
@@ -1401,6 +1743,178 @@
     </form>
   </div>
 
+  <!-- ================= BUYER DEAL APPROVAL MODAL ================= -->
+  <div class="modal-backdrop" id="buyerDealModal" hidden role="dialog" aria-modal="true" aria-labelledby="buyerDealModalTitle">
+    <form class="purchase-modal deal-modal-card" id="buyerDealForm">
+      <button class="modal-close" id="closeBuyerDealModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      
+      <span class="section-kicker">ENTERPRISE PROCUREMENT WORKDESK</span>
+      <h2 id="buyerDealModalTitle">🤝 Review &amp; Finalize Deal Terms</h2>
+      <p class="section-sub">Set your agreed rate, calculate total deal amount, select logistics &amp; delivery schedule, and approve for Admin clearance.</p>
+
+      <input type="hidden" id="buyerDealOrderId" name="order_id" />
+      <input type="hidden" id="buyerDealLotQuantity" name="lot_quantity" />
+
+      <!-- Lot Summary Banner -->
+      <div class="purchase-item-banner" id="buyerDealLotBanner" style="margin-top: 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong id="buyerDealItemName" style="font-size: 1.15rem; color:#fff;">Copper Wire Millberry Scrap</strong>
+            <div id="buyerDealItemSub" style="font-size: 0.8rem; color: var(--text-muted);">Category: Metal Scrap · Quantity: 500 kg</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size: 0.72rem; color: var(--brass-soft); text-transform:uppercase; font-family:var(--font-mono); font-weight:700;">Seller Asking Rate</span>
+            <div id="buyerDealAskingRate" style="font-weight: 800; color: #f5f3ff;">₹720 / kg</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="purchase-form-grid" style="margin-top: 16px;">
+        <label>Agreed Unit Rate (₹ per unit/kg)
+          <input name="agreed_price" id="buyerDealAgreedPrice" type="number" min="0.01" step="0.01" required placeholder="e.g. 715" />
+        </label>
+
+        <label>Logistics &amp; Delivery Method
+          <select name="delivery_method" id="buyerDealDeliveryMethod" required>
+            <option value="Seller Direct Delivery to Buyer Warehouse">Seller Direct Delivery to Buyer Warehouse</option>
+            <option value="Buyer Self-Pickup via Logistics Fleet">Buyer Self-Pickup via Logistics Fleet</option>
+            <option value="Ex-Works / Weighbridge Handover">Ex-Works / Weighbridge Handover</option>
+            <option value="Third-Party Freight Partner Dispatch">Third-Party Freight Partner Dispatch</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Real-time Dynamic Deal Amount Calculation Card -->
+      <div class="deal-calc-box" id="buyerDealCalcBox">
+        <div>
+          <div class="deal-calc-amount-label">Auto Deal Calculation</div>
+          <div class="deal-calc-formula" id="buyerDealCalcFormula">500 kg × ₹715.00</div>
+        </div>
+        <div class="deal-calc-amount">
+          <div class="deal-calc-amount-label">Total Deal Amount (Payout)</div>
+          <div class="deal-calc-amount-val" id="buyerDealTotalAmount">₹3,57,500</div>
+        </div>
+      </div>
+
+      <div class="purchase-form-grid">
+        <label>Estimated Delivery Date / Schedule
+          <input name="delivery_schedule" id="buyerDealSchedule" type="date" required />
+        </label>
+
+        <label>Payment Settlement Terms
+          <select name="payment_terms" id="buyerDealPaymentTerms" required>
+            <option value="100% Instant RTGS upon Weighbridge Confirmation">100% Instant RTGS upon Weighbridge Confirmation</option>
+            <option value="50% Advance + 50% on Unloading Inspection">50% Advance + 50% on Unloading Inspection</option>
+            <option value="Irrevocable Letter of Credit (LC)">Irrevocable Letter of Credit (LC)</option>
+            <option value="Instant UPI Payment on Handover">Instant UPI Payment on Handover</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="purchase-address-label">Buyer Delivery Destination / Warehouse Address
+        <textarea name="delivery_address" id="buyerDealAddress" rows="2" required placeholder="Warehouse Bay / MIDC Industrial Area / Factory Gates..."></textarea>
+      </label>
+
+      <label>Special Instructions &amp; Quality Notes (Optional)
+        <textarea name="buyer_notes" id="buyerDealNotes" rows="2" placeholder="Quality inspection notes, moisture deduction thresholds, weighbridge receipt requirements..."></textarea>
+      </label>
+
+      <div class="modal-actions-bar" style="margin-top: 18px;">
+        <button class="btn btn-primary" type="submit" id="submitBuyerDealApprovalBtn" style="flex: 2;">
+          <span>✅ Approve Deal &amp; Submit for Admin Clearance</span>
+        </button>
+        <button class="btn btn-secondary" type="button" id="rejectBuyerDealBtn" style="flex: 1; border-color: rgba(244,63,94,0.4); color: #fda4af;">
+          <span>❌ Reject</span>
+        </button>
+      </div>
+
+      <p id="buyerDealMessage" class="form-message" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- ================= OFFICIAL DEAL CONTRACT SLIP MODAL ================= -->
+  <div class="modal-backdrop" id="dealContractModal" hidden role="dialog" aria-modal="true" aria-labelledby="dealContractTitle">
+    <div class="contract-modal-card" id="dealContractCard">
+      <button class="modal-close" id="closeDealContractModal" type="button" title="Close" aria-label="Close dialog">×</button>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span class="section-kicker">SCRAPSENSE AI SECURE SETTLEMENT</span>
+          <h2 id="dealContractTitle">📜 Official Deal Clearance Contract</h2>
+        </div>
+        <button class="btn btn-primary btn-sm btn-print-contract" id="printDealContractBtn" type="button">
+          🖨️ Print / Download Contract
+        </button>
+      </div>
+
+      <div class="contract-slip" id="contractSlipContent">
+        <div class="contract-header">
+          <div>
+            <div style="font-weight: 800; font-size: 1.15rem; color: #fff;">
+              ScrapSense<span style="color: var(--brass-soft);">AI</span> Verified Transaction Slip
+            </div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); font-family: var(--font-mono);">
+              Admin Clearance ID: <span id="contractClearanceId">CLR-ACTIVE-9982</span>
+            </div>
+          </div>
+          <div class="contract-code-badge" id="contractNumberBadge">
+            CTR-202609-77821
+          </div>
+        </div>
+
+        <div class="contract-grid">
+          <div class="contract-grid-item">
+            <span>SCRAP LOT SPECIFICATION</span>
+            <strong id="contractItemSpec">Copper Wire Millberry Scrap</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>VERIFIED QUANTITY</span>
+            <strong id="contractQuantity">500 kg</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>AGREED UNIT RATE</span>
+            <strong id="contractAgreedRate">₹715.00 / kg</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>TOTAL DEAL SETTLEMENT AMOUNT</span>
+            <strong id="contractTotalAmount" class="deal-highlight-val">₹3,57,500.00</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>REGISTERED SELLER</span>
+            <strong id="contractSellerName">Kailash Metal Recyclers (Verified)</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>CERTIFIED BUYER</span>
+            <strong id="contractBuyerName">Tata Circular Metals Ltd (Verified)</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>DELIVERY &amp; LOGISTICS METHOD</span>
+            <strong id="contractDeliveryMethod">Seller Direct Delivery to Buyer Warehouse</strong>
+          </div>
+          <div class="contract-grid-item">
+            <span>PAYMENT SETTLEMENT METHOD</span>
+            <strong id="contractPaymentTerms">100% Instant RTGS upon Weighbridge Confirmation</strong>
+          </div>
+          <div class="contract-grid-item" style="grid-column: 1 / -1;">
+            <span>DELIVERY DESTINATION / WAREHOUSE ADDRESS</span>
+            <strong id="contractDeliveryAddress">Plot 42, Bhosari MIDC Industrial Zone, Pune, Maharashtra 411026</strong>
+          </div>
+        </div>
+
+        <div class="contract-qr-section">
+          <div class="contract-qr-box" id="contractQrBox">
+            <!-- QR code rendered here -->
+          </div>
+          <div class="contract-seal">
+            <strong style="color: #34d399;">🛡️ ADMIN PLATFORM VERIFIED &amp; CLEARED</strong><br>
+            Cryptographic Integrity Hash: <code id="contractHash" style="color: #c084fc; font-size: 0.72rem;">0x7f83b2a9e14d...</code><br>
+            Timestamp: <span id="contractTimestamp">2026-09-23 16:30 IST</span> · ScrapSense AI Mediation Authority
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= FLOATING CAMERA AI SCANNER FAB ================= -->
   <div class="float-cam-fab" id="floatCamFab" hidden>
     <button class="float-cam-btn" id="floatCamBtn" type="button" title="Open AI Camera Scanner">
@@ -1438,7 +1952,7 @@
       <div class="modal-calc-section">
         <div class="modal-calc-title">🧮 Resale Value Calculator</div>
         <div class="modal-calc-row">
-          <input type="number" class="modal-qty-input" id="itemModalQty" min="0.1" step="0.5" value="1" />
+          <input type="number" class="modal-qty-input" id="itemModalQty" min="1" step="1" value="5" />
           <span class="modal-unit-badge" id="itemModalUnit">kg</span>
         </div>
         <div class="modal-payout-grid">
@@ -1507,7 +2021,7 @@
             <label for="qsQtyInput">Quantity to Sell</label>
             <div class="qs-qty-wrapper">
               <button type="button" class="qs-stepper-btn" id="qsMinusBtn">−</button>
-              <input type="number" id="qsQtyInput" name="quantity" min="0.1" step="0.5" value="5" required />
+              <input type="number" id="qsQtyInput" name="quantity" min="1" step="1" value="5" required />
               <button type="button" class="qs-stepper-btn" id="qsPlusBtn">+</button>
               <span class="qs-unit-badge" id="qsUnitBadge">kg</span>
             </div>
@@ -1688,6 +2202,6 @@
   <!-- Toast Notification Container -->
   <div id="scrapToast" class="scrap-toast" role="status" aria-live="polite"></div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=2.3"></script>
 </body>
 </html>

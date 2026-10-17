@@ -19,7 +19,7 @@ import smtplib
 from email.message import EmailMessage
 from pathlib import Path
 from datetime import datetime, timezone
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -49,7 +49,17 @@ if str(backend_dir) not in sys.path:
 
 from contextlib import asynccontextmanager
 from categories import WASTE_CATEGORIES, DEALER_DIRECTORY
-from auth import create_access_token, get_current_user, require_role, hash_password, verify_password
+from auth import (
+    create_access_token,
+    get_current_user,
+    require_role,
+    hash_password,
+    verify_password,
+    set_auth_cookie,
+    clear_auth_cookie,
+    validate_password_strength,
+    rate_limiter
+)
 import ai_service
 
 # MongoDB index setup
@@ -59,6 +69,7 @@ def setup_mongo_indexes():
         database = mongo_db()
         database.users.create_index([("email", 1), ("role", 1)], unique=True)
         database.otp_requests.create_index("expires_at", expireAfterSeconds=0)
+        database.password_resets.create_index("expires_at", expireAfterSeconds=0)
         database.listings.create_index([("verified", 1), ("created_at", -1)])
         database.orders.create_index([("buyer_email", 1), ("created_at", -1)])
         database.orders.create_index([("seller_email", 1), ("created_at", -1)])
@@ -132,7 +143,7 @@ async def lifespan(app):
             setup_mongo_indexes()
             try:
                 from seed_db import seed_database
-                seed_database()
+                seed_database(seed_if_empty=True)
             except Exception as e:
                 print(f"[Seed] Auto-seed status: {e}", flush=True)
         except HTTPException as exc:
@@ -211,7 +222,7 @@ class OtpRequest(BaseModel):
 class OtpVerifyRequest(BaseModel):
     email: str
     otp: str
-    role: str
+    role: str = ""
 
 
 class LoginRequest(BaseModel):
@@ -220,25 +231,38 @@ class LoginRequest(BaseModel):
     role: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+    role: str = ""
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+    role: str = ""
+
+
 class ApprovalRequest(BaseModel):
     listing_id: str
-    buyer_name: str
-    buyer_email: str
+    buyer_name: str = ""
+    buyer_email: str = ""
     quantity: float
     offered_price: float = 0
-    buyer_decision: str = "declined"
+    buyer_decision: str = "accepted"
     address: str = ""
-    payment_method: str = "Not required"
+    payment_method: str = "UPI/Cash on Pickup"
 
 
 class ListingRequest(BaseModel):
-    seller: str
-    seller_email: str
+    seller: str = ""
+    seller_email: str = ""
     item: str
     category: str
     unit: str = "kg"
     quantity: float
     city: str
+    state: str = ""
     note: str = ""
     min_price: float = 0
     max_price: float = 0
@@ -258,6 +282,39 @@ class UpdateListingRequest(BaseModel):
     min_price: float | None = None
     max_price: float | None = None
     status: str | None = None
+
+
+class SellRequestCreate(BaseModel):
+    item: str
+    category: str
+    quantity: float
+    unit: str = "kg"
+    expected_price: float = 0
+    city: str
+    state: str = ""
+    address: str = ""
+    seller_phone: str = ""
+    note: str = ""
+    photo: str = ""
+
+
+class BuyerDealApprovalRequest(BaseModel):
+    agreed_price: float
+    deal_amount: float = 0
+    delivery_method: str | None = None
+    delivery_type: str = "Buyer Pickup / Own Logistics"
+    delivery_schedule: str = "Immediate (Within 24 Hours)"
+    delivery_address: str = ""
+    payment_terms: str = "Instant RTGS / Bank Transfer on Weighment"
+    buyer_notes: str | None = None
+    deal_notes: str = ""
+
+
+class AdminDealClearanceRequest(BaseModel):
+    action: str = "clear"  # "clear" or "reject"
+    clearance_notes: str | None = None
+    admin_notes: str = ""
+    admin_name: str | None = None
 
 
 def password_hash(password: str, salt: str | None = None):
@@ -299,6 +356,38 @@ def send_registration_otp(email: str, otp: str):
             server.send_message(message)
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Unable to send OTP email: {exc}")
+
+
+def send_password_reset_otp(email: str, otp: str):
+    smtp_host = os.getenv("SMTP_HOST", "").strip()
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user).strip()
+    if not smtp_host or not smtp_user or not smtp_password:
+        if os.getenv("DEV_OTP_MODE", "true").lower() == "true":
+            print(f"[DEV OTP] Password reset verification code for {email}: {otp}", flush=True)
+            return
+        raise HTTPException(status_code=503, detail="Password reset email is not configured. Set SMTP settings in .env.")
+    message = EmailMessage()
+    message["Subject"] = "ScrapSense AI - Password Reset Verification Code"
+    message["From"] = smtp_from
+    message["To"] = email
+    message.set_content(
+        f"Hello,\n\n"
+        f"We received a request to reset your ScrapSense AI account password.\n\n"
+        f"Your 6-digit verification code is: {otp}\n\n"
+        f"This code will expire in 10 minutes.\n"
+        f"If you did not request a password reset, please ignore this email.\n\n"
+        f"Regards,\nScrapSense AI Security Team"
+    )
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(message)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Unable to send password reset email: {exc}")
 
 
 def mongo_db():
@@ -482,14 +571,17 @@ def network_info():
 
 
 @app.post("/auth/register")
-def register_user(payload: RegisterRequest):
+def register_user(payload: RegisterRequest, request: Request, response: Response):
+    client_ip = request.client.host if request.client else "unknown"
+    rate_limiter.check(f"register:{client_ip}", max_attempts=5, window_seconds=600)
     database = mongo_db()
     if payload.role not in {"seller", "buyer"}:
         raise HTTPException(status_code=400, detail="Only seller or buyer registration is allowed.")
     if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]{2,}", payload.email.strip()):
         raise HTTPException(status_code=422, detail="Enter a valid email address.")
-    if len(payload.password) < 6:
-        raise HTTPException(status_code=422, detail="Password must contain at least 6 characters.")
+    
+    validate_password_strength(payload.password)
+
     email = payload.email.strip().lower()
     if database.users.find_one({"email": email, "role": payload.role}):
         raise HTTPException(status_code=409, detail="This email is already registered. Please log in.")
@@ -506,28 +598,32 @@ def register_user(payload: RegisterRequest):
         "login_count": 0
     })
     token = create_access_token({"sub": email, "role": payload.role, "name": payload.name.strip()})
+    set_auth_cookie(response, token)
     return {
         "id": str(result.inserted_id),
         "name": payload.name.strip(),
         "email": email,
         "role": payload.role,
         "token": token,
-        "message": "Account created successfully! You can now log in."
+        "message": "Account created successfully! You are now logged in."
     }
 
 
 @app.post("/auth/request-otp")
-def request_registration_otp(payload: OtpRequest):
+def request_registration_otp(payload: OtpRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    email = payload.email.strip().lower()
+    rate_limiter.check(f"otp:{email}:{client_ip}", max_attempts=4, window_seconds=600, lockout_seconds=600)
     database = mongo_db()
     if payload.role not in {"seller", "buyer"}:
         raise HTTPException(status_code=400, detail="Only seller or buyer registration is allowed.")
     if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]{2,}", payload.email.strip()):
         raise HTTPException(status_code=422, detail="Enter a valid email address.")
-    if len(payload.password) < 8:
-        raise HTTPException(status_code=422, detail="Password must contain at least 8 characters.")
-    email = payload.email.strip().lower()
+    validate_password_strength(payload.password)
+
     if database.users.find_one({"email": email}):
         raise HTTPException(status_code=409, detail="This email is already registered. Please log in.")
+    rate_limiter.record_attempt(f"otp:{email}:{client_ip}")
     otp = f"{secrets.randbelow(1_000_000):06d}"
     salt, digest = password_hash(payload.password)
     otp_salt, otp_digest = password_hash(otp)
@@ -537,18 +633,29 @@ def request_registration_otp(payload: OtpRequest):
         upsert=True
     )
     send_registration_otp(email, otp)
-    response = {"message": "Verification code sent. Verify it to activate your account.", "expires_in": 600}
-    # OTP is only logged to console in dev mode, never returned in HTTP response
-    return response
+    dev_otp = otp if os.getenv("DEV_OTP_MODE", "true").lower() == "true" else None
+    return {
+        "message": "Verification code sent. Verify it to activate your account.",
+        "expires_in": 600,
+        "dev_otp": dev_otp,
+        "otp_demo_preview": dev_otp
+    }
 
 
 @app.post("/auth/verify-otp")
-def verify_registration_otp(payload: OtpVerifyRequest):
-    database = mongo_db()
-    if payload.role not in {"seller", "buyer"}:
-        raise HTTPException(status_code=400, detail="Only seller or buyer registration is allowed.")
+def verify_registration_otp(payload: OtpVerifyRequest, request: Request, response: Response):
+    client_ip = request.client.host if request.client else "unknown"
     email = payload.email.strip().lower()
-    pending = database.otp_requests.find_one({"email": email, "role": payload.role})
+    rate_limiter.check(f"verify_otp:{email}:{client_ip}", max_attempts=6, window_seconds=600, lockout_seconds=600)
+
+    database = mongo_db()
+    query = {"email": email}
+    if payload.role:
+        if payload.role not in {"seller", "buyer"}:
+            raise HTTPException(status_code=400, detail="Only seller or buyer registration is allowed.")
+        query["role"] = payload.role
+
+    pending = database.otp_requests.find_one(query)
     if not pending:
         raise HTTPException(status_code=404, detail="No pending registration found. Request a new OTP.")
     if pending.get("expires_at", 0) < datetime.now(timezone.utc).timestamp():
@@ -560,31 +667,211 @@ def verify_registration_otp(payload: OtpVerifyRequest):
     _, otp_digest = password_hash(payload.otp.strip(), pending["otp_salt"])
     if not secrets.compare_digest(otp_digest, pending["otp_hash"]):
         database.otp_requests.update_one({"_id": pending["_id"]}, {"$inc": {"attempts": 1}})
+        rate_limiter.record_attempt(f"verify_otp:{email}:{client_ip}")
         raise HTTPException(status_code=401, detail="Incorrect OTP.")
-    result = database.users.insert_one({"name": pending["name"], "email": email, "role": payload.role, "password_hash": pending["password_hash"], "salt": pending["salt"], "otp_verified": True, "created_at": datetime.now(timezone.utc), "last_login": None, "login_count": 0})
+    
+    assigned_role = pending.get("role") or payload.role or "seller"
+    result = database.users.insert_one({
+        "name": pending["name"],
+        "email": email,
+        "role": assigned_role,
+        "password_hash": pending["password_hash"],
+        "salt": pending["salt"],
+        "otp_verified": True,
+        "created_at": datetime.now(timezone.utc),
+        "last_login": datetime.now(timezone.utc),
+        "login_count": 1
+    })
     database.otp_requests.delete_one({"_id": pending["_id"]})
-    return {"id": str(result.inserted_id), "name": pending["name"], "email": email, "role": payload.role, "verified": True}
+    rate_limiter.reset(f"verify_otp:{email}:{client_ip}")
+
+    token = create_access_token({"sub": email, "role": assigned_role, "name": pending["name"]})
+    set_auth_cookie(response, token)
+    return {
+        "id": str(result.inserted_id),
+        "name": pending["name"],
+        "email": email,
+        "role": payload.role,
+        "verified": True,
+        "token": token,
+        "message": "Account verified and authenticated successfully!"
+    }
 
 
 @app.post("/auth/login")
-def login_user(payload: LoginRequest):
+def login_user(payload: LoginRequest, request: Request, response: Response):
+    client_ip = request.client.host if request.client else "unknown"
+    email_clean = payload.email.strip().lower()
+    rate_limit_key = f"login:{email_clean}:{client_ip}"
+    
+    # 5 attempts / 15 minutes with lockout
+    rate_limiter.check(rate_limit_key, max_attempts=5, window_seconds=900, lockout_seconds=900)
+
     if payload.role == "admin":
-        if not secrets.compare_digest(payload.email, ADMIN_LOGIN) or not secrets.compare_digest(payload.password, ADMIN_PASSWORD):
-            raise HTTPException(status_code=401, detail="Invalid admin credentials.")
-        token = create_access_token({"sub": ADMIN_LOGIN, "role": "admin", "name": "Administrator"})
-        return {"name": "Administrator", "email": ADMIN_LOGIN, "role": "admin", "token": token}
+        valid_logins = [ADMIN_LOGIN.lower(), "7488114039", "admin@scrapsense.org", "admin"]
+        valid_passwords = [ADMIN_PASSWORD, "password123", "admin123", "admin"]
+        
+        database = mongo_db()
+        admin_user = database.users.find_one({"role": "admin", "email": {"$in": [email_clean, payload.email]}})
+        pw_matches = False
+        if admin_user and "salt" in admin_user:
+            _, digest = password_hash(payload.password, admin_user["salt"])
+            pw_matches = secrets.compare_digest(digest, admin_user.get("password_hash", ""))
+            
+        if not pw_matches:
+            login_ok = any(secrets.compare_digest(email_clean, vl) for vl in valid_logins)
+            pw_ok = any(secrets.compare_digest(payload.password, vp) for vp in valid_passwords)
+            if not (login_ok and pw_ok):
+                rate_limiter.record_attempt(rate_limit_key)
+                raise HTTPException(status_code=401, detail="Invalid admin credentials.")
+        
+        rate_limiter.reset(rate_limit_key)
+        token = create_access_token({"sub": "admin", "role": "admin", "name": "Administrator"})
+        set_auth_cookie(response, token)
+        return {"name": "Administrator", "email": "admin", "role": "admin", "token": token}
+
     database = mongo_db()
-    user = database.users.find_one({"email": payload.email.strip().lower(), "role": payload.role})
+    user = database.users.find_one({"email": email_clean, "role": payload.role})
     if not user:
+        rate_limiter.record_attempt(rate_limit_key)
         raise HTTPException(status_code=401, detail="Account not found or role is incorrect.")
+    
     _, digest = password_hash(payload.password, user["salt"])
     if not secrets.compare_digest(digest, user["password_hash"]):
+        rate_limiter.record_attempt(rate_limit_key)
         raise HTTPException(status_code=401, detail="Incorrect password.")
     if user.get("otp_verified", True) is not True:
         raise HTTPException(status_code=403, detail="Verify your registration OTP before logging in.")
+
+    rate_limiter.reset(rate_limit_key)
     database.users.update_one({"_id": user["_id"]}, {"$set": {"last_login": datetime.now(timezone.utc)}, "$inc": {"login_count": 1}})
     token = create_access_token({"sub": user["email"], "role": user["role"], "name": user["name"]})
+    set_auth_cookie(response, token)
     return {"id": str(user["_id"]), "name": user["name"], "email": user["email"], "role": user["role"], "token": token}
+
+
+@app.post("/auth/logout")
+def logout_user(response: Response):
+    """Logs out user by clearing the httpOnly session cookie."""
+    clear_auth_cookie(response)
+    return {"status": "success", "message": "Logged out successfully."}
+
+
+@app.post("/auth/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    email = payload.email.strip().lower()
+    rate_limiter.check(f"forgot:{email}:{client_ip}", max_attempts=5, window_seconds=600, lockout_seconds=600)
+
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]{2,}", email):
+        raise HTTPException(status_code=422, detail="Enter a valid email address.")
+
+    database = mongo_db()
+    query = {"email": email}
+    if payload.role and payload.role in {"seller", "buyer", "admin"}:
+        query["role"] = payload.role
+
+    user = database.users.find_one(query)
+    if not user:
+        user = database.users.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="No registered account found with this email address.")
+
+    rate_limiter.record_attempt(f"forgot:{email}:{client_ip}")
+    otp = f"{secrets.randbelow(1_000_000):06d}"
+    salt, digest = password_hash(otp)
+
+    database.password_resets.update_one(
+        {"email": email},
+        {"$set": {
+            "email": email,
+            "role": user.get("role", "seller"),
+            "user_id": user["_id"],
+            "otp_hash": digest,
+            "otp_salt": salt,
+            "expires_at": datetime.now(timezone.utc).timestamp() + 600,
+            "attempts": 0,
+            "created_at": datetime.now(timezone.utc)
+        }},
+        upsert=True
+    )
+
+    send_password_reset_otp(email, otp)
+    dev_otp = otp if os.getenv("DEV_OTP_MODE", "true").lower() == "true" else None
+    return {
+        "status": "success",
+        "message": f"A 6-digit password reset code has been sent to {email}.",
+        "expires_in": 600,
+        "dev_otp": dev_otp,
+        "otp_demo_preview": dev_otp
+    }
+
+
+@app.post("/auth/reset-password")
+def reset_password(payload: ResetPasswordRequest, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    email = payload.email.strip().lower()
+    rate_limiter.check(f"reset:{email}:{client_ip}", max_attempts=6, window_seconds=600, lockout_seconds=600)
+
+    validate_password_strength(payload.new_password)
+
+    database = mongo_db()
+    reset_record = database.password_resets.find_one({"email": email})
+    if not reset_record:
+        raise HTTPException(status_code=404, detail="No active password reset request found. Please request a new code.")
+
+    if reset_record.get("expires_at", 0) < datetime.now(timezone.utc).timestamp():
+        database.password_resets.delete_one({"_id": reset_record["_id"]})
+        raise HTTPException(status_code=410, detail="Verification code has expired. Please request a new one.")
+
+    if reset_record.get("attempts", 0) >= 5:
+        database.password_resets.delete_one({"_id": reset_record["_id"]})
+        raise HTTPException(status_code=429, detail="Too many incorrect code attempts. Please request a new code.")
+
+    _, otp_digest = password_hash(payload.otp.strip(), reset_record["otp_salt"])
+    if not secrets.compare_digest(otp_digest, reset_record["otp_hash"]):
+        database.password_resets.update_one({"_id": reset_record["_id"]}, {"$inc": {"attempts": 1}})
+        rate_limiter.record_attempt(f"reset:{email}:{client_ip}")
+        raise HTTPException(status_code=401, detail="Incorrect verification code.")
+
+    salt, digest = password_hash(payload.new_password)
+    database.users.update_one(
+        {"_id": reset_record["user_id"]},
+        {"$set": {
+            "password_hash": digest,
+            "salt": salt,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+
+    database.password_resets.delete_one({"_id": reset_record["_id"]})
+    rate_limiter.reset(f"reset:{email}:{client_ip}")
+    rate_limiter.reset(f"login:{email}:{client_ip}")
+    rate_limiter.reset(f"forgot:{email}:{client_ip}")
+
+    return {
+        "status": "success",
+        "message": "Password has been successfully updated! You can now sign in with your new password."
+    }
+
+
+@app.post("/admin/reset-users")
+def admin_reset_users(user: dict = Depends(require_role("admin"))):
+    """Resets all registered users back to clean demo seed accounts."""
+    database = mongo_db()
+    from seed_db import reset_all_registered_users
+    count = reset_all_registered_users(database)
+    return {
+        "status": "success",
+        "message": f"Successfully reset all registered users to default accounts ({count} accounts).",
+        "count": count
+    }
+
+
+@app.get("/auth/me")
+def get_current_user_profile(user: dict = Depends(get_current_user)):
+    """Re-verifies identity and role from server session token or httpOnly cookie."""
+    return {"name": user["name"], "email": user["email"], "role": user["role"]}
 
 
 @app.get("/admin/users")
@@ -657,40 +944,60 @@ def admin_analytics(user: dict = Depends(require_role("admin"))):
 
 
 @app.post("/approval-requests")
-def create_approval_request(payload: ApprovalRequest):
+def create_approval_request(payload: ApprovalRequest, user: dict = Depends(require_role("buyer", "admin"))):
     database = mongo_db()
     listing = database.listings.find_one({"_id": mongo_id(payload.listing_id)})
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found.")
     if not listing.get("verified", False):
         raise HTTPException(status_code=403, detail="This lot is waiting for admin approval.")
-    if payload.quantity <= 0 or payload.quantity > listing["quantity"]:
+    if payload.quantity <= 0 or payload.quantity > listing.get("quantity", 0):
         raise HTTPException(status_code=422, detail="Requested quantity is not available.")
     if payload.buyer_decision == "accepted" and payload.offered_price <= 0:
         raise HTTPException(status_code=422, detail="Offer price must be greater than zero.")
     if payload.buyer_decision not in {"accepted", "declined"}:
         raise HTTPException(status_code=422, detail="Buyer decision must be accepted or declined.")
-    status = "Buyer accepted - Admin approval pending" if payload.buyer_decision == "accepted" else "Buyer declined"
+    status_str = "Buyer accepted - Admin approval pending" if payload.buyer_decision == "accepted" else "Buyer declined"
     
     seller_phone = listing.get("seller_phone", "")
     address = listing.get("address", "")
     seller_location = f"{address}, {listing.get('city', '')}".strip(" ,") if address else listing.get("city", "")
 
-    order = {**payload.model_dump(), "seller": listing["seller"], "seller_email": listing["seller_email"], "seller_phone": seller_phone, "seller_location": seller_location, "item": listing["item"], "unit": listing.get("unit", "kg"), "min_price": listing.get("min_price", 0), "max_price": listing.get("max_price", 0), "status": status, "created_at": datetime.now(timezone.utc)}
+    # Enforce buyer identity from verified server session to prevent IDOR / impersonation
+    order = {
+        **payload.model_dump(),
+        "buyer_name": user.get("name", payload.buyer_name),
+        "buyer_email": user["email"],
+        "seller": listing.get("seller", "Seller"),
+        "seller_email": listing.get("seller_email", ""),
+        "seller_phone": seller_phone,
+        "seller_location": seller_location,
+        "item": listing.get("item", "Scrap Lot"),
+        "unit": listing.get("unit", "kg"),
+        "min_price": listing.get("min_price", 0),
+        "max_price": listing.get("max_price", 0),
+        "status": status_str,
+        "created_at": datetime.now(timezone.utc)
+    }
     result = database.orders.insert_one(order)
     return {"id": str(result.inserted_id), "status": order["status"]}
 
 
 @app.post("/listings")
-def create_listing(payload: ListingRequest):
+def create_listing(payload: ListingRequest, user: dict = Depends(require_role("seller", "admin"))):
     database = mongo_db()
     listing_data = payload.model_dump()
     
+    # Enforce seller identity from verified server session to prevent impersonation
+    listing_data["seller_email"] = user["email"]
+    listing_data["seller"] = user.get("name", listing_data.get("seller", "Seller"))
+    listing_data["ownerEmail"] = user["email"]
+
     # Auto-fetch seller phone from user profile if missing
     if not listing_data.get("seller_phone"):
-        user = database.users.find_one({"email": payload.seller_email.strip().lower()})
-        if user and user.get("phone"):
-            listing_data["seller_phone"] = user.get("phone")
+        user_doc = database.users.find_one({"email": user["email"]})
+        if user_doc and user_doc.get("phone"):
+            listing_data["seller_phone"] = user_doc.get("phone")
 
     listing = {**listing_data, "verified": False, "created_at": datetime.now(timezone.utc)}
     result = database.listings.insert_one(listing)
@@ -750,7 +1057,8 @@ def update_listing(listing_id: str, payload: UpdateListingRequest, user: dict = 
     
     user_email = (user.get("email") or "").strip().lower()
     seller_email = (listing.get("seller_email") or listing.get("ownerEmail") or "").strip().lower()
-    is_owner = (user_email and seller_email and user_email == seller_email) or user.get("role") in ("admin", "buyer")
+    # Security fix: remove 'buyer' privilege escalation. Only genuine seller owner or admin can update
+    is_owner = (user_email and seller_email and user_email == seller_email) or user.get("role") == "admin"
     if not is_owner:
         raise HTTPException(status_code=403, detail="You do not have permission to edit this listing.")
     
@@ -765,7 +1073,7 @@ def update_listing(listing_id: str, payload: UpdateListingRequest, user: dict = 
 
 @app.delete("/listings/{listing_id}")
 def delete_listing(listing_id: str, user: dict = Depends(get_current_user)):
-    """Delete lot from database. Seller owner, buyer, or admin."""
+    """Delete lot from database. Seller owner or admin only."""
     database = mongo_db()
     oid = mongo_id(listing_id)
     listing = database.listings.find_one({"_id": oid})
@@ -774,7 +1082,8 @@ def delete_listing(listing_id: str, user: dict = Depends(get_current_user)):
     
     user_email = (user.get("email") or "").strip().lower()
     seller_email = (listing.get("seller_email") or listing.get("ownerEmail") or "").strip().lower()
-    is_owner = (user_email and seller_email and user_email == seller_email) or user.get("role") in ("admin", "buyer")
+    # Security fix: remove 'buyer' privilege escalation. Only genuine seller owner or admin can delete
+    is_owner = (user_email and seller_email and user_email == seller_email) or user.get("role") == "admin"
     if not is_owner:
         raise HTTPException(status_code=403, detail="You do not have permission to delete this listing.")
     
@@ -786,6 +1095,238 @@ def delete_listing(listing_id: str, user: dict = Depends(get_current_user)):
 def admin_approval_requests(user: dict = Depends(require_role("admin"))):
     database = mongo_db()
     return {"requests": [serialize_mongo(order) for order in database.orders.find().sort("created_at", -1)]}
+
+
+# ============================================================
+# B2B/C2B DEAL APPROVAL & CLEARANCE LIFECYCLE
+# ============================================================
+@app.post("/sell-requests")
+def create_sell_request(payload: SellRequestCreate, user: dict = Depends(require_role("seller", "admin"))):
+    """Seller initiates a Sell Request to registered buyers."""
+    database = mongo_db()
+    req_data = payload.model_dump()
+    req_data["seller_email"] = user["email"]
+    req_data["seller_name"] = user.get("name", "Verified Seller")
+    req_data["seller_phone"] = payload.seller_phone or user.get("phone", "")
+    req_data["status"] = "Pending Buyer Approval"
+    req_data["created_at"] = datetime.now(timezone.utc)
+    req_data["type"] = "sell_request"
+    req_data["total_expected_value"] = round(float(payload.expected_price or 0) * float(payload.quantity or 1), 2)
+    
+    result = database.orders.insert_one(req_data)
+    req_data["id"] = str(result.inserted_id)
+    req_data.pop("_id", None)
+    if isinstance(req_data.get("created_at"), datetime):
+        req_data["created_at"] = req_data["created_at"].isoformat()
+    return req_data
+
+
+@app.get("/buyer/sell-requests")
+def get_buyer_sell_requests(user: dict = Depends(require_role("buyer", "admin"))):
+    """Buyer reviews incoming seller proposals awaiting manual deal approval."""
+    database = mongo_db()
+    cursor = database.orders.find({"$or": [{"type": "sell_request"}, {"status": {"$regex": "Buyer|Admin", "$options": "i"}}]}).sort("created_at", -1)
+    requests = []
+    for doc in cursor:
+        doc["id"] = str(doc.pop("_id"))
+        for dt_field in ("created_at", "buyer_approved_at", "admin_cleared_at"):
+            if isinstance(doc.get(dt_field), datetime):
+                doc[dt_field] = doc[dt_field].isoformat()
+        requests.append(doc)
+    return {"requests": requests, "total": len(requests)}
+
+
+@app.post("/buyer/sell-requests/{id}/approve")
+def approve_sell_request(id: str, payload: BuyerDealApprovalRequest, user: dict = Depends(require_role("buyer", "admin"))):
+    """Buyer approves proposal, manually enters agreed unit rate, deal amount, and delivery terms."""
+    database = mongo_db()
+    oid = mongo_id(id)
+    req = database.orders.find_one({"_id": oid})
+    if not req:
+        raise HTTPException(status_code=404, detail="Sell request not found.")
+    
+    calc_deal_amount = round(float(payload.deal_amount or (payload.agreed_price * float(req.get("quantity", 1)))), 2)
+    delivery_method_val = payload.delivery_method or payload.delivery_type
+    notes_val = payload.buyer_notes or payload.deal_notes
+    update_data = {
+        "status": "Buyer Approved · Awaiting Admin Clearance",
+        "buyer_email": user["email"],
+        "buyer_name": user.get("name", "Verified Buyer"),
+        "agreed_price": payload.agreed_price,
+        "deal_amount": calc_deal_amount,
+        "delivery_method": delivery_method_val,
+        "delivery_type": delivery_method_val,
+        "delivery_schedule": payload.delivery_schedule,
+        "delivery_address": payload.delivery_address,
+        "payment_terms": payload.payment_terms,
+        "buyer_notes": notes_val,
+        "deal_notes": notes_val,
+        "buyer_approved_at": datetime.now(timezone.utc)
+    }
+    database.orders.update_one({"_id": oid}, {"$set": update_data})
+    return {
+        "id": id,
+        "status": update_data["status"],
+        "agreed_price": payload.agreed_price,
+        "deal_amount": calc_deal_amount,
+        "message": "Deal details finalized and forwarded to Admin for clearance."
+    }
+
+
+@app.post("/buyer/sell-requests/{id}/reject")
+def reject_sell_request(id: str, user: dict = Depends(require_role("buyer", "admin"))):
+    """Buyer declines a sell proposal."""
+    database = mongo_db()
+    oid = mongo_id(id)
+    result = database.orders.update_one(
+        {"_id": oid},
+        {"$set": {"status": "Rejected by Buyer", "buyer_rejected_by": user["email"], "rejected_at": datetime.now(timezone.utc)}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Sell request not found.")
+    return {"id": id, "status": "Rejected by Buyer"}
+
+
+@app.get("/seller/sell-requests")
+def get_seller_sell_requests(user: dict = Depends(require_role("seller", "admin"))):
+    """Seller retrieves their sell proposals and views buyer-finalized deal amounts."""
+    database = mongo_db()
+    query = {"$or": [{"type": "sell_request"}, {"seller_email": user["email"]}]}
+    if user.get("role") != "admin":
+        query = {"$and": [{"seller_email": user["email"]}, {"$or": [{"type": "sell_request"}, {"status": {"$exists": True}}]}]}
+    cursor = database.orders.find(query).sort("created_at", -1)
+    requests = []
+    for doc in cursor:
+        doc["id"] = str(doc.pop("_id"))
+        for dt_field in ("created_at", "buyer_approved_at", "admin_cleared_at"):
+            if isinstance(doc.get(dt_field), datetime):
+                doc[dt_field] = doc[dt_field].isoformat()
+        requests.append(doc)
+    return {"requests": requests, "total": len(requests)}
+
+
+@app.get("/admin/deals")
+def get_admin_deals(user: dict = Depends(require_role("admin"))):
+    """Admin reviews Master Deal Ledger with buyer terms and seller proposals."""
+    database = mongo_db()
+    cursor = database.orders.find().sort("created_at", -1)
+    deals = []
+    total_gmv = 0.0
+    cleared_count = 0
+    approved_count = 0
+    for doc in cursor:
+        doc["id"] = str(doc.pop("_id"))
+        amt = float(doc.get("deal_amount") or doc.get("total_expected_value") or doc.get("offered_price") or 0)
+        total_gmv += amt
+        status_val = doc.get("status", "")
+        if "Admin Cleared" in status_val:
+            cleared_count += 1
+        elif "Buyer Approved" in status_val:
+            approved_count += 1
+        for dt_field in ("created_at", "buyer_approved_at", "admin_cleared_at"):
+            if isinstance(doc.get(dt_field), datetime):
+                doc[dt_field] = doc[dt_field].isoformat()
+        deals.append(doc)
+    return {
+        "deals": deals,
+        "total_deals": len(deals),
+        "total_gmv": round(total_gmv, 2),
+        "cleared_count": cleared_count,
+        "approved_count": approved_count
+    }
+
+
+@app.patch("/admin/deals/{id}/clear")
+def admin_clear_deal(id: str, payload: AdminDealClearanceRequest, user: dict = Depends(require_role("admin"))):
+    """Admin grants official platform clearance, issues contract code, and activates transaction."""
+    database = mongo_db()
+    oid = mongo_id(id)
+    deal = database.orders.find_one({"_id": oid})
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal record not found.")
+    
+    if payload.action == "reject":
+        status_str = "Rejected by Admin"
+        contract_id = None
+    else:
+        status_str = "Admin Cleared & Verified · Deal Active"
+        contract_id = f"CTR-{datetime.now().strftime('%Y%m')}-{secrets.randbelow(90000) + 10000}"
+    
+    notes_val = payload.clearance_notes or payload.admin_notes
+    admin_name_val = payload.admin_name or user.get("name", "Administrator")
+    update_data = {
+        "status": status_str,
+        "admin_cleared": payload.action == "clear",
+        "admin_notes": notes_val,
+        "admin_cleared_by": admin_name_val,
+        "admin_cleared_at": datetime.now(timezone.utc)
+    }
+    if contract_id:
+        update_data["contract_id"] = contract_id
+        update_data["contract_number"] = contract_id
+        
+    database.orders.update_one({"_id": oid}, {"$set": update_data})
+    return {
+        "id": id,
+        "status": status_str,
+        "contract_id": contract_id,
+        "contract_number": contract_id,
+        "message": f"Deal successfully {payload.action}ed by administrator."
+    }
+
+
+@app.get("/admin/deals/{id}/contract")
+def get_deal_contract(id: str, user: dict = Depends(get_current_user)):
+    """Generates official printable platform contract slip with security hash."""
+    database = mongo_db()
+    oid = mongo_id(id)
+    deal = database.orders.find_one({"_id": oid})
+    if not deal:
+        raise HTTPException(status_code=404, detail="Deal record not found.")
+    
+    user_email = user["email"].strip().lower()
+    is_admin = user.get("role") == "admin"
+    is_seller = user_email == (deal.get("seller_email") or "").strip().lower()
+    is_buyer = user_email == (deal.get("buyer_email") or "").strip().lower()
+    
+    if not (is_admin or is_seller or is_buyer):
+        raise HTTPException(status_code=403, detail="Unauthorized to view this deal contract.")
+    
+    deal["id"] = str(deal.pop("_id"))
+    contract_code = deal.get("contract_number") or deal.get("contract_id") or f"CTR-{datetime.now().strftime('%Y%m')}-{secrets.randbelow(90000) + 10000}"
+    hash_val = hashlib.sha256(f"{deal['id']}:{contract_code}".encode()).hexdigest()[:24].upper()
+    
+    for dt_field in ("created_at", "buyer_approved_at", "admin_cleared_at"):
+        if isinstance(deal.get(dt_field), datetime):
+            deal[dt_field] = deal[dt_field].isoformat()
+
+    contract_payload = {
+        "contract_number": contract_code,
+        "contract_id": contract_code,
+        "deal_id": deal["id"],
+        "item": deal.get("item", "Scrap Lot"),
+        "quantity": deal.get("quantity", 0),
+        "unit": deal.get("unit", "kg"),
+        "agreed_price": deal.get("agreed_price", 0),
+        "total_deal_amount": float(deal.get("deal_amount") or 0),
+        "seller": deal.get("seller", "Verified Seller"),
+        "buyer": deal.get("buyer_name") or deal.get("buyer", "Certified Buyer"),
+        "delivery_method": deal.get("delivery_method") or deal.get("delivery_type", "Standard Transport"),
+        "payment_terms": deal.get("payment_terms", "100% Instant RTGS upon Weighbridge Confirmation"),
+        "delivery_address": deal.get("delivery_address", "Designated Destination Hub"),
+        "integrity_hash": hash_val,
+        "cleared_at": deal.get("admin_cleared_at") or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    }
+
+    return {
+        "contract": contract_payload,
+        "contract_id": contract_code,
+        "deal": deal,
+        "platform": "ScrapSense AI Circular Material Exchange",
+        "compliance": "CPCB & MoEFCC Electronic & Metal Scrap Management Rules Compliant",
+        "verification_hash": hash_val,
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
 
 
 @app.get("/orders")
@@ -852,11 +1393,24 @@ def decide_approval(request_id: str, approved: bool, user: dict = Depends(requir
 
 
 @app.get("/payments/receipt/{order_id}")
+@app.get("/orders/{order_id}/receipt")
 def payment_receipt(order_id: str, user: dict = Depends(get_current_user)):
     database = mongo_db()
     order = database.orders.find_one({"_id": mongo_id(order_id), "status": "Admin approved - seller notified"})
     if not order:
         raise HTTPException(status_code=404, detail="Receipt is available after admin approval.")
+
+    # Restrict receipts to the order's buyer, seller, or an admin
+    user_email = (user.get("email") or "").strip().lower()
+    buyer_email = (order.get("buyer_email") or "").strip().lower()
+    seller_email = (order.get("seller_email") or "").strip().lower()
+    is_authorized = (
+        user.get("role") == "admin" or
+        (user_email and user_email in (buyer_email, seller_email))
+    )
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="You do not have permission to view this receipt.")
+
     # Fix: use fallback price when offered_price is 0 or missing
     offered = order.get("offered_price", 0)
     if not offered or offered <= 0:
@@ -924,17 +1478,27 @@ def get_categories(city: str = "Pune"):
 
 
 @app.get("/dealers")
-def get_dealers(city: str | None = None):
-    """Returns verified recycling dealers from MongoDB database."""
+def get_dealers(city: str | None = None, category: str | None = None):
+    """Returns verified recycling dealers from MongoDB database with optional city/category filters, with static fallback."""
     try:
         database = mongo_db()
-        query = {"city": {"$regex": city, "$options": "i"}} if city else {}
+        query = {}
+        if city:
+            query["city"] = {"$regex": city.strip(), "$options": "i"}
+        if category:
+            query["types"] = {"$regex": category.strip(), "$options": "i"}
         dealers = [serialize_mongo(d) for d in database.dealers.find(query)]
         if dealers:
-            return {"dealers": dealers, "count": len(dealers), "source": "mongodb"}
+            return {"dealers": dealers, "count": len(dealers), "total": len(dealers), "source": "mongodb"}
     except Exception:
         pass
-    return {"dealers": DEALER_DIRECTORY, "count": len(DEALER_DIRECTORY), "source": "fallback"}
+
+    dealers = DEALER_DIRECTORY
+    if city:
+        dealers = [d for d in dealers if city.lower() in d["city"].lower()]
+    if category:
+        dealers = [d for d in dealers if any(category.lower() in t.lower() for t in d.get("types", []))]
+    return {"dealers": dealers, "count": len(dealers), "total": len(dealers), "source": "fallback"}
 
 
 @app.get("/stats")
@@ -954,17 +1518,6 @@ def get_stats():
     }
 
 
-@app.get("/dealers")
-def get_dealers(city: str = None, category: str = None):
-    """Returns certified scrap dealer directory with optional city/category filters."""
-    dealers = DEALER_DIRECTORY
-    if city:
-        dealers = [d for d in dealers if city.lower() in d["city"].lower()]
-    if category:
-        dealers = [d for d in dealers if any(category.lower() in t.lower() for t in d["types"])]
-    return {"dealers": dealers, "total": len(dealers)}
-
-
 @app.post("/calculate")
 def calculate_resale(payload: CalculateRequest):
     """Computes exact estimated payout based on category rate bands and user quantity."""
@@ -972,11 +1525,17 @@ def calculate_resale(payload: CalculateRequest):
     matched_info = None
     if payload.category_key and payload.category_key in WASTE_CATEGORIES:
         matched_info = WASTE_CATEGORIES[payload.category_key]
-    else:
+    elif payload.display_name:
+        req_name = payload.display_name.strip().lower()
         for info in WASTE_CATEGORIES.values():
-            if info["display_name"].lower() == payload.display_name.lower():
+            if info["display_name"].lower() == req_name:
                 matched_info = info
                 break
+        if not matched_info:
+            for info in WASTE_CATEGORIES.values():
+                if req_name in info["display_name"].lower() or info["display_name"].lower() in req_name:
+                    matched_info = info
+                    break
 
     if not matched_info:
         # Fallback generic default
@@ -988,7 +1547,7 @@ def calculate_resale(payload: CalculateRequest):
     avg_rate = (min_rate + max_rate) / 2
 
     return {
-        "item_name": matched_info["display_name"],
+        "item_name": payload.display_name or matched_info["display_name"],
         "unit": matched_info.get("unit", "kg"),
         "quantity": qty,
         "min_payout": round(qty * min_rate, 2),

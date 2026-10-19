@@ -30,7 +30,7 @@
 <body>
 
   <!-- ================= AUTH SCREEN ================= -->
-  <div class="auth-screen" id="authScreen">
+  <div class="auth-screen is-hidden" id="authScreen" hidden style="display: none !important;">
 
     <!-- === ROLE SELECTOR PANEL (always visible left side) === -->
     <div class="auth-role-selector" id="authRoleSelector">
@@ -297,6 +297,19 @@
     </div>
 
     <div class="header-right">
+      <!-- Presentation 1-Click Role Switcher -->
+      <div class="pres-role-switcher" id="presRoleSwitcher" style="display: flex; gap: 4px; background: rgba(255,255,255,0.06); padding: 3px 5px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.12);">
+        <button type="button" class="btn-pres-role" id="presRoleSellerBtn" style="background: rgba(34, 197, 94, 0.25); border: 1px solid #22c55e; color: #86efac; border-radius: 6px; padding: 5px 9px; font-size: 0.76rem; font-weight: 600; cursor: pointer;" title="Instant Seller Portal">
+          📦 Seller
+        </button>
+        <button type="button" class="btn-pres-role" id="presRoleBuyerBtn" style="background: transparent; border: 1px solid transparent; color: #94a3b8; border-radius: 6px; padding: 5px 9px; font-size: 0.76rem; font-weight: 600; cursor: pointer;" title="Instant Buyer Marketplace">
+          🏢 Buyer
+        </button>
+        <button type="button" class="btn-pres-role" id="presRoleAdminBtn" style="background: transparent; border: 1px solid transparent; color: #94a3b8; border-radius: 6px; padding: 5px 9px; font-size: 0.76rem; font-weight: 600; cursor: pointer;" title="Instant Administrator Control Room">
+          🛡️ Admin
+        </button>
+      </div>
+
       <!-- Phone App QR Trigger Button -->
       <button class="btn-phone-connect" id="openPhoneModalBtn" type="button" title="Open on Mobile Phone">
         <span class="phone-icon">📱</span>

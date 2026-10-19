@@ -288,8 +288,13 @@ let activeCatFilter = "all";
 let activeSellerTab = "scanner";
 let activeSellerCategory = "All Categories";
 let authRole = "seller";
-let currentSession = null;
-let authToken = null;
+let currentSession = {
+  name: "Apex Metals Recycling (Verified Seller)",
+  email: "apex.metals@scrapsense.org",
+  role: "seller",
+  isDemo: true
+};
+let authToken = "demo-seller-token";
 let selectedListingId = null;
 
 // Escape HTML helper
@@ -8606,71 +8611,70 @@ adminTabBtns.forEach(btn => {
 // BOOTSTRAP INITIALIZATION
 // ============================================================
 async function init() {
-  // 1. Immediately check cached session for smooth initial paint
-  if (!currentSession) {
-    const stored = getStoredSession();
-    if (stored) {
-      currentSession = stored;
-      hideAuthScreen();
-      setRoleVisibility();
-    } else {
-      setRole("seller");
-    }
-  }
+  // Directly open Seller Dashboard with zero barrier for presentation
+  hideAuthScreen();
+  currentSession = {
+    name: "Apex Metals Recycling (Verified Seller)",
+    email: "apex.metals@scrapsense.org",
+    role: "seller",
+    isDemo: true
+  };
+  authRole = "seller";
+  saveStoredSession(currentSession);
+  setRoleVisibility();
+  setSellerCategory("All Categories");
+  setSellerView("scanner");
 
   renderAdmin();
   renderHistory();
   initMobilePhoneLink();
 
-  // 2. Connect to backend with auto-discovery & latching
-  await checkBackendStatus();
-  startBackendHeartbeat();
-  await loadCategories();
-  setSellerCategory("All Categories");
+  // Wire up presentation role switcher buttons in top navbar
+  document.getElementById("presRoleSellerBtn")?.addEventListener("click", () => switchPresentationRole("seller"));
+  document.getElementById("presRoleBuyerBtn")?.addEventListener("click", () => switchPresentationRole("buyer"));
+  document.getElementById("presRoleAdminBtn")?.addEventListener("click", () => switchPresentationRole("admin"));
 
-  // 3. Verify real authentication session with backend via httpOnly cookie
+  // Connect to backend in background without blocking UI
   try {
-    const meRes = await fetch(`${API_BASE}/auth/me`);
-    if (meRes.ok) {
-      const userData = await meRes.json();
-      currentSession = { name: userData.name, email: userData.email, role: userData.role };
-      saveStoredSession(currentSession);
-      hideAuthScreen();
-      setRoleVisibility();
-    } else if (meRes.status === 401) {
-      // Cookie is missing or expired - prompt login unless demo session is active
-      const isDemo = currentSession && (
-        currentSession.email === "admin" ||
-        currentSession.email === "7488114039" ||
-        currentSession.email === "admin@scrapsense.org" ||
-        currentSession.email === "apex.metals@scrapsense.org" ||
-        currentSession.email === "procurement@tatasteel.com" ||
-        currentSession.isDemo
-      );
-      if (!isDemo) {
-        currentSession = null;
-        clearStoredSession();
-        showAuthScreen();
-        setRole("seller");
-        setAuthMode("login");
-        setRoleVisibility();
-      } else {
-        hideAuthScreen();
-        setRoleVisibility();
-      }
-    }
-  } catch {
-    // If backend is unreachable, retain cached session for offline demonstration
-    if (currentSession) {
-      hideAuthScreen();
-      setRoleVisibility();
-    }
+    await checkBackendStatus();
+    startBackendHeartbeat();
+    await loadCategories();
+    setSellerCategory("All Categories");
+  } catch {}
+
+  hideAuthScreen();
+  setRoleVisibility();
+}
+
+function switchPresentationRole(role) {
+  authRole = role;
+  let demoName = role === "admin" ? "Admin Officer" : (role === "buyer" ? "Tata Steel Procurement" : "Apex Metals Recycling (Verified Seller)");
+  let demoEmail = role === "admin" ? "admin@scrapsense.org" : (role === "buyer" ? "procurement@tatasteel.com" : "apex.metals@scrapsense.org");
+  currentSession = { name: demoName, email: demoEmail, role: role, isDemo: true };
+  saveStoredSession(currentSession);
+  hideAuthScreen();
+  setRoleVisibility();
+
+  const sBtn = document.getElementById("presRoleSellerBtn");
+  const bBtn = document.getElementById("presRoleBuyerBtn");
+  const aBtn = document.getElementById("presRoleAdminBtn");
+  if (sBtn) {
+    sBtn.style.background = role === "seller" ? "rgba(34, 197, 94, 0.25)" : "transparent";
+    sBtn.style.borderColor = role === "seller" ? "#22c55e" : "transparent";
+    sBtn.style.color = role === "seller" ? "#86efac" : "#94a3b8";
+  }
+  if (bBtn) {
+    bBtn.style.background = role === "buyer" ? "rgba(59, 130, 246, 0.25)" : "transparent";
+    bBtn.style.borderColor = role === "buyer" ? "#3b82f6" : "transparent";
+    bBtn.style.color = role === "buyer" ? "#93c5fd" : "#94a3b8";
+  }
+  if (aBtn) {
+    aBtn.style.background = role === "admin" ? "rgba(168, 85, 247, 0.25)" : "transparent";
+    aBtn.style.borderColor = role === "admin" ? "#a855f7" : "transparent";
+    aBtn.style.color = role === "admin" ? "#c084fc" : "#94a3b8";
   }
 
-  if (currentSession) {
-    hideAuthScreen();
-    setRoleVisibility();
-  }
+  showToast(`Switched to ${role.toUpperCase()} View`, "info");
 }
 
 init();
